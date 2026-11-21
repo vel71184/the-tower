@@ -25,6 +25,9 @@ records decisions made in chat that the doc may not have yet.
 | Floor 1 is the exterior | Floor 1 is the outside of the tower and the way in. Levels 1–8 outside, level 9 the Waiting Hall just inside the gate, level 10 Marta at the stair. | Chat, 2026-11-21 |
 | Floors grow as you climb | All levels within a floor are the same size; each floor is larger than the last. About 5 minutes per level on floor 1, growing fast early and leveling off at about 30 minutes per level near the top. | Chat, 2026-11-21 |
 | Automatic saving | Saves when a level starts, after every conversation, at level end, and when the app is closed or backgrounded. Continue resumes exactly where you stopped. | Chat, 2026-11-21 |
+| Turn-based combat | On the same grid as exploring, no separate battle screen. A turn is a few tiles of movement plus one action: strike, shove (non-lethal), shoot, guard, or talk. Fits the Kenney animations (no dodge/block), plays the same on touch and controller, and makes habits countable for floor 100. | Chat, 2026-11-21 |
+| Controllers | Full controller and keyboard support, matched by button position. 8BitDo Pro 2 in X-input mode. | Chat, 2026-11-21 |
+| CI screenshots | CI renders screenshots and force-pushes them to the `ci-screenshots` branch. | Chat, 2026-11-21 |
 | Kenney zips | Kept in `kenney_zips/` (ignored by Godot); used parts get extracted to `assets/`. | Chat, 2026-11-21 |
 
 ## Suggested, not yet confirmed
@@ -37,8 +40,8 @@ records decisions made in chat that the doc may not have yet.
 
 ## Still open
 
-- **Combat** for the kill route: real-time, turn-based, or light. Deferred until after the
-  investigation slice.
+- **Combat details:** health and injury model, stats and leveling, and what happens when the
+  climber falls.
 - **Floor 1's boss.** The slice uses a draft (Marta, the Gatekeeper) to test the systems.
 - **Which two axes the prototype tracks.** The slice uses speed ↔ patience and
   others ↔ self, because level 1 can measure them without combat.
