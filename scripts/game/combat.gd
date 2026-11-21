@@ -45,6 +45,7 @@ var _staggered: Dictionary = {}
 var _acted_this_fight := false
 var _awaiting := ""
 var _talk_options: Array = []
+var _foes_running := false
 
 
 func setup(main_node) -> void:
@@ -66,6 +67,8 @@ func start(id: String, data: Dictionary, opener: String = "") -> void:
 	_staggered.clear()
 	_acted_this_fight = false
 	_awaiting = ""
+	_foes_running = false
+	busy = false
 	events.clear()
 	for foe_id in data.get("opponents", []):
 		var obj = main.find_object(String(foe_id))
@@ -227,13 +230,20 @@ func handle_choice(index: int) -> bool:
 func _foes_turn() -> void:
 	if not active:
 		return
+	# Only one opponents' turn at a time, and never while the climber's action is resolving.
+	if busy or _foes_running:
+		push_warning("Opponents' turn requested while another is resolving; ignored")
+		print_stack()
+		return
+	_foes_running = true
 	turn = "foes"
 	events.append("turn:foes")
 	ui.hide_combat()
 	for foe in foes.duplicate():
 		if not active:
-			return
+			break
 		await _foe_act(foe)
+	_foes_running = false
 	if active:
 		_begin_climber_turn()
 
