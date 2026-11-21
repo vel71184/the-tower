@@ -10,7 +10,7 @@ var target: Node3D
 
 func _ready() -> void:
 	projection = PROJECTION_ORTHOGONAL
-	size = 10.0
+	size = 7.0
 	near = 0.1
 	far = 100.0
 	rotation_degrees = Vector3(-35.264, 45.0, 0.0)
