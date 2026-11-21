@@ -29,10 +29,20 @@ Every push builds the game on GitHub:
 
 ## Controls
 
-- **Walk:** tap (phone) or click (PC) where you want to go.
-- **Look, talk, use:** tap a thing. Names appear when you're close.
-- **Zoom:** pinch, or the mouse wheel.
-- **Dev overlay** (shows the hidden baseline, for playtesting only): three-finger tap, or F3.
+| | Phone | Controller (8BitDo Pro 2, Xbox, PlayStation) | Keyboard |
+|---|---|---|---|
+| Walk | Tap where to go | D-pad or left stick | WASD or arrows |
+| Look, talk, use | Tap the thing | **Bottom** face button (faces it first) | E, Space or Enter |
+| Stop walking | | **Right** face button | Esc or Q |
+| Pick a dialogue choice | Tap it | D-pad + bottom face button | Arrows + Enter |
+| Zoom | Pinch | L1 / R1 | − / = or mouse wheel |
+| Dev overlay (hidden baseline) | Three-finger tap | Select | F3 |
+
+Names appear over things when you're close. You can switch between touch and controller at any time.
+
+**8BitDo Pro 2:** set the switch on the back to **X** (X-input). Pair it over Bluetooth on Android, or
+plug it in by USB on PC. Buttons are matched by **position**, not by the printed letter, so the
+bottom button always confirms, even in Switch mode where it's labelled B.
 
 ## Project layout
 
@@ -44,6 +54,11 @@ Every push builds the game on GitHub:
 | `scripts/game/interactable.gd` | Things to examine, people, hidden things, exits |
 | `scripts/game/climber.gd`, `iso_camera.gd` | The player character and the fixed isometric camera |
 | `scripts/ui/game_ui.gd` | Dialogue panel, cards, toasts, dev overlay |
+| `scripts/autoload/controls.gd` | Keyboard and controller bindings |
+| `scripts/characters/` | Characters built from Kenney parts, and floor-palette looks |
+| `content/characters/parts.json` | Every model's colour slots, items, the climber's look, reserved colours |
+| `content/floors/floor_NN/floor.json` | A floor's name, era and people palette |
+| `assets/kenney/` | Kenney models in use (CC0). The original zips are in `kenney_zips/` |
 | `content/floors/floor_NN/level_NN.json` | Level content (see below) |
 | `tests/` | Headless checks that CI runs before building |
 
