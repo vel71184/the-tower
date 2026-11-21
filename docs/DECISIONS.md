@@ -26,6 +26,9 @@ records decisions made in chat that the doc may not have yet.
 | Floors grow as you climb | All levels within a floor are the same size; each floor is larger than the last. About 5 minutes per level on floor 1, growing fast early and leveling off at about 30 minutes per level near the top. | Chat, 2026-11-21 |
 | Automatic saving | Saves when a level starts, after every conversation, at level end, and when the app is closed or backgrounded. Continue resumes exactly where you stopped. | Chat, 2026-11-21 |
 | Turn-based combat | On the same grid as exploring, no separate battle screen. A turn is a few tiles of movement plus one action: strike, shove (non-lethal), shoot, guard, or talk. Fits the Kenney animations (no dodge/block), plays the same on touch and controller, and makes habits countable for floor 100. | Chat, 2026-11-21 |
+| Wounds | Everyone has 3 wounds; a hit takes one; wounds last until rest. The maximum can grow later (armor, gear). At zero the climber falls and loses the fight; someone on their last wound may yield. | Chat, 2026-11-21 |
+| First fight | The optional Waiting Hall brawl with Brann, before Marta. | Chat, 2026-11-21 |
+| More characters | The nine other Kenney "Mini" characters on the same rig join the parts system (29 heads × 29 bodies). | Chat, 2026-11-21 |
 | Controllers | Full controller and keyboard support, matched by button position. 8BitDo Pro 2 in X-input mode. | Chat, 2026-11-21 |
 | CI screenshots | CI renders screenshots and force-pushes them to the `ci-screenshots` branch. | Chat, 2026-11-21 |
 | Kenney zips | Kept in `kenney_zips/` (ignored by Godot); used parts get extracted to `assets/`. | Chat, 2026-11-21 |
@@ -40,8 +43,7 @@ records decisions made in chat that the doc may not have yet.
 
 ## Still open
 
-- **Combat details:** health and injury model, stats and leveling, and what happens when the
-  climber falls.
+- **Combat details:** stats and leveling, and whether falling ever means death.
 - **Floor 1's boss.** The slice uses a draft (Marta, the Gatekeeper) to test the systems.
 - **Which two axes the prototype tracks.** The slice uses speed ↔ patience and
   others ↔ self, because level 1 can measure them without combat.
