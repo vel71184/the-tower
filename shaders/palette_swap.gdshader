@@ -5,7 +5,7 @@ render_mode cull_back, specular_disabled;
 // Each colour is a light/dark pair of cells in the shared colormap texture, so a swap
 // keeps the model's shading. Set by scripts/characters/character_model.gd.
 
-const int MAX_SWAPS = 8;
+const int MAX_SWAPS = 12;
 
 uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_disable;
 uniform int swap_count = 0;

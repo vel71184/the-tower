@@ -72,7 +72,11 @@ func _lineup() -> void:
 		looks.append(Looks.resolve({}, floor1["people"], "crowd:%d" % i))
 	looks.append({"body": "knight", "item": "sword", "item_left": "shield_round"})
 	looks.append({"body": "male-b", "wheelchair": "power"})
-	var cols := 8
+	for b in ["arena-soldier", "forest-archer", "shop-employee", "arcade-gamer", "skate-girl", "dungeon-orc"]:
+		looks.append(Looks.resolve({"body": b, "head": b}, floor1["people"], "floor1:" + b))
+	looks.append({"body": "dungeon-orc", "head": "male-e", "colors": {"species": "violet", "shirt": "red"}})
+	looks.append({"body": "skate-boy", "head": "arena-soldier", "colors": {"shirt": "green", "pants": "white"}})
+	var cols := 10
 	for i in looks.size():
 		var c = CharacterModel.new()
 		stage.add_child(c)
@@ -81,9 +85,9 @@ func _lineup() -> void:
 		c.rotation.y = deg_to_rad(-135.0)
 	var cam := Camera3D.new()
 	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
-	cam.size = 7.5
+	cam.size = 9.5
 	cam.rotation_degrees = Vector3(-30, 0, 0)
-	cam.position = Vector3((cols - 1) * 1.3 / 2.0, 6.0, 2.4 + 9.0)
+	cam.position = Vector3((cols - 1) * 1.3 / 2.0, 6.0, 3.2 + 9.0)
 	stage.add_child(cam)
 	cam.make_current()
 	await _frames(30)

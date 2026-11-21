@@ -1,65 +1,221 @@
 {
- "about": "Kenney Mini Characters, assembled from parts. Any head fits any body (same rig, same 32 animations). Each slot names the palette colour that part uses in the original model; a character recolours a slot by swapping that colour for another. Colours come in light/dark pairs in colormap.png, so swaps keep the shading. 'species' is what a robot, alien or zombie is made of; skin tones never touch it.",
- "model_dir": "res://assets/kenney/mini-characters",
+ "about": "Characters assembled from Kenney 'Mini' parts. Every model listed under 'models' shares one rig and its animations, so any head fits any body. A slot names what a part is coloured with: a Mini Characters colour name, or a list of [cx, cy] cells in that model's own family colormap. Recolouring swaps those cells for the requested colour's cells (the nearest cells, in other families), so shading is kept. 'species' is what a robot, alien, zombie or orc is made of; skin tones never touch it.",
  "scale": 1.35,
  "palette": {
-  "texture": "res://assets/kenney/mini-characters/Textures/colormap.png",
-  "colors": [
-   "blue",
-   "sky",
-   "violet",
-   "magenta",
-   "pink",
-   "coral",
-   "brown",
-   "tan",
-   "cream",
-   "green",
-   "gold",
-   "orange",
-   "red",
-   "sand",
-   "slate",
-   "lavender",
-   "charcoal",
-   "steel",
-   "ink",
-   "silver",
-   "white"
-  ],
-  "rows": [
-   [
-    "blue",
-    "sky",
-    "violet",
-    "magenta",
-    "pink"
+  "family": "mini-characters",
+  "colors": {
+   "blue": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
    ],
-   [
-    "coral",
-    "brown",
-    "tan",
-    "cream",
-    "green",
-    "gold",
-    "orange",
-    "red"
+   "sky": [
+    [
+     2,
+     1
+    ],
+    [
+     3,
+     1
+    ]
    ],
-   [
-    "sand",
-    "slate",
-    "lavender",
-    "charcoal",
-    "steel",
-    "ink",
-    "silver",
-    "white"
+   "violet": [
+    [
+     4,
+     1
+    ],
+    [
+     5,
+     1
+    ]
+   ],
+   "magenta": [
+    [
+     6,
+     1
+    ],
+    [
+     7,
+     1
+    ]
+   ],
+   "pink": [
+    [
+     8,
+     1
+    ],
+    [
+     9,
+     1
+    ]
+   ],
+   "coral": [
+    [
+     0,
+     2
+    ],
+    [
+     1,
+     2
+    ]
+   ],
+   "brown": [
+    [
+     2,
+     2
+    ],
+    [
+     3,
+     2
+    ]
+   ],
+   "tan": [
+    [
+     4,
+     2
+    ],
+    [
+     5,
+     2
+    ]
+   ],
+   "cream": [
+    [
+     6,
+     2
+    ],
+    [
+     7,
+     2
+    ]
+   ],
+   "green": [
+    [
+     8,
+     2
+    ],
+    [
+     9,
+     2
+    ]
+   ],
+   "gold": [
+    [
+     10,
+     2
+    ],
+    [
+     11,
+     2
+    ]
+   ],
+   "orange": [
+    [
+     12,
+     2
+    ],
+    [
+     13,
+     2
+    ]
+   ],
+   "red": [
+    [
+     14,
+     2
+    ],
+    [
+     15,
+     2
+    ]
+   ],
+   "sand": [
+    [
+     0,
+     3
+    ],
+    [
+     1,
+     3
+    ]
+   ],
+   "slate": [
+    [
+     2,
+     3
+    ],
+    [
+     3,
+     3
+    ]
+   ],
+   "lavender": [
+    [
+     4,
+     3
+    ],
+    [
+     5,
+     3
+    ]
+   ],
+   "charcoal": [
+    [
+     6,
+     3
+    ],
+    [
+     7,
+     3
+    ]
+   ],
+   "steel": [
+    [
+     8,
+     3
+    ],
+    [
+     9,
+     3
+    ]
+   ],
+   "ink": [
+    [
+     10,
+     3
+    ],
+    [
+     11,
+     3
+    ]
+   ],
+   "silver": [
+    [
+     12,
+     3
+    ],
+    [
+     13,
+     3
+    ]
+   ],
+   "white": [
+    [
+     14,
+     3
+    ],
+    [
+     15,
+     3
+    ]
    ]
-  ],
-  "first_row_y": 128,
-  "row_height": 128,
-  "pair_width": 64,
-  "size": 512
+  },
+  "about": "Colour names are Mini Characters light/dark cell pairs (cx, cy) in its colormap: 32 px wide, 128 px tall cells, 16 across, 4 down. Other families have their own colormaps; asking them for a colour picks their nearest cell."
  },
  "skin_tones": [
   "cream",
@@ -186,6 +342,240 @@
    "pants": "lavender",
    "accent": "coral",
    "species": "green"
+  },
+  "arena-soldier": {
+   "skin": [
+    [
+     15,
+     3
+    ]
+   ],
+   "shirt": [
+    [
+     9,
+     2
+    ]
+   ],
+   "accent": [
+    [
+     7,
+     3
+    ]
+   ],
+   "shoes": [
+    [
+     11,
+     3
+    ]
+   ]
+  },
+  "forest-archer": {
+   "skin": [
+    [
+     3,
+     2
+    ]
+   ],
+   "shirt": [
+    [
+     1,
+     2
+    ]
+   ],
+   "accent": [
+    [
+     3,
+     3
+    ]
+   ]
+  },
+  "shop-employee": {
+   "skin": [
+    [
+     5,
+     2
+    ]
+   ],
+   "shirt": [
+    [
+     3,
+     2
+    ]
+   ],
+   "pants": [
+    [
+     5,
+     3
+    ]
+   ],
+   "shoes": [
+    [
+     9,
+     2
+    ]
+   ]
+  },
+  "arcade-employee": {
+   "skin": [
+    [
+     15,
+     3
+    ]
+   ],
+   "shirt": [
+    [
+     5,
+     2
+    ]
+   ],
+   "pants": [
+    [
+     15,
+     2
+    ]
+   ],
+   "shoes": [
+    [
+     1,
+     3
+    ]
+   ],
+   "accent": [
+    [
+     11,
+     3
+    ]
+   ]
+  },
+  "arcade-gamer": {
+   "skin": [
+    [
+     11,
+     3
+    ]
+   ],
+   "shirt": [
+    [
+     9,
+     2
+    ]
+   ],
+   "pants": [
+    [
+     11,
+     2
+    ]
+   ],
+   "shoes": [
+    [
+     9,
+     3
+    ]
+   ],
+   "accent": [
+    [
+     5,
+     2
+    ]
+   ]
+  },
+  "skate-boy": {
+   "skin": [
+    [
+     5,
+     2
+    ]
+   ],
+   "shirt": [
+    [
+     15,
+     2
+    ]
+   ],
+   "pants": [
+    [
+     1,
+     1
+    ]
+   ],
+   "shoes": [
+    [
+     15,
+     3
+    ]
+   ],
+   "accent": [
+    [
+     1,
+     2
+    ]
+   ]
+  },
+  "skate-girl": {
+   "skin": [
+    [
+     5,
+     2
+    ]
+   ],
+   "shirt": [
+    [
+     5,
+     3
+    ]
+   ],
+   "pants": [
+    [
+     7,
+     3
+    ]
+   ],
+   "shoes": [
+    [
+     15,
+     2
+    ]
+   ]
+  },
+  "dungeon-human": {
+   "shirt": [
+    [
+     3,
+     3
+    ]
+   ],
+   "pants": [
+    [
+     13,
+     3
+    ]
+   ],
+   "accent": [
+    [
+     9,
+     3
+    ]
+   ]
+  },
+  "dungeon-orc": {
+   "species": [
+    [
+     9,
+     2
+    ]
+   ],
+   "shirt": [
+    [
+     1,
+     2
+    ]
+   ],
+   "pants": [
+    [
+     7,
+     3
+    ]
+   ]
   }
  },
  "heads": {
@@ -270,6 +660,174 @@
   "zombie": {
    "hair": "charcoal",
    "species": "green"
+  },
+  "arena-soldier": {
+   "skin": [
+    [
+     15,
+     3
+    ]
+   ],
+   "hair": [
+    [
+     7,
+     3
+    ]
+   ],
+   "accent": [
+    [
+     9,
+     2
+    ]
+   ]
+  },
+  "forest-archer": {
+   "skin": [
+    [
+     3,
+     2
+    ]
+   ],
+   "hair": [
+    [
+     1,
+     2
+    ]
+   ],
+   "accent": [
+    [
+     3,
+     3
+    ]
+   ]
+  },
+  "shop-employee": {
+   "skin": [
+    [
+     5,
+     2
+    ]
+   ],
+   "hair": [
+    [
+     3,
+     3
+    ]
+   ],
+   "accent": [
+    [
+     5,
+     3
+    ]
+   ]
+  },
+  "arcade-employee": {
+   "skin": [
+    [
+     15,
+     3
+    ]
+   ],
+   "hair": [
+    [
+     11,
+     3
+    ]
+   ],
+   "accent": [
+    [
+     5,
+     2
+    ]
+   ]
+  },
+  "arcade-gamer": {
+   "skin": [
+    [
+     11,
+     3
+    ]
+   ],
+   "hair": [
+    [
+     1,
+     3
+    ]
+   ],
+   "accent": [
+    [
+     11,
+     2
+    ]
+   ]
+  },
+  "skate-boy": {
+   "skin": [
+    [
+     5,
+     2
+    ]
+   ],
+   "hair": [
+    [
+     1,
+     2
+    ]
+   ],
+   "accent": [
+    [
+     15,
+     2
+    ]
+   ]
+  },
+  "skate-girl": {
+   "skin": [
+    [
+     5,
+     2
+    ]
+   ],
+   "hair": [
+    [
+     7,
+     3
+    ]
+   ]
+  },
+  "dungeon-human": {
+   "skin": [
+    [
+     5,
+     2
+    ]
+   ],
+   "hair": [
+    [
+     3,
+     3
+    ]
+   ]
+  },
+  "dungeon-orc": {
+   "species": [
+    [
+     9,
+     2
+    ]
+   ],
+   "hair": [
+    [
+     7,
+     3
+    ]
+   ],
+   "accent": [
+    [
+     11,
+     2
+    ]
+   ]
   }
  },
  "items": {
@@ -320,6 +878,452 @@
  },
  "notes": {
   "female-a body": "Holds a sci-fi blaster that is part of the body mesh. Keep it off pre-modern floors.",
-  "knight, soldier, worker, robot heads": "Their 'hair' slot is headwear: helmet, hard hat or dome."
+  "knight, soldier, worker, robot heads": "Their 'hair' slot is headwear: helmet, hard hat or dome.",
+  "arena-soldier": "Roman soldier from Mini Arena. Has 25 of the 32 animations: wheelchair-look-left, wheelchair-look-right, wheelchair-move-back, wheelchair-move-forward, wheelchair-move-left, wheelchair-move-right, wheelchair-sit are missing.",
+  "arcade-employee, skate-girl": "Their own shirts are close to the climber's gold. Floor palettes always set shirts, so they never show it in practice."
+ },
+ "families": {
+  "mini-characters": {
+   "dir": "res://assets/kenney/mini-characters",
+   "texture": "res://assets/kenney/mini-characters/Textures/colormap.png",
+   "cells": {
+    "0,1": "#6794d9",
+    "1,1": "#5f74ca",
+    "2,1": "#d0e8ff",
+    "3,1": "#9bbdec",
+    "4,1": "#a878e8",
+    "5,1": "#8158cf",
+    "6,1": "#f378f0",
+    "7,1": "#cc77eb",
+    "8,1": "#f5c8f0",
+    "9,1": "#e5b1e5",
+    "0,2": "#f1976c",
+    "1,2": "#d07b56",
+    "2,2": "#b06041",
+    "3,2": "#995a41",
+    "4,2": "#f2bf99",
+    "5,2": "#dd9f79",
+    "6,2": "#fde4c7",
+    "7,2": "#f8d6ae",
+    "8,2": "#61cb8b",
+    "9,2": "#3da679",
+    "10,2": "#ffc044",
+    "11,2": "#ffb349",
+    "12,2": "#ff7e44",
+    "13,2": "#ff8744",
+    "14,2": "#cf534f",
+    "15,2": "#e76047",
+    "0,3": "#e6b96e",
+    "1,3": "#e7b96f",
+    "2,3": "#67648d",
+    "3,3": "#66638b",
+    "4,3": "#9e9cc9",
+    "5,3": "#9391c1",
+    "6,3": "#38383d",
+    "7,3": "#3e3e44",
+    "8,3": "#868ba1",
+    "9,3": "#73768b",
+    "10,3": "#4f5260",
+    "11,3": "#474a58",
+    "12,3": "#a0a8c9",
+    "13,3": "#949bbe",
+    "14,3": "#ffffff",
+    "15,3": "#dcdce9"
+   }
+  },
+  "mini-arena": {
+   "dir": "res://assets/kenney/mini-arena",
+   "texture": "res://assets/kenney/mini-arena/Textures/colormap.png",
+   "cells": {
+    "0,2": "#fde4c7",
+    "1,2": "#f8d6ad",
+    "2,2": "#61cb8b",
+    "3,2": "#39a378",
+    "4,2": "#ffc044",
+    "5,2": "#ffb247",
+    "6,2": "#ff7e44",
+    "7,2": "#ff8844",
+    "8,2": "#de433e",
+    "9,2": "#e64d3e",
+    "10,2": "#6794d9",
+    "11,2": "#5e72c9",
+    "12,2": "#d0e8ff",
+    "13,2": "#9cbeec",
+    "14,2": "#a878e8",
+    "15,2": "#835ad1",
+    "0,3": "#f2bf99",
+    "1,3": "#f0b38d",
+    "2,3": "#38383d",
+    "3,3": "#3e3e45",
+    "4,3": "#868ba1",
+    "5,3": "#71768e",
+    "6,3": "#a0a8c9",
+    "7,3": "#9da4c5",
+    "8,3": "#ffffff",
+    "9,3": "#dbdbe8",
+    "10,3": "#f1976c",
+    "11,3": "#cf7a55",
+    "12,3": "#b06041",
+    "13,3": "#9b5a41",
+    "14,3": "#f2bf99",
+    "15,3": "#dc9f78"
+   }
+  },
+  "mini-forest": {
+   "dir": "res://assets/kenney/mini-forest",
+   "texture": "res://assets/kenney/mini-forest/Textures/colormap.png",
+   "cells": {
+    "0,1": "#d0e8ff",
+    "1,1": "#9bbdec",
+    "2,1": "#a878e8",
+    "3,1": "#8158cf",
+    "4,1": "#f378f0",
+    "5,1": "#cc77eb",
+    "0,2": "#b06041",
+    "1,2": "#995a41",
+    "2,2": "#f2bf99",
+    "3,2": "#dd9f79",
+    "4,2": "#fde4c7",
+    "5,2": "#f8d6ae",
+    "6,2": "#61cb8b",
+    "7,2": "#3da679",
+    "8,2": "#ffc044",
+    "9,2": "#ffb349",
+    "10,2": "#ff7e44",
+    "11,2": "#ff8744",
+    "12,2": "#cf534f",
+    "13,2": "#e76047",
+    "14,2": "#6794d9",
+    "15,2": "#5f74ca",
+    "0,3": "#868ba1",
+    "1,3": "#7a7796",
+    "2,3": "#76bc88",
+    "3,3": "#6cb588",
+    "4,3": "#38383d",
+    "5,3": "#3e3e44",
+    "6,3": "#868ba1",
+    "7,3": "#73768b",
+    "8,3": "#4f5260",
+    "9,3": "#474a58",
+    "10,3": "#a0a8c9",
+    "11,3": "#9da4c4",
+    "12,3": "#ffffff",
+    "13,3": "#dcdce9",
+    "14,3": "#f1976c",
+    "15,3": "#d07b56"
+   }
+  },
+  "mini-shop": {
+   "dir": "res://assets/kenney/mini-shop",
+   "texture": "res://assets/kenney/mini-shop/Textures/colormap.png",
+   "cells": {
+    "0,0": "#949dab",
+    "1,0": "#949dac",
+    "2,0": "#949dac",
+    "3,0": "#949dab",
+    "4,0": "#af7e60",
+    "5,0": "#b07f61",
+    "6,0": "#b07f61",
+    "7,0": "#af7e60",
+    "0,1": "#ff7e44",
+    "1,1": "#ff8744",
+    "2,1": "#cf534f",
+    "3,1": "#e76047",
+    "4,1": "#6794d9",
+    "5,1": "#5f74ca",
+    "6,1": "#d0e8ff",
+    "7,1": "#9bbdec",
+    "8,1": "#a878e8",
+    "9,1": "#8158cf",
+    "10,1": "#f378f0",
+    "11,1": "#cc77eb",
+    "12,1": "#f5c8f0",
+    "13,1": "#e5b1e5",
+    "0,2": "#a0a8c9",
+    "1,2": "#949bbe",
+    "2,2": "#ffffff",
+    "3,2": "#dcdce9",
+    "4,2": "#f1976c",
+    "5,2": "#d07b56",
+    "6,2": "#b06041",
+    "7,2": "#995a41",
+    "8,2": "#f2bf99",
+    "9,2": "#dd9f79",
+    "10,2": "#fde4c7",
+    "11,2": "#f8d6ae",
+    "12,2": "#61cb8b",
+    "13,2": "#3da679",
+    "14,2": "#ffc044",
+    "15,2": "#ffb349",
+    "0,3": "#61cb8b",
+    "1,3": "#49b16a",
+    "2,3": "#38383d",
+    "3,3": "#414155",
+    "4,3": "#61cb8b",
+    "5,3": "#3da679",
+    "6,3": "#ccd8ec",
+    "7,3": "#bcc8d8",
+    "8,3": "#f1ae85",
+    "9,3": "#d07b56",
+    "10,3": "#38383d",
+    "11,3": "#3e3e44",
+    "12,3": "#868ba1",
+    "13,3": "#73768b",
+    "14,3": "#4f5260",
+    "15,3": "#474a58"
+   }
+  },
+  "mini-arcade": {
+   "dir": "res://assets/kenney/mini-arcade",
+   "texture": "res://assets/kenney/mini-arcade/Textures/colormap.png",
+   "cells": {
+    "0,1": "#f378f0",
+    "1,1": "#ca77eb",
+    "0,2": "#fde4c7",
+    "1,2": "#f8d7af",
+    "2,2": "#61cb8b",
+    "3,2": "#3fa87a",
+    "4,2": "#ffc044",
+    "5,2": "#ffb54a",
+    "6,2": "#ff7e44",
+    "7,2": "#ff8644",
+    "8,2": "#cf534f",
+    "9,2": "#eb6246",
+    "10,2": "#6794d9",
+    "11,2": "#5f74cb",
+    "12,2": "#d0e8ff",
+    "13,2": "#98bceb",
+    "14,2": "#a878e8",
+    "15,2": "#7e56ce",
+    "0,3": "#38383d",
+    "1,3": "#3f3f46",
+    "2,3": "#868ba1",
+    "3,3": "#6d738a",
+    "4,3": "#4f5260",
+    "5,3": "#464957",
+    "6,3": "#a0a8c9",
+    "7,3": "#9ca4c4",
+    "8,3": "#ffffff",
+    "9,3": "#dedeea",
+    "10,3": "#f1976c",
+    "11,3": "#cf7a55",
+    "12,3": "#b06041",
+    "13,3": "#985941",
+    "14,3": "#f2bf99",
+    "15,3": "#dd9f78"
+   }
+  },
+  "mini-skate": {
+   "dir": "res://assets/kenney/mini-skate",
+   "texture": "res://assets/kenney/mini-skate/Textures/colormap.png",
+   "cells": {
+    "0,1": "#6794d9",
+    "1,1": "#5f74ca",
+    "2,1": "#d0e8ff",
+    "3,1": "#9bbdec",
+    "4,1": "#a878e8",
+    "5,1": "#8158cf",
+    "6,1": "#f378f0",
+    "7,1": "#cc77eb",
+    "8,1": "#f5c8f0",
+    "9,1": "#e5b1e5",
+    "0,2": "#f1976c",
+    "1,2": "#d07b56",
+    "2,2": "#b06041",
+    "3,2": "#995a41",
+    "4,2": "#f2bf99",
+    "5,2": "#dd9f79",
+    "6,2": "#fde4c7",
+    "7,2": "#f8d6ae",
+    "8,2": "#61cb8b",
+    "9,2": "#3da679",
+    "10,2": "#ffc044",
+    "11,2": "#ffb349",
+    "12,2": "#ff7e44",
+    "13,2": "#ff8744",
+    "14,2": "#cf534f",
+    "15,2": "#e76047",
+    "0,3": "#7c7996",
+    "1,3": "#7e7a98",
+    "2,3": "#a6a3bf",
+    "3,3": "#a8a5c1",
+    "4,3": "#f6bf51",
+    "5,3": "#f6c052",
+    "6,3": "#38383d",
+    "7,3": "#3e3e44",
+    "8,3": "#868ba1",
+    "9,3": "#73768b",
+    "10,3": "#4f5260",
+    "11,3": "#474a58",
+    "12,3": "#a0a8c9",
+    "13,3": "#9da4c4",
+    "14,3": "#ffffff",
+    "15,3": "#dcdce9"
+   }
+  },
+  "mini-dungeon": {
+   "dir": "res://assets/kenney/mini-dungeon",
+   "texture": "res://assets/kenney/mini-dungeon/Textures/colormap.png",
+   "cells": {
+    "0,1": "#6794d9",
+    "1,1": "#5f74ca",
+    "2,1": "#d0e8ff",
+    "3,1": "#9bbdec",
+    "4,1": "#a878e8",
+    "5,1": "#8158cf",
+    "6,1": "#f378f0",
+    "7,1": "#cc77eb",
+    "0,2": "#f1976c",
+    "1,2": "#d07b56",
+    "2,2": "#b06041",
+    "3,2": "#995a41",
+    "4,2": "#f2bf99",
+    "5,2": "#dd9f79",
+    "6,2": "#fde4c7",
+    "7,2": "#f8d6ae",
+    "8,2": "#61cb8b",
+    "9,2": "#3da679",
+    "10,2": "#ffc044",
+    "11,2": "#ffb349",
+    "12,2": "#ff7e44",
+    "13,2": "#ff8744",
+    "14,2": "#cf534f",
+    "15,2": "#e76047",
+    "0,3": "#bec2d4",
+    "1,3": "#9da4c4",
+    "2,3": "#d6865b",
+    "3,3": "#ca704e",
+    "4,3": "#985345",
+    "5,3": "#9b5345",
+    "6,3": "#38383d",
+    "7,3": "#3e3e44",
+    "8,3": "#868ba1",
+    "9,3": "#73768b",
+    "10,3": "#4f5260",
+    "11,3": "#474a58",
+    "12,3": "#a0a8c9",
+    "13,3": "#9da4c4",
+    "14,3": "#ffffff",
+    "15,3": "#dcdce9"
+   }
+  }
+ },
+ "models": {
+  "alien": {
+   "family": "mini-characters",
+   "file": "character-alien"
+  },
+  "female-a": {
+   "family": "mini-characters",
+   "file": "character-female-a"
+  },
+  "female-b": {
+   "family": "mini-characters",
+   "file": "character-female-b"
+  },
+  "female-c": {
+   "family": "mini-characters",
+   "file": "character-female-c"
+  },
+  "female-d": {
+   "family": "mini-characters",
+   "file": "character-female-d"
+  },
+  "female-e": {
+   "family": "mini-characters",
+   "file": "character-female-e"
+  },
+  "female-f": {
+   "family": "mini-characters",
+   "file": "character-female-f"
+  },
+  "knight": {
+   "family": "mini-characters",
+   "file": "character-knight"
+  },
+  "male-a": {
+   "family": "mini-characters",
+   "file": "character-male-a"
+  },
+  "male-b": {
+   "family": "mini-characters",
+   "file": "character-male-b"
+  },
+  "male-c": {
+   "family": "mini-characters",
+   "file": "character-male-c"
+  },
+  "male-d": {
+   "family": "mini-characters",
+   "file": "character-male-d"
+  },
+  "male-e": {
+   "family": "mini-characters",
+   "file": "character-male-e"
+  },
+  "male-f": {
+   "family": "mini-characters",
+   "file": "character-male-f"
+  },
+  "male-g": {
+   "family": "mini-characters",
+   "file": "character-male-g"
+  },
+  "raider": {
+   "family": "mini-characters",
+   "file": "character-raider"
+  },
+  "robot": {
+   "family": "mini-characters",
+   "file": "character-robot"
+  },
+  "soldier": {
+   "family": "mini-characters",
+   "file": "character-soldier"
+  },
+  "worker": {
+   "family": "mini-characters",
+   "file": "character-worker"
+  },
+  "zombie": {
+   "family": "mini-characters",
+   "file": "character-zombie"
+  },
+  "arena-soldier": {
+   "family": "mini-arena",
+   "file": "character-soldier"
+  },
+  "forest-archer": {
+   "family": "mini-forest",
+   "file": "character-archer"
+  },
+  "shop-employee": {
+   "family": "mini-shop",
+   "file": "character-employee"
+  },
+  "arcade-employee": {
+   "family": "mini-arcade",
+   "file": "character-employee"
+  },
+  "arcade-gamer": {
+   "family": "mini-arcade",
+   "file": "character-gamer"
+  },
+  "skate-boy": {
+   "family": "mini-skate",
+   "file": "character-skate-boy"
+  },
+  "skate-girl": {
+   "family": "mini-skate",
+   "file": "character-skate-girl"
+  },
+  "dungeon-human": {
+   "family": "mini-dungeon",
+   "file": "character-human"
+  },
+  "dungeon-orc": {
+   "family": "mini-dungeon",
+   "file": "character-orc"
+  }
  }
 }

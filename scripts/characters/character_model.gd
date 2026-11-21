@@ -1,6 +1,7 @@
 extends Node3D
-## A person assembled from Kenney Mini Characters parts: any head on any body, recoloured
-## slot by slot, optionally holding items or sitting in a wheelchair.
+## A person assembled from Kenney "Mini" character parts: any head on any body, recoloured
+## slot by slot, optionally holding items or sitting in a wheelchair. Models come from several
+## Kenney packs ("families") that share one rig; each family has its own colormap texture.
 ##
 ## A look (spec) is a Dictionary, usually from level JSON:
 ##   {"body": "male-f", "head": "female-c",
@@ -11,7 +12,8 @@ extends Node3D
 
 const PARTS_PATH := "res://content/characters/parts.json"
 const SHADER := preload("res://shaders/palette_swap.gdshader")
-const MAX_SWAPS := 8
+const MAX_SWAPS := 12
+const BASE_FAMILY := "mini-characters"
 ## Where the hand is, in arm-bone space (model units). All Mini Characters share one rig.
 const HAND_RIGHT := Vector3(-0.24, 0.0, 0.02)
 const HAND_LEFT := Vector3(0.24, 0.0, 0.02)
@@ -20,6 +22,7 @@ const LOOPING := ["idle", "walk", "sprint", "sit", "drive", "crouch", "holding-r
 
 static var _parts: Dictionary = {}
 static var _scenes: Dictionary = {}
+static var _family_cells: Dictionary = {}
 
 var spec: Dictionary = {}
 var body_name := ""
@@ -47,35 +50,83 @@ static func parts() -> Dictionary:
 	return _parts
 
 
-static func scene_for(file_stem: String) -> PackedScene:
-	if not _scenes.has(file_stem):
-		var path := "%s/%s.glb" % [parts().get("model_dir", ""), file_stem]
-		_scenes[file_stem] = load(path) if ResourceLoader.exists(path) else null
-		if _scenes[file_stem] == null:
+## A model file from a family's folder (items and wheelchairs are in Mini Characters).
+static func scene_for(file_stem: String, family: String = BASE_FAMILY) -> PackedScene:
+	var path := "%s/%s.glb" % [parts().get("families", {}).get(family, {}).get("dir", ""), file_stem]
+	if not _scenes.has(path):
+		_scenes[path] = load(path) if ResourceLoader.exists(path) else null
+		if _scenes[path] == null:
 			push_error("Missing character model: %s" % path)
-	return _scenes[file_stem]
+	return _scenes[path]
+
+
+## The scene for a body or head id from parts.json "models", e.g. "male-a" or "arena-soldier".
+static func model_scene(model_id: String) -> PackedScene:
+	var m: Dictionary = parts().get("models", {}).get(model_id, {})
+	return scene_for(String(m.get("file", "")), String(m.get("family", BASE_FAMILY))) if not m.is_empty() else null
+
+
+static func family_of(model_id: String) -> String:
+	return String(parts().get("models", {}).get(model_id, {}).get("family", BASE_FAMILY))
 
 
 static func color_names() -> Array:
-	return parts().get("palette", {}).get("colors", [])
+	return (parts().get("palette", {}).get("colors", {}) as Dictionary).keys()
 
 
 static func is_color(name: String) -> bool:
 	return color_names().has(name)
 
 
-## UV rectangle of a palette colour (its light/dark pair of cells) in the colormap.
+## UV rectangle of one colormap cell (32 x 128 px in a 512 x 512 texture).
+static func cell_rect(cell: Vector2i) -> Rect2:
+	return Rect2(cell.x * 32.0 / 512.0, cell.y * 128.0 / 512.0, 32.0 / 512.0, 128.0 / 512.0)
+
+
+## UV rectangle covering a named colour's light/dark pair in the Mini Characters colormap.
 static func color_rect(name: String) -> Rect2:
-	var pal: Dictionary = parts().get("palette", {})
-	var size := float(pal.get("size", 512))
-	var rows: Array = pal.get("rows", [])
-	for r in rows.size():
-		var i := (rows[r] as Array).find(name)
-		if i >= 0:
-			var x := i * float(pal.get("pair_width", 64))
-			var y := float(pal.get("first_row_y", 128)) + r * float(pal.get("row_height", 128))
-			return Rect2(x / size, y / size, float(pal.get("pair_width", 64)) / size, float(pal.get("row_height", 128)) / size)
-	return Rect2()
+	var cells := color_cells(name)
+	if cells.is_empty():
+		return Rect2()
+	return cell_rect(cells[0]).merge(cell_rect(cells[cells.size() - 1]))
+
+
+## The Mini Characters cells (light, dark) for a colour name.
+static func color_cells(name: String) -> Array:
+	var out: Array = []
+	for c in parts().get("palette", {}).get("colors", {}).get(name, []):
+		out.append(Vector2i(int(c[0]), int(c[1])))
+	return out
+
+
+## cell -> Color for every cell in a family's colormap.
+static func family_cells(family: String) -> Dictionary:
+	if not _family_cells.has(family):
+		var cells := {}
+		var raw: Dictionary = parts().get("families", {}).get(family, {}).get("cells", {})
+		for key in raw:
+			var xy := String(key).split(",")
+			cells[Vector2i(int(xy[0]), int(xy[1]))] = Color(String(raw[key]))
+		_family_cells[family] = cells
+	return _family_cells[family]
+
+
+## The cell in a family's colormap closest to a colour.
+static func nearest_cell(family: String, want: Color) -> Vector2i:
+	var best := Vector2i(-1, -1)
+	var best_d := INF
+	var cells := family_cells(family)
+	for cell in cells:
+		var c: Color = cells[cell]
+		var d := Vector3(c.r - want.r, c.g - want.g, c.b - want.b).length_squared()
+		if d < best_d:
+			best_d = d
+			best = cell
+	return best
+
+
+static func _luma(c: Color) -> float:
+	return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b
 
 
 ## Builds the character. Returns false if the parts don't exist.
@@ -84,12 +135,13 @@ func build(look: Dictionary) -> bool:
 	var p := parts()
 	body_name = String(spec.get("body", "male-a"))
 	head_name = String(spec.get("head", body_name))
-	if not p.get("bodies", {}).has(body_name) or not p.get("heads", {}).has(head_name):
+	if not p.get("bodies", {}).has(body_name) or not p.get("heads", {}).has(head_name) \
+			or not p.get("models", {}).has(body_name) or not p.get("models", {}).has(head_name):
 		push_error("Unknown character parts: body '%s', head '%s'" % [body_name, head_name])
 		return false
 	colors = (spec.get("colors", {}) as Dictionary).duplicate()
 
-	var scene := scene_for("character-" + body_name)
+	var scene := model_scene(body_name)
 	if scene == null:
 		return false
 	model = scene.instantiate() as Node3D
@@ -112,7 +164,7 @@ func build(look: Dictionary) -> bool:
 		return false
 
 	if head_name != body_name:
-		var donor_scene := scene_for("character-" + head_name)
+		var donor_scene := model_scene(head_name)
 		if donor_scene:
 			var donor := donor_scene.instantiate()
 			for mi in _find_all_type(donor, "MeshInstance3D"):
@@ -121,8 +173,8 @@ func build(look: Dictionary) -> bool:
 					head_mesh.skin = mi.skin
 			donor.free()
 
-	_recolor(body_mesh, p["bodies"][body_name])
-	_recolor(head_mesh, p["heads"][head_name])
+	_recolor(body_mesh, p["bodies"][body_name], family_of(body_name))
+	_recolor(head_mesh, p["heads"][head_name], family_of(head_name))
 	height = 0.85 * s
 
 	if spec.has("item"):
@@ -171,43 +223,69 @@ func swap_count(mesh: MeshInstance3D) -> int:
 
 # --- Internals ------------------------------------------------------------------------------
 
-func _recolor(mesh: MeshInstance3D, slots: Dictionary) -> void:
+## Swaps each slot's cells for the requested colour. Mini Characters slots name a colour pair;
+## other families list their exact cells. Targets are the requested colour's Mini Characters
+## cells, or the nearest cells in this mesh's own family colormap.
+func _recolor(mesh: MeshInstance3D, slots: Dictionary, family: String) -> void:
 	var froms: Array = []
 	var bys: Array = []
 	for slot in slots:
 		if not colors.has(slot):
 			continue
-		var src := String(slots[slot])
 		var dst := String(colors[slot])
-		if src == dst or not is_color(dst):
-			if not is_color(dst):
-				push_warning("Unknown colour '%s' for slot '%s'" % [dst, slot])
+		if not is_color(dst):
+			push_warning("Unknown colour '%s' for slot '%s'" % [dst, slot])
 			continue
-		if froms.size() >= MAX_SWAPS:
-			break
-		var a := color_rect(src)
-		var b := color_rect(dst)
-		froms.append(Vector4(a.position.x, a.position.y, a.end.x, a.end.y))
-		bys.append(b.position - a.position)
+		var src_cells: Array = []
+		var raw: Variant = slots[slot]
+		if raw is String:
+			if raw == dst:
+				continue
+			src_cells = color_cells(raw)
+		else:
+			for c in raw:
+				src_cells.append(Vector2i(int(c[0]), int(c[1])))
+		var want := color_cells(dst)
+		var base := family_cells(BASE_FAMILY)
+		var light: Color = base.get(want[0], Color.WHITE)
+		var dark: Color = base.get(want[want.size() - 1], light)
+		var own := family_cells(family)
+		var sorted_src := src_cells.duplicate()
+		sorted_src.sort_custom(func(a, b): return _luma(own.get(a, Color.BLACK)) > _luma(own.get(b, Color.BLACK)))
+		for i in sorted_src.size():
+			var src: Vector2i = sorted_src[i]
+			var target_color: Color
+			if sorted_src.size() >= 2:
+				target_color = light if i == 0 else dark
+			else:
+				var l := _luma(own.get(src, Color.WHITE))
+				target_color = light if absf(_luma(light) - l) <= absf(_luma(dark) - l) else dark
+			var to := nearest_cell(family, target_color)
+			if to == src or to.x < 0 or froms.size() >= MAX_SWAPS:
+				continue
+			var a := cell_rect(src)
+			var b := cell_rect(to)
+			froms.append(Vector4(a.position.x, a.position.y, a.end.x, a.end.y))
+			bys.append(b.position - a.position)
 	var count := froms.size()
 	while froms.size() < MAX_SWAPS:
 		froms.append(Vector4.ZERO)
 		bys.append(Vector2.ZERO)
 	var mat := ShaderMaterial.new()
 	mat.shader = SHADER
-	mat.set_shader_parameter("albedo_texture", _texture_of(mesh))
+	mat.set_shader_parameter("albedo_texture", _texture_of(mesh, family))
 	mat.set_shader_parameter("swap_count", count)
 	mat.set_shader_parameter("swap_from", PackedVector4Array(froms))
 	mat.set_shader_parameter("swap_by", PackedVector2Array(bys))
 	mesh.material_override = mat
 
 
-func _texture_of(mesh: MeshInstance3D) -> Texture2D:
+func _texture_of(mesh: MeshInstance3D, family: String) -> Texture2D:
 	if mesh.mesh and mesh.mesh.get_surface_count() > 0:
 		var m := mesh.mesh.surface_get_material(0)
 		if m is BaseMaterial3D and (m as BaseMaterial3D).albedo_texture:
 			return (m as BaseMaterial3D).albedo_texture
-	var path := String(parts().get("palette", {}).get("texture", ""))
+	var path := String(parts().get("families", {}).get(family, {}).get("texture", ""))
 	return load(path) if ResourceLoader.exists(path) else null
 
 

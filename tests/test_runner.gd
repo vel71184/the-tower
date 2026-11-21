@@ -54,20 +54,25 @@ func _test_characters() -> void:
 	var CM = load("res://scripts/characters/character_model.gd")
 	var Looks = load("res://scripts/characters/looks.gd")
 	var parts: Dictionary = CM.parts()
-	check(parts.get("bodies", {}).size() == 20 and parts.get("heads", {}).size() == 20, "20 bodies and 20 heads")
+	check(parts.get("bodies", {}).size() == 29 and parts.get("heads", {}).size() == 29, "29 bodies and 29 heads")
+	for model in parts["models"]:
+		check(CM.model_scene(model) != null, "model %s loads from %s" % [model, CM.family_of(model)])
 	for color in CM.color_names():
 		var r: Rect2 = CM.color_rect(color)
 		check(r.size.x > 0.0 and r.end.x <= 1.0 and r.end.y <= 1.0, "colour %s has a palette cell" % color)
 	for kind in ["bodies", "heads"]:
 		for model in parts[kind]:
+			var cells: Dictionary = CM.family_cells(CM.family_of(model))
 			for slot in parts[kind][model]:
-				check(CM.is_color(parts[kind][model][slot]), "%s %s %s is a known colour" % [kind, model, slot])
+				var v: Variant = parts[kind][model][slot]
+				var ok := CM.is_color(v) if v is String else (v as Array).all(func(c): return cells.has(Vector2i(int(c[0]), int(c[1]))))
+				check(ok, "%s %s %s points at real colours" % [kind, model, slot])
 	for item in parts.get("items", {}):
 		check(CM.scene_for(parts["items"][item]) != null, "item %s has a model" % item)
 	for chair in parts.get("wheelchairs", {}):
 		check(CM.scene_for(parts["wheelchairs"][chair]) != null, "wheelchair %s has a model" % chair)
 
-	var needed := ["idle", "walk", "interact-right", "emote-yes", "emote-no", "pick-up", "die", "attack-melee-right"]
+	var needed := ["idle", "walk", "interact-right", "emote-yes", "emote-no", "pick-up", "die", "attack-melee-right", "attack-kick-right", "holding-right-shoot"]
 	for body in parts["bodies"]:
 		var c = CM.new()
 		add_child(c)
@@ -93,8 +98,15 @@ func _test_characters() -> void:
 	var red = CM.new()
 	add_child(red)
 	red.build({"body": "male-a", "colors": {"shirt": "red", "pants": "charcoal", "hair": "gold", "skin": "brown"}})
-	check(red.swap_count(red.body_mesh) == 2, "shirt and pants swap; skin already brown doesn't")
-	check(red.swap_count(red.head_mesh) == 1, "hair swaps on the head")
+	check(red.swap_count(red.body_mesh) == 4, "shirt and pants swap (light and dark cells); skin already brown doesn't")
+	check(red.swap_count(red.head_mesh) == 2, "hair swaps on the head")
+	red.free()
+	red = CM.new()
+	add_child(red)
+	red.build({"body": "arena-soldier", "head": "dungeon-orc", "colors": {"shirt": "blue", "skin": "cream", "species": "violet"}})
+	check(red.swap_count(red.body_mesh) >= 2, "another family's body recolours (Roman soldier, blue tunic, cream skin)")
+	check(red.swap_count(red.head_mesh) >= 1, "another family's head recolours (orc species to violet)")
+	check(CM.nearest_cell("mini-arena", Color("#e64d3e")) == Vector2i(9, 2), "nearest-colour lookup finds an exact cell")
 	red.set_moving(true)
 	check(red.current_animation() == "walk", "moving plays walk")
 	red.set_moving(false)

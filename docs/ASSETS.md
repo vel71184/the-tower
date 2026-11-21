@@ -32,17 +32,17 @@ apply to Mini Characters.
 | Character(s) | Pack | Works with the parts system? | Notes |
 |---|---|---|---|
 | 20 people, robots, aliens, zombies | Mini Characters | **Yes** (in use) | Any head on any body, recolourable, 32 animations |
-| human, orc | Mini Dungeon | Same rig, own colormap | Needs its own colour table |
-| soldier (Roman) | Mini Arena | Same rig, own colormap | 25 animations |
-| archer | Mini Forest | Same rig, own colormap | |
-| employee | Mini Shop | Same rig, own colormap | |
-| employee, gamer | Mini Arcade | Same rig, own colormap | |
-| skate boy, skate girl | Mini Skate | Same rig, colormap nearly identical (7 of 42 colours differ) | 36 animations (skating) |
+| human, orc | Mini Dungeon | **Yes** (in use) | |
+| soldier (Roman) | Mini Arena | **Yes** (in use) | No wheelchair animations |
+| archer | Mini Forest | **Yes** (in use) | |
+| employee | Mini Shop | **Yes** (in use) | |
+| employee, gamer | Mini Arcade | **Yes** (in use) | |
+| skate boy, skate girl | Mini Skate | **Yes** (in use) | 36 animations (adds skating) |
 | ghost, keeper, skeleton, vampire, zombie | Graveyard Kit | **No**: rigid parts, no head/body split | 32 animations, so usable as whole, fixed-look characters |
 | alien, astronaut A/B | Space Kit | **No**: not rigged, no animations | Statues or set dressing only |
 
-"Same rig, own colormap" characters can join the parts system once each pack gets its own
-colour table (same method as Mini Characters: render, label, check).
+All 29 "Mini" characters mix freely: any head on any body. Each pack has its own colormap
+(a "family" in `parts.json`); recolouring picks the nearest colour each family has.
 
 ## Also downloaded
 
