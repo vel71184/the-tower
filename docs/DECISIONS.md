@@ -18,6 +18,12 @@ records decisions made in chat that the doc may not have yet.
 | Placeholders first | Build with simple shapes now; swap in Kenney art when the packs are in the repo. | Confirmed 2026-11-21 |
 | First slice | Floor 1, Level 1: walk, examine, talk, find a hidden letter, hidden baseline tracking, save at level end. | Confirmed 2026-11-21 |
 
+| All eras | The tower spans ancient to post-modern. Each floor is one place, era and look. | Chat, 2026-11-21 |
+| Themed floors | Whole floors of zombies, robots, aliens, orcs and so on, as communities. | Chat, 2026-11-21 |
+| Residents, not enemies | No monsters. Every character is a resident; killing is possible and always remembered. | Chat, 2026-11-21 |
+| Characters from parts | Any Mini Characters head on any body (22 × 22), recolored by a palette-swap shader. Floor palettes act as factions. 99 bosses get unique combos, a signature color and item; the climber has a reserved color no floor may use. | Chat, 2026-11-21 |
+| Kenney zips | Kept in `kenney_zips/` (ignored by Godot); used parts get extracted to `assets/`. | Chat, 2026-11-21 |
+
 ## Suggested, not yet confirmed
 
 - Kenney packs: Mini Characters 1, Mini Dungeon, Furniture Kit, Modular Dungeon Kit,
@@ -33,4 +39,7 @@ records decisions made in chat that the doc may not have yet.
 - **Floor 1's boss.** The slice uses a draft (Marta, the Gatekeeper) to test the systems.
 - **Which two axes the prototype tracks.** The slice uses speed ↔ patience and
   others ↔ self, because level 1 can measure them without combat.
+- **Era order:** roughly chronological up the tower, or shuffled.
+- **Level size:** floor 1 as the tower's exterior with short levels, and floors growing larger as you climb (fast early, leveling off around floor 30). Target length near the top still to pick.
+- **Climber's color leaking into higher floors** as environmental drift.
 - Death and the roguelite variant; the floor-100 reveal; the game's name.
