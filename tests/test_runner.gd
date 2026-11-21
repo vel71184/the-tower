@@ -48,19 +48,20 @@ func _test_baseline() -> void:
 
 
 func _test_level_one() -> void:
-	print("Floor 1, Level 1")
+	print("Floor 1, Level 9 (the Waiting Hall)")
 	Baseline.reset()
 	var main = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	await get_tree().process_frame
-	check(main.start_level(1, 1), "level 1-1 loads")
+	check(main.first_built_level() == Vector2i(1, 9), "the first built level is 1-9")
+	check(main.start_level(1, 9), "level 1-9 loads")
 	var level = main.level
 	check(level.width == 14 and level.height == 11, "map size is 14x11")
 	check(level.is_walkable(level.spawn_cell), "spawn is walkable")
 	for obj in level.objects:
 		check(not level.path_to_object(level.spawn_cell, obj).is_empty(), "%s is reachable" % obj.id)
-	check(not main.start_level(1, 2), "unbuilt level 1-2 reports not built")
-	main.start_level(1, 1)
+	check(not main.start_level(1, 10), "unbuilt level 1-10 reports not built")
+	main.start_level(1, 9)
 	level = main.level
 
 	var board = main.find_object("loose_board")
@@ -100,18 +101,40 @@ func _test_level_one() -> void:
 
 	main.interact(main.find_object("passage"))
 	check(main.choose_text("Go on"), "the exit offers to go on")
-	check(Baseline.level_num == 2, "finishing the level advances to level 2")
+	check(Baseline.level_num == 10, "finishing the level advances to level 10")
+	check(Baseline.resume.is_empty(), "finishing the level clears the mid-level resume point")
 	check(Baseline.has_save(), "finishing the level saves")
 	check(is_equal_approx(Baseline.value("speed_patience"), 1.0), "a careful look around leans toward patience")
 
-	print("Floor 1, Level 1: walking past Tobin")
+	print("Floor 1, Level 9: walking past Tobin")
 	Baseline.reset()
-	main.start_level(1, 1)
+	main.start_level(1, 9)
 	main._on_entered_cell(main.find_object("tobin").cell + Vector2i(0, 1))
 	main.interact(main.find_object("passage"))
 	main.choose_text("Go on")
 	check(is_equal_approx(Baseline.value("others_self"), 2.0), "ignoring a call for help leans toward self")
 	check(is_equal_approx(Baseline.value("speed_patience"), -1.0), "rushing through leans toward speed")
+
+	print("Autosave and resume")
+	main.new_climb()
+	check(Baseline.floor_num == 1 and Baseline.level_num == 9, "a new climb starts at the first built level")
+	var hidden = main.find_object("loose_board")
+	main._on_entered_cell(hidden.cell)
+	main.climber.place(Vector2i(4, 7))
+	main.interact(main.find_object("tobin"))
+	main.choose_text("Who says")
+	main.choose(0)
+	main.choose_text("That's all")
+	check(not main.is_talking(), "conversation closed")
+	main.autosave()
+	var saved_others := Baseline.value("others_self")
+	Baseline.reset()
+	check(Baseline.load_save(), "the mid-level save loads")
+	check(main.resume_climb(), "resuming reopens the level")
+	check(main.climber.cell == Vector2i(4, 7), "the climber is back where they stopped")
+	check(main.find_object("loose_board").revealed, "found hidden things stay found")
+	check(Baseline.knows("marta_name") and Baseline.has_flag("talked_tobin"), "what the climber learned is kept")
+	check(is_equal_approx(Baseline.value("others_self"), saved_others), "the baseline is kept")
 
 	main.queue_free()
 	await get_tree().process_frame

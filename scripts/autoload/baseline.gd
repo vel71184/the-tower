@@ -30,6 +30,9 @@ var knowledge: Dictionary = {}
 var history: Array = []
 var floor_num := 1
 var level_num := 1
+## Where to pick up inside a level after the app was closed mid-level:
+## {"floor": int, "level": int, "cell": [x, y]}. Empty between levels.
+var resume: Dictionary = {}
 
 
 func _ready() -> void:
@@ -45,6 +48,7 @@ func reset() -> void:
 	history.clear()
 	floor_num = 1
 	level_num = 1
+	resume = {}
 	changed.emit()
 
 
@@ -179,6 +183,7 @@ func to_dict() -> Dictionary:
 		"flags": flags.duplicate(),
 		"knowledge": knowledge.duplicate(true),
 		"history": history.duplicate(true),
+		"resume": resume.duplicate(true),
 	}
 
 
@@ -193,6 +198,7 @@ func from_dict(d: Dictionary) -> void:
 	history = (d.get("history", []) as Array).duplicate(true)
 	floor_num = int(d.get("floor", 1))
 	level_num = int(d.get("level", 1))
+	resume = (d.get("resume", {}) as Dictionary).duplicate(true)
 	changed.emit()
 
 

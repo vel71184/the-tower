@@ -8,8 +8,10 @@ const GameUI := preload("res://scripts/ui/game_ui.gd")
 const Interactable := preload("res://scripts/game/interactable.gd")
 
 ## "floor-level" -> content file. Levels not listed here aren't built yet.
+## Floor 1 is the tower's exterior and the way in: levels 1-8 are outside (not built yet),
+## level 9 is the Waiting Hall just inside the gate, and level 10 is the Gatekeeper.
 const LEVELS := {
-	"1-1": "res://content/floors/floor_01/level_01.json",
+	"1-9": "res://content/floors/floor_01/level_09.json",
 }
 
 const NEAR_LABEL_RANGE := 2.5
@@ -60,16 +62,47 @@ func show_title() -> void:
 	var body := "A hundred floors. Ten levels each.\nTap to walk. Tap things to look closer."
 	if Baseline.has_save():
 		_card("THE TOWER", body, ["Continue the climb", "Start a new climb"], func(i: int) -> void:
-			if i == 0:
-				Baseline.load_save()
+			if i == 0 and Baseline.load_save():
+				resume_climb()
 			else:
-				Baseline.reset()
-				Baseline.delete_save()
-			start_level(Baseline.floor_num, Baseline.level_num))
+				new_climb())
 	else:
 		_card("THE TOWER", body, ["Begin the climb"], func(_i: int) -> void:
-			Baseline.reset()
-			start_level(1, 1))
+			new_climb())
+
+
+## Starts over from the first level that exists so far.
+func new_climb() -> void:
+	Baseline.reset()
+	Baseline.delete_save()
+	var first := first_built_level()
+	start_level(first.x, first.y)
+
+
+## Picks up a loaded save: inside a level where the climber stopped, or at the next level.
+func resume_climb() -> bool:
+	var spot: Dictionary = Baseline.resume.duplicate()
+	if not start_level(Baseline.floor_num, Baseline.level_num):
+		return false
+	if int(spot.get("floor", 0)) == Baseline.floor_num and int(spot.get("level", 0)) == Baseline.level_num:
+		var c: Array = spot.get("cell", [])
+		if c.size() == 2:
+			var cell := Vector2i(int(c[0]), int(c[1]))
+			if level.is_walkable(cell):
+				climber.place(cell)
+				cam.snap()
+				_on_entered_cell(cell)
+	return true
+
+
+func first_built_level() -> Vector2i:
+	var best := Vector2i(999, 999)
+	for key in LEVELS:
+		var parts := String(key).split("-")
+		var at := Vector2i(int(parts[0]), int(parts[1]))
+		if at.x < best.x or (at.x == best.x and at.y < best.y):
+			best = at
+	return best
 
 
 func start_level(floor_n: int, level_n: int) -> bool:
@@ -80,9 +113,7 @@ func start_level(floor_n: int, level_n: int) -> bool:
 		_card("Floor %d · Level %d" % [floor_n, level_n],
 			"This part of the tower isn't built yet.\nYour climb so far is saved.",
 			["Start a new climb"], func(_i: int) -> void:
-				Baseline.reset()
-				Baseline.delete_save()
-				start_level(1, 1))
+				new_climb())
 		return false
 
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(LEVELS[key]))
@@ -102,9 +133,16 @@ func start_level(floor_n: int, level_n: int) -> bool:
 	_pending = null
 	_talk_obj = null
 	_ended = false
+	Baseline.floor_num = floor_n
+	Baseline.level_num = level_n
+	# Hidden things the climber already found stay found.
+	for obj in level.objects:
+		if obj.kind == "hidden" and Baseline.has_flag("noticed:" + obj.id):
+			obj.reveal()
 	Baseline.record("entered", String(data.get("id", key)))
 	ui.toast(String(data.get("title", key)), 3.0)
 	_on_entered_cell(climber.cell)
+	autosave()
 	return true
 
 
@@ -116,6 +154,7 @@ func end_level() -> void:
 	_apply_end_rules()
 	Baseline.record("completed", String(level.data.get("id", "")))
 	Baseline.advance_level()
+	Baseline.resume = {}
 	Baseline.save()
 	var title := "Level %d complete" % int(level.data.get("level", 0))
 	_card(title, "Your climb is saved.", ["Climb on"], func(_i: int) -> void:
@@ -146,6 +185,24 @@ func examined_count() -> int:
 		if obj.kind != "exit" and Baseline.has_flag("examined:" + obj.id):
 			seen[obj.id] = true
 	return seen.size()
+
+
+## Saves mid-level, so closing the app never loses progress. Runs when the app is closed or
+## sent to the background, when a level starts, and after every conversation.
+func autosave() -> void:
+	if level == null or _ended:
+		return
+	var at := climber.cell
+	Baseline.resume = {"floor": Baseline.floor_num, "level": Baseline.level_num, "cell": [at.x, at.y]}
+	Baseline.save()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED \
+			or what == NOTIFICATION_APPLICATION_FOCUS_OUT \
+			or what == NOTIFICATION_WM_CLOSE_REQUEST \
+			or what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		autosave()
 
 
 # --- Input ----------------------------------------------------------------------------------
@@ -354,6 +411,7 @@ func _end_talk() -> void:
 	_talk_nodes = {}
 	_talk_choices = []
 	ui.hide_page()
+	autosave()
 
 
 # --- Helpers --------------------------------------------------------------------------------

@@ -1,9 +1,9 @@
 {
-  "id": "f01_l01",
+  "id": "f01_l09",
   "floor": 1,
-  "level": 1,
+  "level": 9,
   "title": "Floor 1 · The Waiting Hall",
-  "draft_note": "Prototype content. Floor 1's boss (Marta, the Gatekeeper) is a draft for testing the investigation loop; the design doc still lists the real floor 1 boss as open.",
+  "draft_note": "Prototype content. Floor 1 is the tower's exterior and the way in: levels 1-8 outside (not built yet), level 9 is this hall just inside the gate, level 10 is Marta, the Gatekeeper, at the stair. Marta is a draft boss for testing the investigation loop.",
   "palette": {
     "floor_a": "#5b5148",
     "floor_b": "#544a42",
@@ -19,10 +19,27 @@
     "#............#",
     "#.....h......#",
     "#B...........#",
-    "#.....S......#",
+    "#....GS......#",
     "##############"
   ],
   "objects": [
+    {
+      "char": "G",
+      "id": "entry_gate",
+      "name": "The gate",
+      "kind": "examine",
+      "shape": "arch",
+      "color": "#7d6a52",
+      "lines": [
+        "The gate you came in through. It swung shut behind you on its own.",
+        "There's no handle on this side."
+      ],
+      "effects": {
+        "learn": [
+          "no_way_back"
+        ]
+      }
+    },
     {
       "char": "N",
       "id": "notice_board",
@@ -237,7 +254,7 @@
     {
       "char": "E",
       "id": "passage",
-      "name": "Passage to the Gate Court",
+      "name": "Passage to the stair",
       "kind": "exit",
       "shape": "arch",
       "color": "#c2b49c",
@@ -245,7 +262,7 @@
         "start": "ask",
         "nodes": {
           "ask": {
-            "text": "The passage leads deeper into the gatehouse, toward the stair. Go on?",
+            "text": "The passage leads to the stair, where the Gatekeeper keeps watch. Go on?",
             "choices": [
               {
                 "text": "Go on.",

@@ -22,6 +22,9 @@ records decisions made in chat that the doc may not have yet.
 | Themed floors | Whole floors of zombies, robots, aliens, orcs and so on, as communities. | Chat, 2026-11-21 |
 | Residents, not enemies | No monsters. Every character is a resident; killing is possible and always remembered. | Chat, 2026-11-21 |
 | Characters from parts | Any Mini Characters head on any body (22 × 22), recolored by a palette-swap shader. Floor palettes act as factions. 99 bosses get unique combos, a signature color and item; the climber has a reserved color no floor may use. | Chat, 2026-11-21 |
+| Floor 1 is the exterior | Floor 1 is the outside of the tower and the way in. Levels 1–8 outside, level 9 the Waiting Hall just inside the gate, level 10 Marta at the stair. | Chat, 2026-11-21 |
+| Floors grow as you climb | All levels within a floor are the same size; each floor is larger than the last. About 5 minutes per level on floor 1, growing fast early and leveling off at about 30 minutes per level near the top. | Chat, 2026-11-21 |
+| Automatic saving | Saves when a level starts, after every conversation, at level end, and when the app is closed or backgrounded. Continue resumes exactly where you stopped. | Chat, 2026-11-21 |
 | Kenney zips | Kept in `kenney_zips/` (ignored by Godot); used parts get extracted to `assets/`. | Chat, 2026-11-21 |
 
 ## Suggested, not yet confirmed
@@ -40,6 +43,5 @@ records decisions made in chat that the doc may not have yet.
 - **Which two axes the prototype tracks.** The slice uses speed ↔ patience and
   others ↔ self, because level 1 can measure them without combat.
 - **Era order:** roughly chronological up the tower, or shuffled.
-- **Level size:** floor 1 as the tower's exterior with short levels, and floors growing larger as you climb (fast early, leveling off around floor 30). Target length near the top still to pick.
 - **Climber's color leaking into higher floors** as environmental drift.
 - Death and the roguelite variant; the floor-100 reveal; the game's name.

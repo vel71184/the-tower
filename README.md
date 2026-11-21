@@ -7,7 +7,14 @@ baseline records who the climber is becoming, and the tower adapts to it.
 - Design: [The Tower — Game Design Doc](https://claude.ai/artifact/9chnnz1zTjYc1NeqCQTxKF)
 - What's decided and what's open: [docs/DECISIONS.md](docs/DECISIONS.md)
 
-**Status:** first playable slice, Floor 1 · Level 1 (The Waiting Hall), with placeholder art.
+**Status:** first playable slice, Floor 1 · Level 9 (The Waiting Hall), with placeholder art.
+
+Floor 1 is the tower's exterior and the way in. Levels 1–8 (outside) aren't built yet, so a new
+climb starts at level 9, the hall just inside the gate. Level 10 is the Gatekeeper.
+
+**Saving is automatic.** The game saves when a level starts, after every conversation, at the end
+of each level, and whenever the app is closed or sent to the background. **Continue** puts you
+back exactly where you stopped.
 
 ## Playing a build
 
@@ -42,7 +49,8 @@ Every push builds the game on GitHub:
 
 ## Writing a level
 
-A level is one JSON file, registered in `LEVELS` in `scripts/game/main.gd`.
+A level is one JSON file, registered in `LEVELS` in `scripts/game/main.gd` (the key is
+`"floor-level"`, e.g. `"1-9"`). A new climb starts at the lowest registered level.
 
 - `map`: rows of characters. `#` wall, `.` floor, `S` spawn; any other character is an object
   from `objects`. Rows run toward the camera; the bottom row and right column are drawn as
