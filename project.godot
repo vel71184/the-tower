@@ -14,6 +14,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Baseline="*res://scripts/autoload/baseline.gd"
+Controls="*res://scripts/autoload/controls.gd"
 
 [display]
 

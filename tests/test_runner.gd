@@ -13,6 +13,7 @@ func _ready() -> void:
 	Baseline.delete_save()
 	_test_baseline()
 	_test_characters()
+	_test_controls()
 	await _test_level_one()
 	Baseline.delete_save()
 	print("\n%d checks, %d failed" % [_checks, _failures])
@@ -131,6 +132,32 @@ func _test_characters() -> void:
 	check(clean, "floor 1's palette is valid and has no reserved colours")
 
 
+func _has_pad_button(action: String, button: int) -> bool:
+	for e in InputMap.action_get_events(action):
+		if e is InputEventJoypadButton and e.button_index == button:
+			return true
+	return false
+
+
+func _test_controls() -> void:
+	print("Controls (controller and keyboard)")
+	check(_has_pad_button("interact", JOY_BUTTON_A), "bottom face button interacts")
+	check(_has_pad_button("ui_accept", JOY_BUTTON_A), "bottom face button confirms menu choices")
+	check(_has_pad_button("move_up", JOY_BUTTON_DPAD_UP) and _has_pad_button("move_left", JOY_BUTTON_DPAD_LEFT), "d-pad walks")
+	var stick := false
+	for e in InputMap.action_get_events("move_right"):
+		stick = stick or (e is InputEventJoypadMotion and e.axis == JOY_AXIS_LEFT_X and e.axis_value > 0)
+	check(stick, "left stick walks")
+	check(_has_pad_button("zoom_in", JOY_BUTTON_RIGHT_SHOULDER) and _has_pad_button("zoom_out", JOY_BUTTON_LEFT_SHOULDER), "shoulders zoom")
+	check(_has_pad_button("dev_overlay", JOY_BUTTON_BACK), "Select toggles the dev overlay")
+	var Main = load("res://scripts/game/main.gd")
+	check(Main.screen_to_grid(Vector2(0, -1)) == Vector2i(-1, -1), "stick up walks up the screen")
+	check(Main.screen_to_grid(Vector2(1, 0)) == Vector2i(1, -1), "stick right walks right on screen")
+	check(Main.screen_to_grid(Vector2(0, 1)) == Vector2i(1, 1), "stick down walks down the screen")
+	check(Main.screen_to_grid(Vector2(0.7, -0.7)) == Vector2i(0, -1), "stick up-right follows a grid line")
+	check(Main.screen_to_grid(Vector2(-0.7, -0.7)) == Vector2i(-1, 0), "stick up-left follows a grid line")
+
+
 func _test_level_one() -> void:
 	print("Floor 1, Level 9 (the Waiting Hall)")
 	Baseline.reset()
@@ -202,6 +229,23 @@ func _test_level_one() -> void:
 	main.choose_text("Go on")
 	check(is_equal_approx(Baseline.value("others_self"), 2.0), "ignoring a call for help leans toward self")
 	check(is_equal_approx(Baseline.value("speed_patience"), -1.0), "rushing through leans toward speed")
+
+	print("Walking and talking with a controller")
+	main.start_level(1, 9)
+	main.climber.place(Vector2i(6, 9))
+	check(main.pad_move(Vector2(1, 0)), "the stick queues a step")
+	check(main.climber._path.back() == Vector2i(7, 8), "the step goes to the right cell")
+	main.climber.place(Vector2i(3, 6))
+	check(not main.pad_move(Vector2(0.7, -0.7)), "walking into Tobin turns toward him instead")
+	check(main.facing_step == Vector2i(0, -1), "the climber now faces Tobin")
+	check(main.pad_interact() and main.is_talking(), "the interact button talks to whoever you face")
+	while main.is_talking():
+		main.choose(main._talk_choices.size() - 1 if not main._talk_choices.is_empty() else 0)
+	main.climber.place(Vector2i(1, 1))
+	check(not main.pad_move(Vector2(0, -1)), "walls block steps")
+	main.climber.place(Vector2i(1, 7))
+	main.facing_step = Vector2i(1, 0)
+	check(main.object_in_reach() != null and main.object_in_reach().id == "bedrolls", "something in reach is found even when not faced")
 
 	print("Autosave and resume")
 	main.new_climb()

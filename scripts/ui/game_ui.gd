@@ -45,6 +45,7 @@ func show_page(speaker: String, text: String, choices: Array) -> void:
 	for i in labels.size():
 		_choices.add_child(_button(String(labels[i]), _on_choice.bind(i)))
 	_panel.visible = true
+	_focus_first(_choices)
 
 
 func hide_page() -> void:
@@ -70,6 +71,7 @@ func show_card(title: String, body: String, buttons: Array) -> void:
 		_card_buttons.add_child(_button(String(buttons[i]), _on_card.bind(i)))
 	_dim.visible = true
 	_card.visible = true
+	_focus_first(_card_buttons)
 
 
 func hide_card() -> void:
@@ -133,6 +135,16 @@ func _button(text: String, on_pressed: Callable) -> Button:
 	b.add_theme_stylebox_override("focus", _box(Color(0.32, 0.27, 0.22, 1.0)))
 	b.pressed.connect(on_pressed)
 	return b
+
+
+## With a controller or keyboard, highlight the first choice so A / Enter picks it and the
+## d-pad moves between choices. With touch, leave nothing highlighted.
+func _focus_first(container: Node) -> void:
+	if container.get_child_count() == 0:
+		return
+	var controls := get_node_or_null("/root/Controls")
+	if controls and (controls.using_pad or controls.has_controller()):
+		(container.get_child(0) as Control).call_deferred("grab_focus")
 
 
 func _clear(node: Node) -> void:

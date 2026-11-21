@@ -54,6 +54,9 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	_refresh_dev()
+	var v := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if v.length() >= 0.5:
+		pad_move(v)
 
 
 # --- Title and level flow -------------------------------------------------------------------
@@ -214,8 +217,18 @@ func _notification(what: int) -> void:
 # --- Input ----------------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
+	if event.is_action_pressed("dev_overlay"):
 		ui.toggle_dev()
+	elif event.is_action_pressed("interact"):
+		pad_interact()
+	elif event.is_action_pressed("zoom_in"):
+		cam.zoom_by(0.85)
+	elif event.is_action_pressed("zoom_out"):
+		cam.zoom_by(1.15)
+	elif event.is_action_pressed("cancel"):
+		if level and not ui.is_busy():
+			_pending = null
+			climber.stop()
 	elif event is InputEventMouseButton and event.pressed:
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
@@ -306,12 +319,102 @@ func _on_arrived() -> void:
 	if _pending:
 		var obj := _pending
 		_pending = null
-		climber.face(obj.global_position)
-		if obj.kind == "npc":
-			obj.face(climber.global_position)
-		elif obj.kind != "exit":
-			climber.act("interact-right")
-		interact(obj)
+		_use(obj)
+
+
+## Turns to face something and uses it: people turn back, things get an interact animation.
+func _use(obj: Interactable) -> void:
+	climber.face(obj.global_position)
+	var d := obj.cell - climber.cell
+	if d != Vector2i.ZERO:
+		facing_step = Vector2i(signi(d.x), signi(d.y))
+	if obj.kind == "npc":
+		obj.face(climber.global_position)
+	elif obj.kind != "exit":
+		climber.act("interact-right")
+	interact(obj)
+
+
+# --- Controller and keyboard ----------------------------------------------------------------
+
+## Grid direction the climber last moved or turned toward. Starts facing the camera.
+var facing_step := Vector2i(1, 1)
+
+
+## Converts a stick or d-pad direction on screen into a grid step (8 directions).
+## The camera looks from the +X/+Z corner, so screen-up is grid (-1, -1) and
+## screen-right is grid (+1, -1).
+static func screen_to_grid(v: Vector2) -> Vector2i:
+	var g := Vector2(v.x + v.y, v.y - v.x)
+	if g.length() < 0.01:
+		return Vector2i.ZERO
+	g = g.normalized()
+	return Vector2i(int(signf(g.x)) if absf(g.x) > 0.38 else 0,
+		int(signf(g.y)) if absf(g.y) > 0.38 else 0)
+
+
+## One step of stick/d-pad walking. Returns true if a step was queued.
+func pad_move(v: Vector2) -> bool:
+	if level == null or ui.is_busy() or _ended:
+		return false
+	if climber.steps_left() > 1:
+		return false
+	var step := screen_to_grid(v)
+	if step == Vector2i.ZERO:
+		return false
+	var from := climber.path_start()
+	var to := from + step
+	facing_step = step
+	if not _can_step(from, to):
+		if not climber.is_moving():
+			climber.face(level.cell_to_world(to))
+		return false
+	if climber.is_moving() and climber.steps_left() == 1 and from == to:
+		return false
+	_pending = null
+	_marker.visible = false
+	climber.walk([from, to])
+	return true
+
+
+func _can_step(from: Vector2i, to: Vector2i) -> bool:
+	if not level.is_walkable(to):
+		return false
+	if from.x != to.x and from.y != to.y:
+		return level.is_walkable(Vector2i(to.x, from.y)) and level.is_walkable(Vector2i(from.x, to.y))
+	return true
+
+
+## The interact button: use whatever the climber is facing, or the nearest thing in reach.
+func pad_interact() -> bool:
+	if level == null or ui.is_busy() or _ended or climber.is_moving():
+		return false
+	var obj := object_in_reach()
+	if obj == null:
+		return false
+	_use(obj)
+	return true
+
+
+func object_in_reach() -> Interactable:
+	var ahead := level.object_at(climber.cell + facing_step)
+	if ahead and ahead.revealed:
+		return ahead
+	var under := level.object_at(climber.cell)
+	if under and under.revealed:
+		return under
+	var best: Interactable = null
+	var best_score := -INF
+	var facing := Vector2(facing_step).normalized()
+	for obj in level.objects:
+		var d: Vector2i = obj.cell - climber.cell
+		if not obj.revealed or maxi(absi(d.x), absi(d.y)) > 1:
+			continue
+		var score := Vector2(d).normalized().dot(facing)
+		if score > best_score:
+			best_score = score
+			best = obj
+	return best
 
 
 func _on_entered_cell(cell: Vector2i) -> void:

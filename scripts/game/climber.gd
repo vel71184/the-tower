@@ -30,6 +30,11 @@ func place(at: Vector2i) -> void:
 	position = level.cell_to_world(at)
 
 
+## Cells still to walk, counting the one currently being walked to.
+func steps_left() -> int:
+	return _path.size()
+
+
 func is_moving() -> bool:
 	return not _path.is_empty()
 
