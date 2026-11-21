@@ -110,7 +110,7 @@ func _process(_delta: float) -> void:
 	if _touch_bar == null:
 		return
 	var controls := get_node_or_null("/root/Controls")
-	var pad := controls != null and controls.using_pad
+	var pad: bool = controls != null and controls.using_pad
 	_touch_bar.visible = touch_actions_enabled and not pad and not is_busy()
 
 
