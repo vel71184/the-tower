@@ -56,6 +56,11 @@
       "prop": "mini-forest/stones",
       "random_rot": true,
       "scale": 0.6
+    },
+    "L": {
+      "prop": "mini-forest/rocks-low",
+      "solid": true,
+      "random_rot": true
     }
   },
   "backdrop": [
@@ -80,20 +85,20 @@
     }
   ],
   "map": [
-    "fkfT,,fYffkffffTfkkTTk",
-    "Y...E,.opT.f.T.fff...k",
-    "f..p,,....f...fRfopfrf",
-    "YT...,,...fpr.f.T...fY",
-    "T.p...,,.....o...f.rTf",
-    "Y.fp..p,,o..w......opf",
-    "ff...p.p,,.C.h.....o.f",
-    "f......W.,,...p......k",
-    "f...ffpp.o,,,,.P....fY",
-    "kr.o..p.p....,,,...r.f",
-    "f....pT........,,,...f",
-    "Tp..po....Tr..oo.S,..T",
-    "ffTp...fpo.......p,,.k",
-    "kkfTkTkTffkTfffTfYffYk"
+    "fkfT,,fYffkffffTfkkppL",
+    "Y...E,.opT.f.T.fff...L",
+    "f..p,,....f...fRfoprrL",
+    "YT...,,...fpr.f.T...pL",
+    "T.p...,,.....o...f.rrL",
+    "Y.fp..p,,o..w......opL",
+    "ff...p.p,,.C.h.....o.L",
+    "f......W.,,...p......L",
+    "f...ffpp.o,,,,.P....pL",
+    "kr.o..p.p....,,,...r.L",
+    "f....pT........,,,...L",
+    "pp..po....rr..oo.S,..L",
+    "rppp...ppo.......p,,.L",
+    "LLLLLLLLLLLLLLLLLLLLLL"
   ],
   "objects": [
     {

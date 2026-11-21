@@ -13,8 +13,8 @@ const LOW_WALL_HEIGHT := 0.3
 ## Ground types and their two checker colours.
 const GROUND_COLORS := {
 	"floor": ["#5b5148", "#544a42"],
-	"grass": ["#6b9b4b", "#669546"],
-	"path": ["#b8925e", "#b18b58"],
+	"grass": ["#5e8c46", "#5a8742"],
+	"path": ["#a8916e", "#a28a68"],
 	"dirt": ["#8d6c49", "#876746"],
 	"stone": ["#8e877c", "#88817a"],
 	"water": ["#4b7fb5", "#4878ad"],
