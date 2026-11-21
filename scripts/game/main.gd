@@ -713,8 +713,8 @@ func _show_marker(cell: Vector2i) -> void:
 const MOODS := {
 	"indoor": {"background": "#15110f", "ambient": "#8c8070", "ambient_energy": 0.7,
 		"sun": "#ffe2b8", "sun_energy": 1.1, "sun_angle": [-60.0, 30.0], "fog": 0.0},
-	"outdoor_day": {"background": "#c9d6c8", "ambient": "#a7b4c4", "ambient_energy": 0.75,
-		"sun": "#ffdcae", "sun_energy": 1.25, "sun_angle": [-48.0, 55.0], "fog": 0.006, "fog_color": "#d8e0d4"},
+	"outdoor_day": {"background": "#9fb8a0", "ambient": "#8a96a8", "ambient_energy": 0.55,
+		"sun": "#ffe4c0", "sun_energy": 1.0, "sun_angle": [-50.0, 55.0], "fog": 0.0},
 }
 
 var _env: Environment
@@ -725,7 +725,6 @@ func _build_world() -> void:
 	_env = Environment.new()
 	_env.background_mode = Environment.BG_COLOR
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var world_env := WorldEnvironment.new()
 	world_env.environment = _env
 	add_child(world_env)

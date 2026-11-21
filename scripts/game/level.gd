@@ -260,7 +260,7 @@ func _build_ground(cells: Dictionary, palette: Dictionary) -> void:
 			# meets a path.
 			col = Color(String(pair[0]))
 			var n := float(posmod(hash(cell * 31), 1000)) / 1000.0
-			col = col.lightened(0.05 * n) if n > 0.5 else col.darkened(0.06 * (1.0 - n))
+			col = col.lightened(0.025 * n) if n > 0.5 else col.darkened(0.03 * (1.0 - n))
 			if kind == "grass":
 				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 					if cells.get(cell + d, "") == "path":

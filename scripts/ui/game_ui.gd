@@ -120,7 +120,7 @@ func _build_touch_bar() -> void:
 	_touch_bar.anchor_right = 1.0
 	_touch_bar.anchor_top = 1.0
 	_touch_bar.anchor_bottom = 1.0
-	_touch_bar.offset_left = -170
+	_touch_bar.offset_left = -150
 	_touch_bar.offset_right = -20
 	_touch_bar.offset_bottom = -20
 	_touch_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -132,14 +132,16 @@ func _build_touch_bar() -> void:
 		var b := _button(label, _on_combat.bind(id))
 		b.focus_mode = Control.FOCUS_NONE
 		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
-		b.custom_minimum_size = Vector2(150, 64)
+		b.custom_minimum_size = Vector2(130, 52)
+		b.modulate.a = 0.85
 		_touch_bar.add_child(b)
 	_block_button = _button("Block (hold)", func() -> void: pass)
 	_block_button.focus_mode = Control.FOCUS_NONE
 	_block_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_block_button.toggle_mode = false
 	_block_button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-	_block_button.custom_minimum_size = Vector2(150, 64)
+	_block_button.custom_minimum_size = Vector2(130, 52)
+	_block_button.modulate.a = 0.85
 	_touch_bar.add_child(_block_button)
 
 
