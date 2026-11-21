@@ -3,14 +3,13 @@ extends Node
 ## readable place instead of project.godot.
 ##
 ## Controllers are matched by button POSITION, not label (Godot's standard layout):
-##   bottom face = confirm / interact     right face = back
-##   d-pad or left stick = walk           L1 / R1 = zoom
-##   Select = dev overlay                 Start = (menu, later)
-## In a fight: bottom = strike, left = shove, right = guard, top = talk, Start = end turn
-## (keyboard 1-5), while the d-pad or stick still walks.
+##   left stick / d-pad = walk          bottom face = interact / talk
+##   left face = attack                 top face = kick
+##   right face (hold) = block          L1 = lock on, R1 = next target
+##   triggers = zoom                    Select = dev overlay, Start = menu (later)
 ## The 8BitDo Pro 2 works in X-input mode (switch on the back set to X), which Android and
-## Windows both treat as an Xbox pad. In Switch mode the printed letters are swapped (the
-## bottom button is labelled B), but it still confirms, because position is what counts.
+## Windows both treat as an Xbox pad. In Switch mode the printed letters are swapped, but
+## positions are what count.
 
 const DEADZONE := 0.45
 
@@ -21,18 +20,16 @@ const ACTIONS := {
 	"move_down": {"keys": [KEY_S, KEY_DOWN], "buttons": [JOY_BUTTON_DPAD_DOWN], "axes": [[JOY_AXIS_LEFT_Y, 1.0]]},
 	"move_left": {"keys": [KEY_A, KEY_LEFT], "buttons": [JOY_BUTTON_DPAD_LEFT], "axes": [[JOY_AXIS_LEFT_X, -1.0]]},
 	"move_right": {"keys": [KEY_D, KEY_RIGHT], "buttons": [JOY_BUTTON_DPAD_RIGHT], "axes": [[JOY_AXIS_LEFT_X, 1.0]]},
-	"interact": {"keys": [KEY_E, KEY_SPACE, KEY_ENTER], "buttons": [JOY_BUTTON_A]},
-	"cancel": {"keys": [KEY_ESCAPE, KEY_Q], "buttons": [JOY_BUTTON_B]},
-	"zoom_in": {"keys": [KEY_EQUAL, KEY_KP_ADD], "buttons": [JOY_BUTTON_RIGHT_SHOULDER]},
-	"zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "buttons": [JOY_BUTTON_LEFT_SHOULDER]},
+	"interact": {"keys": [KEY_E, KEY_ENTER], "buttons": [JOY_BUTTON_A]},
+	"attack": {"keys": [KEY_SPACE, KEY_J], "buttons": [JOY_BUTTON_X]},
+	"kick": {"keys": [KEY_K, KEY_F], "buttons": [JOY_BUTTON_Y]},
+	"block": {"keys": [KEY_SHIFT], "buttons": [JOY_BUTTON_B]},
+	"lock_on": {"keys": [KEY_Q], "buttons": [JOY_BUTTON_LEFT_SHOULDER]},
+	"lock_next": {"keys": [KEY_TAB], "buttons": [JOY_BUTTON_RIGHT_SHOULDER]},
+	"zoom_in": {"keys": [KEY_EQUAL, KEY_KP_ADD], "axes": [[JOY_AXIS_TRIGGER_RIGHT, 1.0]]},
+	"zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "axes": [[JOY_AXIS_TRIGGER_LEFT, 1.0]]},
 	"dev_overlay": {"keys": [KEY_F3], "buttons": [JOY_BUTTON_BACK]},
 	"menu": {"keys": [], "buttons": [JOY_BUTTON_START]},
-	# In a fight. Face buttons by position: bottom strike, left shove, right guard, top talk.
-	"combat_strike": {"keys": [KEY_1], "buttons": [JOY_BUTTON_A]},
-	"combat_shove": {"keys": [KEY_2], "buttons": [JOY_BUTTON_X]},
-	"combat_guard": {"keys": [KEY_3], "buttons": [JOY_BUTTON_B]},
-	"combat_talk": {"keys": [KEY_4], "buttons": [JOY_BUTTON_Y]},
-	"combat_end_turn": {"keys": [KEY_5, KEY_TAB], "buttons": [JOY_BUTTON_START]},
 }
 
 ## Godot's built-in UI actions (menus, dialogue choices) get the same pad bindings.

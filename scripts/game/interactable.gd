@@ -17,6 +17,7 @@ var character = null
 
 var _label: Label3D
 var _status: Label3D
+var _lock_mark: Label3D
 var _top := 1.0
 
 const CharacterModel := preload("res://scripts/characters/character_model.gd")
@@ -115,6 +116,22 @@ func set_status(text: String) -> void:
 		add_child(_status)
 	_status.text = text
 	_status.visible = text != ""
+
+
+## Shows or hides the lock-on marker over someone.
+func set_locked(on: bool) -> void:
+	if _lock_mark == null:
+		_lock_mark = Label3D.new()
+		_lock_mark.text = "▼"
+		_lock_mark.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_lock_mark.no_depth_test = true
+		_lock_mark.font_size = 56
+		_lock_mark.outline_size = 12
+		_lock_mark.pixel_size = 0.006
+		_lock_mark.modulate = Color(1.0, 0.8, 0.3)
+		_lock_mark.position = Vector3(0, _top + 0.95, 0)
+		add_child(_lock_mark)
+	_lock_mark.visible = on
 
 
 ## Plays a one-off animation on a person, e.g. "emote-yes".

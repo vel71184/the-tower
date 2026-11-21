@@ -26,6 +26,10 @@ var _combat: PanelContainer
 var _combat_hint: Label
 var _combat_buttons: HBoxContainer
 var _wounds: Label
+var _touch_bar: VBoxContainer
+var _block_button: Button
+## Set once a level is playing, so touch action buttons can show.
+var touch_actions_enabled := false
 
 
 func _ready() -> void:
@@ -38,6 +42,7 @@ func _ready() -> void:
 	_build_toast()
 	_build_dev()
 	_build_combat()
+	_build_touch_bar()
 
 
 # --- Dialogue -------------------------------------------------------------------------------
@@ -94,6 +99,48 @@ func set_wounds(current: int, maximum: int, in_fight: bool) -> void:
 		pips += "● " if i < current else "○ "
 	_wounds.text = "Wounds  " + pips.strip_edges()
 	_wounds.visible = in_fight or current < maximum
+
+
+## True while the on-screen Block button is held down.
+func block_held() -> bool:
+	return _block_button != null and _block_button.button_pressed and _touch_bar.visible
+
+
+func _process(_delta: float) -> void:
+	if _touch_bar == null:
+		return
+	var controls := get_node_or_null("/root/Controls")
+	var pad := controls != null and controls.using_pad
+	_touch_bar.visible = touch_actions_enabled and not pad and not is_busy()
+
+
+func _build_touch_bar() -> void:
+	_touch_bar = VBoxContainer.new()
+	_touch_bar.anchor_left = 1.0
+	_touch_bar.anchor_right = 1.0
+	_touch_bar.anchor_top = 1.0
+	_touch_bar.anchor_bottom = 1.0
+	_touch_bar.offset_left = -170
+	_touch_bar.offset_right = -20
+	_touch_bar.offset_bottom = -20
+	_touch_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_touch_bar.add_theme_constant_override("separation", 10)
+	_touch_bar.visible = false
+	_root.add_child(_touch_bar)
+	for id in ["talk", "lock", "kick", "strike"]:
+		var label: String = {"talk": "Talk", "lock": "Lock on", "kick": "Kick", "strike": "Attack"}[id]
+		var b := _button(label, _on_combat.bind(id))
+		b.focus_mode = Control.FOCUS_NONE
+		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.custom_minimum_size = Vector2(150, 64)
+		_touch_bar.add_child(b)
+	_block_button = _button("Block (hold)", func() -> void: pass)
+	_block_button.focus_mode = Control.FOCUS_NONE
+	_block_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_block_button.toggle_mode = false
+	_block_button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	_block_button.custom_minimum_size = Vector2(150, 64)
+	_touch_bar.add_child(_block_button)
 
 
 func _pad_hint(id: String) -> String:

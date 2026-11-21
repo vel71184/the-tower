@@ -33,6 +33,7 @@ var _card_handler: Callable
 var _ended := false
 var _marker: MeshInstance3D
 var combat: Combat
+var _focus_ring: MeshInstance3D
 var _note_open := false
 var _touches: Dictionary = {}
 var _pinch_dist := 0.0
@@ -52,7 +53,7 @@ func _ready() -> void:
 	add_child(ui)
 	ui.choice_made.connect(choose)
 	ui.card_choice.connect(_on_card_choice)
-	ui.combat_action.connect(func(id: String) -> void: combat.act(id))
+	ui.combat_action.connect(_on_combat_button)
 	combat = Combat.new()
 	add_child(combat)
 	combat.setup(self)
@@ -60,15 +61,15 @@ func _ready() -> void:
 	show_title()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_refresh_dev()
-	var v := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	if v.length() >= 0.5:
-		if combat.active:
-			if combat.is_climber_turn():
-				combat.step(screen_to_grid(v))
-		else:
-			pad_move(v)
+	if level == null or _ended:
+		return
+	var free := not ui.is_busy() and not _note_open
+	var v := Input.get_vector("move_left", "move_right", "move_up", "move_down") if free else Vector2.ZERO
+	climber.move_free(screen_to_world(v), delta)
+	combat.set_blocking(free and (Input.is_action_pressed("block") or ui.block_held()))
+	_update_focus()
 
 
 # --- Title and level flow -------------------------------------------------------------------
@@ -150,6 +151,9 @@ func start_level(floor_n: int, level_n: int) -> bool:
 	add_child(level)
 	level.build(data, floor_info)
 	climber.level = level
+	combat.reset(level)
+	ui.touch_actions_enabled = true
+	_focus = null
 	climber.place(level.spawn_cell)
 	cam.snap()
 	_pending = null
@@ -254,21 +258,25 @@ func _notification(what: int) -> void:
 # --- Input ----------------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
-	if combat.active and _combat_input(event):
-		return
 	if event.is_action_pressed("dev_overlay"):
 		ui.toggle_dev()
+	elif level == null or ui.is_busy() or _ended:
+		pass
 	elif event.is_action_pressed("interact"):
 		pad_interact()
+	elif event.is_action_pressed("attack"):
+		combat.strike()
+	elif event.is_action_pressed("kick"):
+		combat.kick()
+	elif event.is_action_pressed("lock_on"):
+		combat.toggle_lock()
+	elif event.is_action_pressed("lock_next"):
+		combat.cycle_lock()
 	elif event.is_action_pressed("zoom_in"):
 		cam.zoom_by(0.85)
 	elif event.is_action_pressed("zoom_out"):
 		cam.zoom_by(1.15)
-	elif event.is_action_pressed("cancel"):
-		if level and not ui.is_busy():
-			_pending = null
-			climber.stop()
-	elif event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton and event.pressed:
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
 				_tap(event.position)
@@ -300,34 +308,26 @@ func _touch_spread() -> float:
 	return (pts[0] as Vector2).distance_to(pts[1])
 
 
-## Fight controls: face buttons or 1-5 act; taps walk (or strike someone in reach).
-func _combat_input(event: InputEvent) -> bool:
-	var map := {"combat_strike": "strike", "combat_shove": "shove", "combat_guard": "guard",
-		"combat_talk": "talk", "combat_end_turn": "wait"}
-	for action in map:
-		if event.is_action_pressed(action):
-			if combat.is_climber_turn():
-				combat.act(map[action])
-			return true
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if ui.is_busy() or not combat.is_climber_turn():
-			return true
-		var obj := _pick_object(event.position)
-		if obj and combat.foes.has(obj) and level.chebyshev(obj.cell, climber.cell) <= 1:
-			combat.act("strike")
-			return true
-		var hit: Variant = Plane(Vector3.UP, 0.0).intersects_ray(
-			cam.project_ray_origin(event.position), cam.project_ray_normal(event.position))
-		if hit != null:
-			combat.move_to(level.world_to_cell(hit))
-		return true
-	return event.is_action_pressed("interact") or event.is_action_pressed("cancel")
+func _on_combat_button(id: String) -> void:
+	match id:
+		"strike":
+			combat.strike()
+		"kick":
+			combat.kick()
+		"lock":
+			combat.toggle_lock()
+		"talk":
+			if not combat.talk():
+				pad_interact()
 
 
 func _tap(screen_pos: Vector2) -> void:
 	if level == null or ui.is_busy() or _ended or _touches.size() > 1:
 		return
 	var obj := _pick_object(screen_pos)
+	if obj and combat.active and obj.kind == "npc":
+		combat._set_lock(obj)
+		return
 	if obj:
 		go_to_object(obj)
 		return
@@ -388,9 +388,6 @@ func _on_arrived() -> void:
 ## Turns to face something and uses it: people turn back, things get an interact animation.
 func _use(obj: Interactable) -> void:
 	climber.face(obj.global_position)
-	var d := obj.cell - climber.cell
-	if d != Vector2i.ZERO:
-		facing_step = Vector2i(signi(d.x), signi(d.y))
 	if obj.kind == "npc":
 		obj.face(climber.global_position)
 	elif obj.kind != "exit":
@@ -400,102 +397,61 @@ func _use(obj: Interactable) -> void:
 
 # --- Controller and keyboard ----------------------------------------------------------------
 
-## Grid direction the climber last moved or turned toward. Starts facing the camera.
-var facing_step := Vector2i(1, 1)
+## What the interact button would use right now (highlighted in the world), or null.
+var _focus: Interactable = null
 
 
-## Converts a stick or d-pad direction on screen into a grid step (8 directions).
-## The camera looks from the +X/+Z corner, so screen-up is grid (-1, -1) and
-## screen-right is grid (+1, -1).
-static func screen_to_grid(v: Vector2) -> Vector2i:
-	var g := Vector2(v.x + v.y, v.y - v.x)
-	if g.length() < 0.01:
-		return Vector2i.ZERO
-	g = g.normalized()
-	return Vector2i(int(signf(g.x)) if absf(g.x) > 0.38 else 0,
-		int(signf(g.y)) if absf(g.y) > 0.38 else 0)
+## Converts a stick or key direction on screen into a flat world direction for walking.
+## The camera looks from the +X/+Z corner, so screen-up is world (-1, 0, -1).
+static func screen_to_world(v: Vector2) -> Vector3:
+	if v.length() < 0.05:
+		return Vector3.ZERO
+	var up := Vector3(-1, 0, -1).normalized()
+	var right := Vector3(1, 0, -1).normalized()
+	return (right * v.x + up * -v.y).limit_length(1.0)
 
 
-## One step of stick/d-pad walking. Returns true if a step was queued.
-func pad_move(v: Vector2) -> bool:
-	if level == null or ui.is_busy() or _ended:
-		return false
-	if climber.steps_left() > 1:
-		return false
-	var step := screen_to_grid(v)
-	if step == Vector2i.ZERO:
-		return false
-	var from := climber.path_start()
-	var to := from + step
-	facing_step = step
-	if not _can_step(from, to):
-		if not climber.is_moving():
-			climber.face(level.cell_to_world(to))
-		return false
-	if climber.is_moving() and climber.steps_left() == 1 and from == to:
-		return false
-	_pending = null
-	_marker.visible = false
-	climber.walk([from, to])
-	return true
-
-
-func _can_step(from: Vector2i, to: Vector2i) -> bool:
-	if not level.is_walkable(to):
-		return false
-	if from.x != to.x and from.y != to.y:
-		return level.is_walkable(Vector2i(to.x, from.y)) and level.is_walkable(Vector2i(from.x, to.y))
-	return true
-
-
-## The interact button: use whatever the climber is facing, or the nearest thing in reach.
-func pad_interact() -> bool:
-	if level == null or ui.is_busy() or _ended or climber.is_moving():
-		return false
-	var obj := object_in_reach()
-	if obj == null:
-		return false
-	_use(obj)
-	return true
-
-
-func object_in_reach() -> Interactable:
-	var ahead := level.object_at(climber.cell + facing_step)
-	if ahead and ahead.revealed:
-		return ahead
-	var under := level.object_at(climber.cell)
-	if under and under.revealed:
-		return under
+## Picks the thing the climber would interact with: close by, and mostly in front.
+func focus_object() -> Interactable:
 	var best: Interactable = null
-	var best_score := -INF
-	var facing := Vector2(facing_step).normalized()
+	var best_score := INF
 	for obj in level.objects:
-		var d: Vector2i = obj.cell - climber.cell
-		if not obj.revealed or maxi(absi(d.x), absi(d.y)) > 1:
+		if not obj.revealed or obj.kind == "":
 			continue
-		var score := Vector2(d).normalized().dot(facing)
-		if score > best_score:
+		var to: Vector3 = obj.global_position - climber.global_position
+		to.y = 0.0
+		var d := to.length()
+		if d > 1.7:
+			continue
+		var facing := climber.facing_dir.dot(to.normalized()) if d > 0.05 else 1.0
+		if d > 1.0 and facing < 0.3:
+			continue
+		var score := d - facing * 0.8
+		if score < best_score:
 			best_score = score
 			best = obj
 	return best
 
 
-func _on_entered_cell(cell: Vector2i) -> void:
-	for obj in level.objects:
-		var d := Vector2(cell).distance_to(Vector2(obj.cell))
-		if obj.kind == "hidden" and not obj.revealed and d <= 1.5:
-			obj.reveal()
-			Baseline.set_flag("noticed:" + obj.id)
-			var notice := String(obj.def.get("reveal_text", ""))
-			if notice != "":
-				obj.bark(notice)
-		obj.set_near(d <= NEAR_LABEL_RANGE)
-		var callout: Dictionary = obj.def.get("call_out", {})
-		if not callout.is_empty():
-			var flag := String(callout.get("flag", "heard:" + obj.id))
-			if not Baseline.has_flag(flag) and d <= float(callout.get("radius", 3.0)):
-				Baseline.set_flag(flag)
-				obj.bark(String(callout.get("text", "")))
+func _update_focus() -> void:
+	var f := focus_object()
+	if f != _focus:
+		_focus = f
+		_show_focus_ring(f)
+
+
+## The interact button: talk to a foe mid-fight, or use whatever is highlighted.
+func pad_interact() -> bool:
+	if level == null or ui.is_busy() or _ended:
+		return false
+	if combat.active and (_focus == null or combat.is_foe(_focus)):
+		return combat.talk()
+	var obj := focus_object()
+	if obj == null:
+		return false
+	climber.stop()
+	_use(obj)
+	return true
 
 
 # --- Dialogue -------------------------------------------------------------------------------
@@ -560,7 +516,7 @@ func choose(index: int) -> void:
 	if _note_open:
 		_close_note()
 		return
-	if combat.active and combat.handle_choice(index):
+	if combat.handle_choice(index):
 		return
 	if _talk_obj == null:
 		return
@@ -603,11 +559,14 @@ func _do_action(action: String, obj: Interactable) -> void:
 			autosave()
 		"fight":
 			var id := parts[1] if parts.size() > 1 else ""
-			var data: Dictionary = level.data.get("fights", {}).get(id, {})
-			if data.is_empty():
-				push_error("No fight '%s' in this level" % id)
+			var foe := obj
+			var fight: Dictionary = level.data.get("fights", {}).get(id, {})
+			if not fight.is_empty():
+				foe = find_object(String((fight.get("opponents", [""]) as Array)[0]))
+			if foe == null:
+				push_error("No one to fight for '%s'" % action)
 				return
-			combat.start(id, data, parts[2] if parts.size() > 2 else "")
+			combat.start_from_dialogue(foe, parts[2] if parts.size() > 2 else "")
 		_:
 			push_warning("Unknown dialogue action '%s'" % action)
 
@@ -675,6 +634,27 @@ func _on_card_choice(i: int) -> void:
 
 func _refresh_dev() -> void:
 	ui.set_dev_text(Baseline.debug_text())
+
+
+## A soft ring under whatever the interact button would use.
+func _show_focus_ring(obj: Interactable) -> void:
+	if _focus_ring == null:
+		_focus_ring = MeshInstance3D.new()
+		var ring := TorusMesh.new()
+		ring.inner_radius = 0.38
+		ring.outer_radius = 0.46
+		ring.rings = 24
+		_focus_ring.mesh = ring
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(1.0, 0.85, 0.45, 0.85)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_focus_ring.material_override = mat
+		add_child(_focus_ring)
+	_focus_ring.visible = obj != null
+	if obj:
+		_focus_ring.global_position = obj.global_position + Vector3(0, 0.03, 0)
+		obj.set_near(true)
 
 
 func _show_marker(cell: Vector2i) -> void:

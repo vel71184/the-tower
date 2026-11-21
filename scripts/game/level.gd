@@ -114,6 +114,18 @@ func is_walkable(cell: Vector2i) -> bool:
 	return in_bounds(cell) and not astar.is_point_solid(cell)
 
 
+## Whether a round body (radius r) can stand at a world position. "own" is the cell the
+## body already stands in, which never blocks it.
+func can_stand(pos: Vector3, r: float, own: Vector2i = Vector2i(-99, -99)) -> bool:
+	for corner in [Vector2(-r, -r), Vector2(r, -r), Vector2(-r, r), Vector2(r, r)]:
+		var c := Vector2i(floori(pos.x + corner.x), floori(pos.z + corner.y))
+		if c == own:
+			continue
+		if not is_walkable(c):
+			return false
+	return true
+
+
 func object_at(cell: Vector2i) -> Interactable:
 	return _object_at.get(cell, null)
 

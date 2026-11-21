@@ -146,6 +146,10 @@ func _test_characters() -> void:
 	check(clean, "floor 1's palette is valid and has no reserved colours")
 
 
+func Main_screen(v: Vector2) -> Vector3:
+	return load("res://scripts/game/main.gd").screen_to_world(v)
+
+
 func _has_pad_button(action: String, button: int) -> bool:
 	for e in InputMap.action_get_events(action):
 		if e is InputEventJoypadButton and e.button_index == button:
@@ -157,19 +161,22 @@ func _test_controls() -> void:
 	print("Controls (controller and keyboard)")
 	check(_has_pad_button("interact", JOY_BUTTON_A), "bottom face button interacts")
 	check(_has_pad_button("ui_accept", JOY_BUTTON_A), "bottom face button confirms menu choices")
+	check(_has_pad_button("attack", JOY_BUTTON_X), "left face button attacks")
+	check(_has_pad_button("kick", JOY_BUTTON_Y), "top face button kicks")
+	check(_has_pad_button("block", JOY_BUTTON_B), "right face button blocks")
+	check(_has_pad_button("lock_on", JOY_BUTTON_LEFT_SHOULDER) and _has_pad_button("lock_next", JOY_BUTTON_RIGHT_SHOULDER), "shoulders lock on and switch targets")
 	check(_has_pad_button("move_up", JOY_BUTTON_DPAD_UP) and _has_pad_button("move_left", JOY_BUTTON_DPAD_LEFT), "d-pad walks")
 	var stick := false
 	for e in InputMap.action_get_events("move_right"):
 		stick = stick or (e is InputEventJoypadMotion and e.axis == JOY_AXIS_LEFT_X and e.axis_value > 0)
 	check(stick, "left stick walks")
-	check(_has_pad_button("zoom_in", JOY_BUTTON_RIGHT_SHOULDER) and _has_pad_button("zoom_out", JOY_BUTTON_LEFT_SHOULDER), "shoulders zoom")
 	check(_has_pad_button("dev_overlay", JOY_BUTTON_BACK), "Select toggles the dev overlay")
 	var Main = load("res://scripts/game/main.gd")
-	check(Main.screen_to_grid(Vector2(0, -1)) == Vector2i(-1, -1), "stick up walks up the screen")
-	check(Main.screen_to_grid(Vector2(1, 0)) == Vector2i(1, -1), "stick right walks right on screen")
-	check(Main.screen_to_grid(Vector2(0, 1)) == Vector2i(1, 1), "stick down walks down the screen")
-	check(Main.screen_to_grid(Vector2(0.7, -0.7)) == Vector2i(0, -1), "stick up-right follows a grid line")
-	check(Main.screen_to_grid(Vector2(-0.7, -0.7)) == Vector2i(-1, 0), "stick up-left follows a grid line")
+	var up: Vector3 = Main.screen_to_world(Vector2(0, -1))
+	check(up.x < -0.6 and up.z < -0.6, "stick up walks up the screen")
+	var right: Vector3 = Main.screen_to_world(Vector2(1, 0))
+	check(right.x > 0.6 and right.z < -0.6, "stick right walks right on screen")
+	check(Main.screen_to_world(Vector2.ZERO) == Vector3.ZERO, "a centred stick stands still")
 
 
 func _until(cond: Callable, frames: int = 600) -> bool:
@@ -180,31 +187,45 @@ func _until(cond: Callable, frames: int = 600) -> bool:
 	return cond.call()
 
 
-## A fresh Waiting Hall with the climber next to Brann, and fights at full speed.
+## A fresh Waiting Hall with the climber next to Brann, facing him, with fight time driven by tick().
 func _brawl_setup(main, climber_cell: Vector2i = Vector2i(5, 5)) -> void:
 	main.start_level(1, 9)
-	main.combat.pace = 0.0
+	main.combat.manual = true
 	main.climber.place(climber_cell)
+	main.climber.face(main.find_object("brann").global_position)
+
+
+## Lets the fight run for a while (Brann walks and swings on his own).
+func _run(c, seconds: float) -> void:
+	var t := 0.0
+	while t < seconds and c.active and not c.ui.is_busy():
+		c.tick(0.05)
+		t += 0.05
+		await get_tree().process_frame
 
 
 func _test_brawl() -> void:
-	print("The Waiting Hall brawl (turn-based combat)")
+	print("The Waiting Hall brawl (real-time combat)")
 	var main = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	await get_tree().process_frame
 	var c = main.combat
+	var brann
 
 	# Swing first, then spare him when he yields.
 	Baseline.reset()
 	_brawl_setup(main)
-	main.interact(main.find_object("brann"))
+	brann = main.find_object("brann")
+	main.interact(brann)
 	check(main.choose_text("Hit him first"), "you can swing first from the conversation")
-	check(await _until(func(): return c.is_climber_turn()), "after the opening strike and Brann's reply, it's your turn")
-	check(c.wounds[main.find_object("brann")] == 2, "the opening strike took one of Brann's 3 wounds")
-	check(Baseline.wounds == 2, "Brann hit back and took one of yours")
+	check(c.active and c.is_foe(brann), "Brann is now fighting you")
+	check(c.foes[brann]["wounds"] == 2, "the opening swing took one of Brann's 3 wounds")
 	check(Baseline.habits.get("openers", {}).get("strike", 0) == 1, "the opener is recorded as a habit")
-	c.act("strike")
-	check(await _until(func(): return c._awaiting == "yield"), "at one wound left, Brann yields")
+	check(c.lock_target == brann, "you're locked on to him")
+	c.tick(1.0)
+	main.climber.face(brann.global_position)
+	c.strike()
+	check(c._awaiting == "yield", "at one wound left, Brann yields")
 	main.choose(0)
 	check(not c.active and main.find_object("brann") == null, "letting him go ends the fight and he leaves")
 	check(Baseline.has_flag("brann_spared") and Baseline.value("others_self") < 0.0, "sparing him is remembered and leans toward others")
@@ -214,15 +235,15 @@ func _test_brawl() -> void:
 	# Finish him instead.
 	Baseline.reset()
 	_brawl_setup(main)
-	main.interact(main.find_object("brann"))
+	brann = main.find_object("brann")
+	main.interact(brann)
 	main.choose_text("Hit him first")
-	await _until(func(): return c.is_climber_turn())
-	c.act("strike")
-	await _until(func(): return c._awaiting == "yield")
+	c.tick(1.0)
+	main.climber.face(brann.global_position)
+	c.strike()
 	main.choose(1)
-	check(Baseline.has_flag("brann_dead") and Baseline.habits.get("killed", 0) == 1, "finishing him is remembered")
-	var body = main.find_object("brann")
-	check(body != null and body.kind == "examine", "his body stays where he fell")
+	check(Baseline.has_flag("brann_dead") and Baseline.has_flag("killed:brann"), "finishing him is remembered")
+	check(brann.kind == "examine", "his body stays where he fell")
 	main.choose(0)
 	main.interact(main.find_object("tobin"))
 	check(main._talk_node_id == "after_kill", "Tobin reacts to the killing")
@@ -233,12 +254,11 @@ func _test_brawl() -> void:
 	Baseline.reset()
 	Baseline.learn("marta_motive")
 	_brawl_setup(main)
-	main.interact(main.find_object("brann"))
+	brann = main.find_object("brann")
+	main.interact(brann)
 	main.choose_text("Let him go")
 	check(main.choose_text("Fight him"), "you can choose to fight him after he squares up")
-	await _until(func(): return c.is_climber_turn())
-	c.act("talk")
-	check(main.ui.is_busy(), "talking opens your lines")
+	check(c.talk() and main.ui.is_busy(), "talking mid-fight opens your lines")
 	main.choose(0)
 	check(not c.active and Baseline.has_flag("talked_down_brann") and main.find_object("brann") == null, "the right words end the fight")
 	check(Baseline.habits.get("actions", {}).get("talk", 0) == 1, "talking is counted as a fighting habit")
@@ -257,25 +277,26 @@ func _test_brawl() -> void:
 	while main.is_talking():
 		main.choose(main._talk_choices.size() - 1 if not main._talk_choices.is_empty() else 0)
 
-	# Shove: into open floor he moves back; into someone he staggers.
+	# Kick: knocks him back a cell, never wounds.
 	Baseline.reset()
 	_brawl_setup(main, Vector2i(4, 6))
-	main.interact(main.find_object("brann"))
+	brann = main.find_object("brann")
+	main.interact(brann)
 	main.choose_text("Let him go")
 	main.choose_text("Fight him")
-	await _until(func(): return c.is_climber_turn())
-	var brann = main.find_object("brann")
-	c.act("shove")
-	await _until(func(): return c.is_climber_turn())
-	check(c.events.has("shove_moved:brann"), "a shove into open floor pushes him back a cell")
-	var guarded: bool = await c.act("guard")
-	var back := await _until(func(): return c.is_climber_turn())
-	if not back or not c.events.has("strike_blocked:climber"):
-		print("    debug: guarded=%s active=%s turn=%s busy=%s awaiting=%s events=%s wounds=%d brann=%s climber=%s" % [
-			guarded, c.active, c.turn, c.busy, c._awaiting, c.events, Baseline.wounds, brann.cell, main.climber.cell])
-	check(c.events.has("strike_blocked:climber"), "guarding blocks his next strike")
-	check(c.wounds[brann] == 3, "a shove doesn't wound")
-	check(Baseline.habits.get("actions", {}).get("shove", 0) == 1, "shoves are counted")
+	c.tick(1.0)
+	main.climber.face(brann.global_position)
+	check(c.kick(), "the kick connects")
+	check(c.events.has("kick_moved:brann") and brann.cell == Vector2i(4, 4), "a kick knocks him back a cell")
+	check(c.foes[brann]["wounds"] == 3, "a kick doesn't wound")
+
+	# Block: hold it facing him and his swing glances off.
+	c.set_blocking(true)
+	await _run(c, 6.0)
+	main.climber.face(brann.global_position)
+	await _run(c, 4.0)
+	check(c.events.has("strike_blocked:climber"), "blocking stops his swing")
+	c.set_blocking(false)
 
 	# Losing: at zero wounds the climber falls, and the world moves on.
 	Baseline.reset()
@@ -284,13 +305,8 @@ func _test_brawl() -> void:
 	main.interact(main.find_object("brann"))
 	main.choose_text("Let him go")
 	main.choose_text("Fight him")
-	await _until(func(): return c.is_climber_turn())
-	var waited: bool = await c.act("wait")
-	var ended := await _until(func(): return not c.active)
-	if not Baseline.has_flag("lost_to_brann"):
-		print("    debug: waited=%s ended=%s active=%s turn=%s busy=%s awaiting=%s events=%s wounds=%d flags=%s" % [
-			waited, ended, c.active, c.turn, c.busy, c._awaiting, c.events, Baseline.wounds, Baseline.flags.keys()])
-	check(ended, "the fight ends when you fall")
+	await _run(c, 8.0)
+	check(not c.active, "the fight ends when you fall")
 	check(Baseline.has_flag("lost_to_brann") and Baseline.has_flag("bird_stolen"), "losing has consequences")
 	check(Baseline.wounds == 1, "you wake with one wound")
 	main.choose(0)
@@ -304,6 +320,20 @@ func _test_brawl() -> void:
 	check(not main.choose_text("Rest"), "no rest offered when you're not hurt")
 	while main.is_talking():
 		main.choose(main._talk_choices.size() - 1 if not main._talk_choices.is_empty() else 0)
+
+	# Anyone can be attacked, but only on purpose (design doc: residents, not enemies).
+	Baseline.reset()
+	_brawl_setup(main, Vector2i(3, 6))
+	var tobin = main.find_object("tobin")
+	main.climber.face(tobin.global_position)
+	c._cooldown = 0.0
+	check(not c.strike() and not c.is_foe(tobin), "a swing near a peaceful person doesn't hurt them")
+	c.tick(1.0)
+	c.toggle_lock()
+	check(c.lock_target == tobin, "locking on picks the person you face")
+	check(c.strike() and c.is_foe(tobin), "a locked-on swing is a deliberate first strike")
+	check(Baseline.has_flag("attacked:tobin") and Baseline.value("force_persuasion") < 0.0, "attacking someone peaceful is remembered")
+	check(c.foes[tobin]["wounds"] == 2, "it wounds them")
 
 	main.queue_free()
 	Baseline.delete_save()
@@ -417,20 +447,21 @@ func _test_level_one() -> void:
 
 	print("Walking and talking with a controller")
 	main.start_level(1, 9)
-	main.climber.place(Vector2i(6, 9))
-	check(main.pad_move(Vector2(1, 0)), "the stick queues a step")
-	check(main.climber._path.back() == Vector2i(7, 8), "the step goes to the right cell")
+	main.climber.place(Vector2i(6, 8))
+	var before: Vector3 = main.climber.position
+	for i in 20:
+		main.climber.move_free(Main_screen(Vector2(1, 0)), 0.05)
+	check(main.climber.position.distance_to(before) > 1.0, "the stick walks smoothly (no grid steps)")
+	main.climber.place(Vector2i(1, 1))
+	for i in 30:
+		main.climber.move_free(Main_screen(Vector2(0, -1)), 0.05)
+	check(main.climber.position.x > 1.0 and main.climber.position.z > 1.0, "walls stop you")
 	main.climber.place(Vector2i(3, 6))
-	check(not main.pad_move(Vector2(0.7, -0.7)), "walking into Tobin turns toward him instead")
-	check(main.facing_step == Vector2i(0, -1), "the climber now faces Tobin")
-	check(main.pad_interact() and main.is_talking(), "the interact button talks to whoever you face")
+	main.climber.face(main.find_object("tobin").global_position)
+	check(main.focus_object() == main.find_object("tobin"), "the person you face is highlighted")
+	check(main.pad_interact() and main.is_talking(), "the interact button talks to them")
 	while main.is_talking():
 		main.choose(main._talk_choices.size() - 1 if not main._talk_choices.is_empty() else 0)
-	main.climber.place(Vector2i(1, 1))
-	check(not main.pad_move(Vector2(0, -1)), "walls block steps")
-	main.climber.place(Vector2i(1, 7))
-	main.facing_step = Vector2i(1, 0)
-	check(main.object_in_reach() != null and main.object_in_reach().id == "bedrolls", "something in reach is found even when not faced")
 
 	print("Autosave and resume")
 	main.new_climb()

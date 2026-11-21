@@ -5,13 +5,19 @@ signal arrived
 signal entered_cell(cell: Vector2i)
 
 const SPEED := 3.5
+## Free (stick/keyboard) walking.
+const WALK_SPEED := 3.4
+const RADIUS := 0.26
 
 ## The current level (level.gd); left untyped so its helpers are called dynamically.
 var level
 var cell := Vector2i.ZERO
 ## The CharacterModel (scripts/characters/character_model.gd).
 var character
+## World direction the climber faces (flat). Free movement, attacks and interactions use it.
+var facing_dir := Vector3(1, 0, 1).normalized()
 var _path: Array = []
+var _free_moving := false
 
 const CharacterModel := preload("res://scripts/characters/character_model.gd")
 const Looks := preload("res://scripts/characters/looks.gd")
@@ -87,6 +93,49 @@ func face(world_pos: Vector3) -> void:
 	var flat := Vector3(world_pos.x, position.y, world_pos.z)
 	if flat.distance_to(position) > 0.01:
 		look_at(flat, Vector3.UP)
+		facing_dir = (flat - position).normalized()
+
+
+## Smooth walking from a stick or keys. dir is a flat world direction; its length (0-1) is speed.
+## Slides along walls and around people instead of stopping dead.
+func move_free(dir: Vector3, delta: float) -> void:
+	if dir.length() < 0.05:
+		if _free_moving:
+			_free_moving = false
+			character.set_moving(false)
+		return
+	_path.clear()
+	_free_moving = true
+	character.set_moving(true)
+	var step := dir.limit_length(1.0) * WALK_SPEED * delta
+	var p := position
+	var try_x := p + Vector3(step.x, 0, 0)
+	if level.can_stand(try_x, RADIUS, cell):
+		p = try_x
+	var try_z := p + Vector3(0, 0, step.z)
+	if level.can_stand(try_z, RADIUS, cell):
+		p = try_z
+	position = p
+	face(position + dir)
+	_update_cell()
+
+
+## Pushed by a hit: slides back as far as the floor allows.
+func knock_back(dir: Vector3, distance: float) -> void:
+	_path.clear()
+	var steps := 6
+	for i in steps:
+		var try := position + dir.normalized() * distance / steps
+		if level.can_stand(try, RADIUS, cell):
+			position = try
+	_update_cell()
+
+
+func _update_cell() -> void:
+	var c: Vector2i = level.world_to_cell(position)
+	if c != cell:
+		cell = c
+		entered_cell.emit(cell)
 
 
 func _process(delta: float) -> void:
