@@ -37,6 +37,8 @@ var moves_left := 0
 var busy := false
 ## Seconds between beats. Tests set this to 0.
 var pace := 0.45
+## What happened this fight, in order, e.g. ["strike_hit:brann", "shove_moved:brann"].
+var events: Array[String] = []
 
 var _guarding: Dictionary = {}
 var _staggered: Dictionary = {}
@@ -64,6 +66,7 @@ func start(id: String, data: Dictionary, opener: String = "") -> void:
 	_staggered.clear()
 	_acted_this_fight = false
 	_awaiting = ""
+	events.clear()
 	for foe_id in data.get("opponents", []):
 		var obj = main.find_object(String(foe_id))
 		if obj:
@@ -286,8 +289,10 @@ func _strike(attacker, target) -> void:
 	if _guarding.get(target, false):
 		_guarding.erase(target)
 		_bark(target, "Blocked!")
+		events.append("strike_blocked:" + _name_of(target))
 		await _beat()
 		return
+	events.append("strike_hit:" + _name_of(target))
 	_hurt(target)
 	await _beat()
 
@@ -310,9 +315,11 @@ func _shove(attacker, target) -> void:
 			level.move_object(target, to)
 			target.position = level.cell_to_world(to)
 		_bark(target, "Shoved back")
+		events.append("shove_moved:" + _name_of(target))
 	else:
 		_staggered[target] = true
 		_bark(target, "Staggered")
+		events.append("shove_staggered:" + _name_of(target))
 	await _beat()
 
 
@@ -406,6 +413,10 @@ func _foe_at(cell: Vector2i):
 		if foe.cell == cell:
 			return foe
 	return null
+
+
+func _name_of(who) -> String:
+	return "climber" if who == climber else String(who.id)
 
 
 func _cell_of(who) -> Vector2i:

@@ -266,7 +266,10 @@ func _test_brawl() -> void:
 	var brann = main.find_object("brann")
 	c.act("shove")
 	await _until(func(): return c.is_climber_turn())
-	check(brann.cell != Vector2i(4, 5), "a shove pushes him back a cell")
+	check(c.events.has("shove_moved:brann"), "a shove into open floor pushes him back a cell")
+	c.act("guard")
+	await _until(func(): return c.is_climber_turn())
+	check(c.events.has("strike_blocked:climber"), "guarding blocks his next strike")
 	check(c.wounds[brann] == 3, "a shove doesn't wound")
 	check(Baseline.habits.get("actions", {}).get("shove", 0) == 1, "shoves are counted")
 
