@@ -59,10 +59,19 @@ jobs:
         run: |
           set -o pipefail
           godot --headless --path . res://tests/test_runner.tscn 2>&1 | tee test.log
-          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|FAIL " test.log; then
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|FAIL |ERROR:" test.log; then
             echo "::error::Script errors or failed checks in test output"
             exit 1
           fi
+
+      - name: Screenshots
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq > /dev/null && sudo apt-get install -y -qq xvfb > /dev/null
+          mkdir -p build/shots
+          SHOT_DIR="$PWD/build/shots" xvfb-run -a -s "-screen 0 1280x720x24" \
+            godot --path . --rendering-driver opengl3 --resolution 1280x720 res://tests/screenshots.tscn 2>&1 | tail -20
+          ls -la build/shots
 
       - name: Export Android (debug APK)
         env:
@@ -85,6 +94,11 @@ jobs:
           mkdir -p build/linux
           godot --headless --path . --export-release "Linux" build/linux/TheTower.x86_64
           test -s build/linux/TheTower.x86_64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: build/shots/
 
       - uses: actions/upload-artifact@v4
         with:

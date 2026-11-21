@@ -20,8 +20,13 @@ var _object_at: Dictionary = {}
 var _materials: Dictionary = {}
 
 
-func build(level_data: Dictionary) -> void:
+## The floor this level is on: its name, era and "people" palette (floor.json).
+var floor_data: Dictionary = {}
+
+
+func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 	data = level_data
+	floor_data = floor_info
 	var rows: Array = data.get("map", [])
 	height = rows.size()
 	width = 0
@@ -142,7 +147,7 @@ func _add_wall(cell: Vector2i, palette: Dictionary) -> void:
 func _add_object(def: Dictionary, cell: Vector2i) -> Interactable:
 	var obj := Interactable.new()
 	add_child(obj)
-	obj.setup(def, cell, cell_to_world(cell), _material)
+	obj.setup(def, cell, cell_to_world(cell), _material, floor_data.get("people", {}))
 	objects.append(obj)
 	_object_at[cell] = obj
 	return obj

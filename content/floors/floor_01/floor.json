@@ -1,0 +1,65 @@
+{
+  "floor": 1,
+  "name": "The Gatehouse",
+  "era": "medieval",
+  "about": "The tower's exterior and the way in. Travelers, would-be climbers, and the Gatekeeper's people. Red marks the Gatekeeper's own.",
+  "people": {
+    "shirt": [
+      "slate",
+      "sand",
+      "brown",
+      "steel",
+      "sky"
+    ],
+    "pants": [
+      "charcoal",
+      "ink",
+      "brown",
+      "slate"
+    ],
+    "shoes": [
+      "charcoal",
+      "brown",
+      "coral"
+    ],
+    "hair": [
+      "charcoal",
+      "brown",
+      "coral",
+      "sand",
+      "silver"
+    ],
+    "accent": [
+      "red",
+      "sand",
+      "brown"
+    ],
+    "bodies": [
+      "female-b",
+      "female-c",
+      "female-d",
+      "female-f",
+      "male-a",
+      "male-b",
+      "male-c",
+      "male-f",
+      "male-g",
+      "raider",
+      "worker"
+    ],
+    "heads": [
+      "female-a",
+      "female-b",
+      "female-d",
+      "female-e",
+      "female-f",
+      "male-a",
+      "male-b",
+      "male-d",
+      "male-e",
+      "male-f",
+      "male-g",
+      "raider"
+    ]
+  }
+}

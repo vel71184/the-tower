@@ -9,31 +9,19 @@ const SPEED := 3.5
 ## The current level (level.gd); left untyped so its helpers are called dynamically.
 var level
 var cell := Vector2i.ZERO
+## The CharacterModel (scripts/characters/character_model.gd).
+var character
 var _path: Array = []
+
+const CharacterModel := preload("res://scripts/characters/character_model.gd")
+const Looks := preload("res://scripts/characters/looks.gd")
 
 
 func _ready() -> void:
-	var body := MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.25
-	capsule.height = 1.3
-	body.mesh = capsule
-	body.position = Vector3(0, 0.65, 0)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color("#d9a441")
-	body.material_override = mat
-	add_child(body)
-
-	# A small pack on the back, so facing reads from above.
-	var pack := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(0.3, 0.35, 0.15)
-	pack.mesh = box
-	pack.position = Vector3(0, 0.8, 0.27)
-	var pack_mat := StandardMaterial3D.new()
-	pack_mat.albedo_color = Color("#6b4a2b")
-	pack.material_override = pack_mat
-	add_child(pack)
+	character = CharacterModel.new()
+	add_child(character)
+	if not character.build(Looks.climber_look()):
+		push_error("Could not build the climber")
 
 
 func place(at: Vector2i) -> void:
@@ -53,15 +41,23 @@ func path_start() -> Vector2i:
 
 func walk(path: Array) -> void:
 	_path = path.duplicate()
+	character.set_moving(not _path.is_empty())
 	if _path.is_empty():
 		return
 	if _path.size() == 1 and _path[0] == cell and position.distance_to(level.cell_to_world(cell)) < 0.01:
 		_path.clear()
+		character.set_moving(false)
 		arrived.emit()
 
 
 func stop() -> void:
 	_path.clear()
+	character.set_moving(false)
+
+
+## Plays a one-off animation, e.g. "interact-right" when examining something.
+func act(animation: String) -> void:
+	character.act(animation)
 
 
 func face(world_pos: Vector3) -> void:
@@ -83,4 +79,5 @@ func _process(delta: float) -> void:
 			cell = next
 			entered_cell.emit(cell)
 		if _path.is_empty():
+			character.set_moving(false)
 			arrived.emit()

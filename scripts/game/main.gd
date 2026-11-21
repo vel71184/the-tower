@@ -124,9 +124,15 @@ func start_level(floor_n: int, level_n: int) -> bool:
 	if level:
 		remove_child(level)
 		level.queue_free()
+	var floor_info: Dictionary = {}
+	var floor_path := "res://content/floors/floor_%02d/floor.json" % floor_n
+	if FileAccess.file_exists(floor_path):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(floor_path))
+		if typeof(parsed) == TYPE_DICTIONARY:
+			floor_info = parsed
 	level = Level.new()
 	add_child(level)
-	level.build(data)
+	level.build(data, floor_info)
 	climber.level = level
 	climber.place(level.spawn_cell)
 	cam.snap()
@@ -301,6 +307,10 @@ func _on_arrived() -> void:
 		var obj := _pending
 		_pending = null
 		climber.face(obj.global_position)
+		if obj.kind == "npc":
+			obj.face(climber.global_position)
+		elif obj.kind != "exit":
+			climber.act("interact-right")
 		interact(obj)
 
 

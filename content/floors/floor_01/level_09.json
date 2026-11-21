@@ -100,8 +100,6 @@
       "id": "tobin",
       "name": "Tobin",
       "kind": "npc",
-      "shape": "npc",
-      "color": "#6d8fb3",
       "call_out": {
         "radius": 3,
         "flag": "heard_tobin",
@@ -226,6 +224,17 @@
           "again": {
             "text": "\"Still here.\""
           }
+        }
+      },
+      "look": {
+        "body": "male-f",
+        "head": "male-e",
+        "colors": {
+          "skin": "tan",
+          "hair": "coral",
+          "shirt": "sky",
+          "pants": "brown",
+          "shoes": "charcoal"
         }
       }
     },

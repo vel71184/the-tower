@@ -12,11 +12,17 @@ var cell := Vector2i.ZERO
 var blocking := true
 var revealed := true
 
+## For people: their CharacterModel (scripts/characters/character_model.gd).
+var character = null
+
 var _label: Label3D
 var _top := 1.0
 
+const CharacterModel := preload("res://scripts/characters/character_model.gd")
+const Looks := preload("res://scripts/characters/looks.gd")
 
-func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: Callable) -> void:
+
+func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: Callable, people: Dictionary = {}) -> void:
 	def = d
 	id = String(d.get("id", "object"))
 	kind = String(d.get("kind", "examine"))
@@ -27,8 +33,11 @@ func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: C
 	position = world_pos
 	name = id.to_pascal_case()
 
-	var color := Color(String(d.get("color", "#b8a48a")))
-	_build_shape(String(d.get("shape", "box")), d.get("size", []), material_for.call(color))
+	if kind == "npc" and not d.has("shape"):
+		_build_character(d.get("look", {}), people)
+	else:
+		var color := Color(String(d.get("color", "#b8a48a")))
+		_build_shape(String(d.get("shape", "box")), d.get("size", []), material_for.call(color))
 
 	_label = Label3D.new()
 	_label.text = display_name
@@ -77,6 +86,33 @@ func bark(text: String) -> void:
 	t.tween_interval(2.5)
 	t.tween_property(l, "modulate:a", 0.0, 0.6)
 	t.tween_callback(l.queue_free)
+
+
+## Turns a person to face a point in the world.
+func face(world_pos: Vector3) -> void:
+	if character == null:
+		return
+	var flat := Vector3(world_pos.x, global_position.y, world_pos.z)
+	if flat.distance_to(global_position) > 0.01:
+		character.look_at(flat, Vector3.UP)
+
+
+## Plays a one-off animation on a person, e.g. "emote-yes".
+func act(animation: String) -> void:
+	if character:
+		character.act(animation)
+
+
+func _build_character(look: Dictionary, people: Dictionary) -> void:
+	character = CharacterModel.new()
+	add_child(character)
+	if character.build(Looks.resolve(look, people, "npc:" + id)):
+		_top = character.height
+		character.rotation.y = deg_to_rad(float(def.get("facing_deg", -135.0)))
+	else:
+		character.queue_free()
+		character = null
+		_build_shape("npc", [], StandardMaterial3D.new())
 
 
 func _size(raw: Variant, fallback: Vector3) -> Vector3:

@@ -1,0 +1,325 @@
+{
+ "about": "Kenney Mini Characters, assembled from parts. Any head fits any body (same rig, same 32 animations). Each slot names the palette colour that part uses in the original model; a character recolours a slot by swapping that colour for another. Colours come in light/dark pairs in colormap.png, so swaps keep the shading. 'species' is what a robot, alien or zombie is made of; skin tones never touch it.",
+ "model_dir": "res://assets/kenney/mini-characters",
+ "scale": 1.35,
+ "palette": {
+  "texture": "res://assets/kenney/mini-characters/Textures/colormap.png",
+  "colors": [
+   "blue",
+   "sky",
+   "violet",
+   "magenta",
+   "pink",
+   "coral",
+   "brown",
+   "tan",
+   "cream",
+   "green",
+   "gold",
+   "orange",
+   "red",
+   "sand",
+   "slate",
+   "lavender",
+   "charcoal",
+   "steel",
+   "ink",
+   "silver",
+   "white"
+  ],
+  "rows": [
+   [
+    "blue",
+    "sky",
+    "violet",
+    "magenta",
+    "pink"
+   ],
+   [
+    "coral",
+    "brown",
+    "tan",
+    "cream",
+    "green",
+    "gold",
+    "orange",
+    "red"
+   ],
+   [
+    "sand",
+    "slate",
+    "lavender",
+    "charcoal",
+    "steel",
+    "ink",
+    "silver",
+    "white"
+   ]
+  ],
+  "first_row_y": 128,
+  "row_height": 128,
+  "pair_width": 64,
+  "size": 512
+ },
+ "skin_tones": [
+  "cream",
+  "tan",
+  "coral",
+  "brown"
+ ],
+ "bodies": {
+  "alien": {
+   "shirt": "white",
+   "pants": "lavender",
+   "accent": "sand",
+   "species": "violet"
+  },
+  "female-a": {
+   "skin": "brown",
+   "shirt": "violet",
+   "pants": "blue",
+   "shoes": "tan"
+  },
+  "female-b": {
+   "skin": "tan",
+   "shirt": "sand",
+   "pants": "violet",
+   "shoes": "charcoal"
+  },
+  "female-c": {
+   "skin": "coral",
+   "shirt": "blue",
+   "pants": "slate",
+   "shoes": "tan",
+   "accent": "red"
+  },
+  "female-d": {
+   "skin": "tan",
+   "shirt": "slate",
+   "shoes": "charcoal"
+  },
+  "female-e": {
+   "shirt": "white",
+   "pants": "charcoal",
+   "shoes": "lavender",
+   "accent": "blue"
+  },
+  "female-f": {
+   "skin": "tan",
+   "shirt": "charcoal",
+   "pants": "blue",
+   "shoes": "violet",
+   "accent": "sand"
+  },
+  "knight": {
+   "shirt": "lavender",
+   "pants": "slate",
+   "shoes": "coral"
+  },
+  "male-a": {
+   "skin": "brown",
+   "shirt": "green",
+   "pants": "blue",
+   "shoes": "sand"
+  },
+  "male-b": {
+   "skin": "tan",
+   "shirt": "red",
+   "pants": "blue",
+   "shoes": "coral"
+  },
+  "male-c": {
+   "skin": "tan",
+   "shirt": "blue",
+   "pants": "charcoal",
+   "shoes": "slate",
+   "accent": "sand"
+  },
+  "male-d": {
+   "skin": "tan",
+   "shirt": "charcoal",
+   "accent": "red"
+  },
+  "male-e": {
+   "shirt": "white",
+   "pants": "charcoal",
+   "shoes": "slate",
+   "accent": "sand"
+  },
+  "male-f": {
+   "skin": "coral",
+   "shirt": "green",
+   "pants": "tan",
+   "shoes": "slate"
+  },
+  "male-g": {
+   "skin": "tan",
+   "shirt": "lavender",
+   "pants": "coral",
+   "shoes": "slate"
+  },
+  "raider": {
+   "skin": "tan",
+   "shirt": "green",
+   "pants": "blue",
+   "shoes": "brown",
+   "accent": "coral"
+  },
+  "robot": {
+   "shirt": "sand",
+   "shoes": "slate",
+   "species": "lavender"
+  },
+  "soldier": {
+   "shirt": "green",
+   "shoes": "charcoal",
+   "accent": "coral"
+  },
+  "worker": {
+   "skin": "brown",
+   "shirt": "blue",
+   "shoes": "sand",
+   "accent": "lavender"
+  },
+  "zombie": {
+   "shirt": "slate",
+   "pants": "lavender",
+   "accent": "coral",
+   "species": "green"
+  }
+ },
+ "heads": {
+  "alien": {
+   "hair": "charcoal",
+   "species": "violet"
+  },
+  "female-a": {
+   "skin": "brown",
+   "hair": "charcoal"
+  },
+  "female-b": {
+   "skin": "tan",
+   "hair": "coral"
+  },
+  "female-c": {
+   "skin": "coral",
+   "hair": "slate",
+   "accent": "red"
+  },
+  "female-d": {
+   "skin": "tan",
+   "hair": "coral"
+  },
+  "female-e": {
+   "skin": "tan",
+   "hair": "charcoal"
+  },
+  "female-f": {
+   "skin": "tan",
+   "hair": "brown"
+  },
+  "knight": {
+   "hair": "lavender",
+   "accent": "blue"
+  },
+  "male-a": {
+   "skin": "brown",
+   "hair": "charcoal"
+  },
+  "male-b": {
+   "skin": "tan",
+   "hair": "coral"
+  },
+  "male-c": {
+   "skin": "tan",
+   "hair": "coral",
+   "accent": "blue"
+  },
+  "male-d": {
+   "skin": "tan",
+   "hair": "coral"
+  },
+  "male-e": {
+   "skin": "tan",
+   "hair": "brown"
+  },
+  "male-f": {
+   "skin": "coral",
+   "hair": "charcoal"
+  },
+  "male-g": {
+   "skin": "tan",
+   "hair": "slate"
+  },
+  "raider": {
+   "skin": "tan",
+   "hair": "charcoal"
+  },
+  "robot": {
+   "hair": "sand",
+   "species": "lavender"
+  },
+  "soldier": {
+   "skin": "tan",
+   "hair": "green"
+  },
+  "worker": {
+   "skin": "brown",
+   "hair": "sand"
+  },
+  "zombie": {
+   "hair": "charcoal",
+   "species": "green"
+  }
+ },
+ "items": {
+  "sword": "weapon-sword",
+  "spear": "weapon-spear",
+  "bow": "weapon-bow",
+  "arrow": "weapon-arrow",
+  "shooter": "weapon-shooter",
+  "shield_round": "shield-round",
+  "shield_rectangle": "shield-rectangle",
+  "luggage": "item-luggage",
+  "luggage_upright": "item-luggage-upright",
+  "cane": "aid-cane",
+  "cane_blind": "aid-cane-blind",
+  "cane_low_vision": "aid-cane-low-vision",
+  "crutch": "aid-crutch",
+  "glasses": "aid-glasses",
+  "sunglasses": "aid-sunglasses",
+  "mask": "aid-mask",
+  "hearing_aid": "aid_hearing",
+  "defibrillator_red": "aid-defibrillator-red",
+  "defibrillator_green": "aid-defibrillator-green"
+ },
+ "wheelchairs": {
+  "wheelchair": "wheelchair",
+  "deluxe": "wheelchair-deluxe",
+  "power": "wheelchair-power",
+  "power_deluxe": "wheelchair-power-deluxe"
+ },
+ "reserved": {
+  "climber_colors": [
+   "gold"
+  ],
+  "why": "No Kenney model uses gold, so it appears only where we put it. Only the climber wears it; no floor palette or NPC may."
+ },
+ "climber": {
+  "body": "raider",
+  "head": "female-c",
+  "colors": {
+   "skin": "tan",
+   "hair": "charcoal",
+   "shirt": "gold",
+   "pants": "ink",
+   "shoes": "brown",
+   "accent": "gold"
+  },
+  "why": "Placeholder look. Gold is reserved for the climber: no NPC or floor palette may use it."
+ },
+ "notes": {
+  "female-a body": "Holds a sci-fi blaster that is part of the body mesh. Keep it off pre-modern floors.",
+  "knight, soldier, worker, robot heads": "Their 'hair' slot is headwear: helmet, hard hat or dome."
+ }
+}
