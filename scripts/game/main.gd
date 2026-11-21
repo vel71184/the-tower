@@ -122,6 +122,7 @@ func first_built_level() -> Vector2i:
 func start_level(floor_n: int, level_n: int) -> bool:
 	ui.hide_card()
 	ui.hide_page()
+	_note_open = false
 	var key := "%d-%d" % [floor_n, level_n]
 	if not LEVELS.has(key):
 		_card("Floor %d · Level %d" % [floor_n, level_n],

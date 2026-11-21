@@ -93,6 +93,7 @@ func is_climber_turn() -> bool:
 # --- Climber turn ---------------------------------------------------------------------------
 
 func _begin_climber_turn() -> void:
+	events.append("turn:climber")
 	turn = "climber"
 	_guarding.erase(climber)
 	moves_left = 0 if _staggered.get(climber, false) else MOVES_PER_TURN
@@ -145,6 +146,7 @@ func act(action: String) -> bool:
 		return true
 	if action != "wait":
 		_count(action)
+	events.append("act:" + action)
 	busy = true
 	match action:
 		"strike":
@@ -226,6 +228,7 @@ func _foes_turn() -> void:
 	if not active:
 		return
 	turn = "foes"
+	events.append("turn:foes")
 	ui.hide_combat()
 	for foe in foes.duplicate():
 		if not active:
