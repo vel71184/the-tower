@@ -66,7 +66,7 @@ func _test_characters() -> void:
 			var cells: Dictionary = CM.family_cells(CM.family_of(model))
 			for slot in parts[kind][model]:
 				var v: Variant = parts[kind][model][slot]
-				var ok := CM.is_color(v) if v is String else (v as Array).all(func(c): return cells.has(Vector2i(int(c[0]), int(c[1]))))
+				var ok: bool = CM.is_color(v) if v is String else (v as Array).all(func(c): return cells.has(Vector2i(int(c[0]), int(c[1]))))
 				check(ok, "%s %s %s points at real colours" % [kind, model, slot])
 	for item in parts.get("items", {}):
 		check(CM.scene_for(parts["items"][item]) != null, "item %s has a model" % item)

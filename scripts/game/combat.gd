@@ -268,7 +268,7 @@ func _walk_foe(foe, cells: Array) -> void:
 		var to: Vector3 = level.cell_to_world(c)
 		foe.face(to)
 		if pace > 0.0:
-			var tw := foe.create_tween()
+			var tw: Tween = foe.create_tween()
 			tw.tween_property(foe, "position", to, 0.28)
 			await tw.finished
 		else:
