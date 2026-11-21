@@ -26,6 +26,9 @@ apply to Mini Characters.
 | Mini Arcade | 20 | Modern: arcade machines |
 | Mini Skate | 42 | Modern: skate park |
 | Space Kit | 153 | Future: station modules, craft, rockets, terrain |
+| Building Kit | 79 | Any era: snap-together walls, doorways, windows, columns, floors, stairs, flat roofs, boarded-up doors and windows, opening doors. Good for the tower's own walls and the Floor 1 exterior |
+| Modular Buildings | 108 | Town and city: stackable house fronts, corners, windows, balconies, awnings, gable and slanted roofs, plus sample houses and 4 sample towers |
+| Food Kit | 200 | Any era (mostly): bread, cheese, meat, fish, fruit, vegetables, pots, pans, plates, barrels, sacks; plus modern food (burgers, pizza, soda, sushi). Markets, kitchens, camps, and things to examine |
 
 ## Characters
 
