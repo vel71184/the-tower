@@ -1,0 +1,212 @@
+extends Node
+## The hidden, running record of who the climber is becoming (design doc: "The baseline").
+##
+## It is never shown to the player as numbers ("No popups"): the world reacting is the only
+## feedback. It also remembers what the climber learned and did, so floor 100 can hand it back.
+
+signal changed
+
+const SAVE_PATH := "user://climb.json"
+const SAVE_VERSION := 1
+
+## Axis id -> [low pole, high pole]. The design doc's four draft axes. These are not good vs evil.
+const AXES := {
+	"force_persuasion": ["force", "persuasion"],
+	"honesty_deception": ["honesty", "deception"],
+	"speed_patience": ["speed", "patience"],
+	"others_self": ["others", "self"],
+}
+
+## Axes the first prototype actually exercises (design doc: "a two-axis baseline").
+const PROTOTYPE_AXES := ["speed_patience", "others_self"]
+
+## Small actions are nudges; boss resolutions are shoves.
+const NUDGE := 1.0
+const SHOVE := 5.0
+
+var axes: Dictionary = {}
+var flags: Dictionary = {}
+var knowledge: Dictionary = {}
+var history: Array = []
+var floor_num := 1
+var level_num := 1
+
+
+func _ready() -> void:
+	reset()
+
+
+func reset() -> void:
+	axes.clear()
+	for id in AXES:
+		axes[id] = 0.0
+	flags.clear()
+	knowledge.clear()
+	history.clear()
+	floor_num = 1
+	level_num = 1
+	changed.emit()
+
+
+## Moves the climber toward a pole by name, e.g. nudge("patience") or nudge("self", 2.0).
+func nudge(pole: String, amount: float = NUDGE) -> void:
+	for id in AXES:
+		var poles: Array = AXES[id]
+		if poles[0] == pole:
+			axes[id] = float(axes[id]) - amount
+			changed.emit()
+			return
+		if poles[1] == pole:
+			axes[id] = float(axes[id]) + amount
+			changed.emit()
+			return
+	push_warning("Baseline: unknown pole '%s'" % pole)
+
+
+func value(axis: String) -> float:
+	return float(axes.get(axis, 0.0))
+
+
+## The pole the climber leans toward on an axis, or "" while roughly balanced.
+func lean(axis: String, threshold: float = 1.0) -> String:
+	if not AXES.has(axis):
+		return ""
+	var v := value(axis)
+	if absf(v) < threshold:
+		return ""
+	var poles: Array = AXES[axis]
+	return String(poles[1]) if v > 0.0 else String(poles[0])
+
+
+func set_flag(flag: String, on: bool = true) -> void:
+	if on:
+		flags[flag] = true
+	else:
+		flags.erase(flag)
+	changed.emit()
+
+
+func has_flag(flag: String) -> bool:
+	return flags.has(flag)
+
+
+func learn(fact: String) -> void:
+	if knowledge.has(fact):
+		return
+	knowledge[fact] = {"floor": floor_num, "level": level_num}
+	record("learned", fact)
+	changed.emit()
+
+
+func knows(fact: String) -> bool:
+	return knowledge.has(fact)
+
+
+## Appends to the climb's history, which the final boss will draw on.
+func record(kind: String, id: String) -> void:
+	history.append({"floor": floor_num, "level": level_num, "kind": kind, "id": id})
+
+
+## Applies an effects block from level content:
+## {"nudge": {"others": 1}, "set_flags": [...], "clear_flags": [...], "learn": [...]}
+func apply(effects: Dictionary) -> void:
+	var nudges: Dictionary = effects.get("nudge", {})
+	for pole in nudges:
+		nudge(String(pole), float(nudges[pole]))
+	for f in effects.get("set_flags", []):
+		set_flag(String(f))
+	for f in effects.get("clear_flags", []):
+		set_flag(String(f), false)
+	for fact in effects.get("learn", []):
+		learn(String(fact))
+
+
+## Applies effects only the first time a given key is seen, so repeating a choice can't farm it.
+func apply_once(key: String, effects: Dictionary) -> void:
+	if effects.is_empty():
+		return
+	var k := "once:" + key
+	if has_flag(k):
+		return
+	set_flag(k)
+	apply(effects)
+
+
+func advance_level() -> void:
+	level_num += 1
+	if level_num > 10:
+		level_num = 1
+		floor_num += 1
+	changed.emit()
+
+
+func has_save() -> bool:
+	return FileAccess.file_exists(SAVE_PATH)
+
+
+func save() -> bool:
+	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f == null:
+		push_error("Baseline: could not write save (%s)" % FileAccess.get_open_error())
+		return false
+	f.store_string(JSON.stringify(to_dict(), "\t"))
+	f.close()
+	return true
+
+
+func load_save() -> bool:
+	if not has_save():
+		return false
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_error("Baseline: save file is unreadable")
+		return false
+	from_dict(parsed)
+	return true
+
+
+func delete_save() -> void:
+	if has_save():
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+
+
+func to_dict() -> Dictionary:
+	return {
+		"version": SAVE_VERSION,
+		"floor": floor_num,
+		"level": level_num,
+		"axes": axes.duplicate(),
+		"flags": flags.duplicate(),
+		"knowledge": knowledge.duplicate(true),
+		"history": history.duplicate(true),
+	}
+
+
+func from_dict(d: Dictionary) -> void:
+	reset()
+	var saved_axes: Dictionary = d.get("axes", {})
+	for id in saved_axes:
+		if axes.has(id):
+			axes[id] = float(saved_axes[id])
+	flags = (d.get("flags", {}) as Dictionary).duplicate()
+	knowledge = (d.get("knowledge", {}) as Dictionary).duplicate(true)
+	history = (d.get("history", []) as Array).duplicate(true)
+	floor_num = int(d.get("floor", 1))
+	level_num = int(d.get("level", 1))
+	changed.emit()
+
+
+## Developer overlay text. Players never see this.
+func debug_text() -> String:
+	var lines: Array[String] = ["BASELINE (dev only)  F%d L%d" % [floor_num, level_num]]
+	for id in AXES:
+		var poles: Array = AXES[id]
+		var mark := "*" if PROTOTYPE_AXES.has(id) else " "
+		lines.append("%s %-9s %+5.1f %s" % [mark, poles[0], value(id), poles[1]])
+	lines.append("knows: " + ", ".join(PackedStringArray(knowledge.keys())))
+	var shown: Array[String] = []
+	for f in flags:
+		if not String(f).begins_with("once:"):
+			shown.append(String(f))
+	lines.append("flags: " + ", ".join(PackedStringArray(shown)))
+	return "\n".join(PackedStringArray(lines))
