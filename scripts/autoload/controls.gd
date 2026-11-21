@@ -6,6 +6,8 @@ extends Node
 ##   bottom face = confirm / interact     right face = back
 ##   d-pad or left stick = walk           L1 / R1 = zoom
 ##   Select = dev overlay                 Start = (menu, later)
+## In a fight: bottom = strike, left = shove, right = guard, top = talk, Start = end turn
+## (keyboard 1-5), while the d-pad or stick still walks.
 ## The 8BitDo Pro 2 works in X-input mode (switch on the back set to X), which Android and
 ## Windows both treat as an Xbox pad. In Switch mode the printed letters are swapped (the
 ## bottom button is labelled B), but it still confirms, because position is what counts.
@@ -25,6 +27,12 @@ const ACTIONS := {
 	"zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "buttons": [JOY_BUTTON_LEFT_SHOULDER]},
 	"dev_overlay": {"keys": [KEY_F3], "buttons": [JOY_BUTTON_BACK]},
 	"menu": {"keys": [], "buttons": [JOY_BUTTON_START]},
+	# In a fight. Face buttons by position: bottom strike, left shove, right guard, top talk.
+	"combat_strike": {"keys": [KEY_1], "buttons": [JOY_BUTTON_A]},
+	"combat_shove": {"keys": [KEY_2], "buttons": [JOY_BUTTON_X]},
+	"combat_guard": {"keys": [KEY_3], "buttons": [JOY_BUTTON_B]},
+	"combat_talk": {"keys": [KEY_4], "buttons": [JOY_BUTTON_Y]},
+	"combat_end_turn": {"keys": [KEY_5, KEY_TAB], "buttons": [JOY_BUTTON_START]},
 }
 
 ## Godot's built-in UI actions (menus, dialogue choices) get the same pad bindings.

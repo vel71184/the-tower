@@ -6,6 +6,7 @@ const Climber := preload("res://scripts/game/climber.gd")
 const IsoCamera := preload("res://scripts/game/iso_camera.gd")
 const GameUI := preload("res://scripts/ui/game_ui.gd")
 const Interactable := preload("res://scripts/game/interactable.gd")
+const Combat := preload("res://scripts/game/combat.gd")
 
 ## "floor-level" -> content file. Levels not listed here aren't built yet.
 ## Floor 1 is the tower's exterior and the way in: levels 1-8 are outside (not built yet),
@@ -30,6 +31,8 @@ var _talk_choices: Array = []
 var _card_handler: Callable
 var _ended := false
 var _marker: MeshInstance3D
+var combat: Combat
+var _note_open := false
 var _touches: Dictionary = {}
 var _pinch_dist := 0.0
 
@@ -48,6 +51,10 @@ func _ready() -> void:
 	add_child(ui)
 	ui.choice_made.connect(choose)
 	ui.card_choice.connect(_on_card_choice)
+	ui.combat_action.connect(func(id: String) -> void: combat.act(id))
+	combat = Combat.new()
+	add_child(combat)
+	combat.setup(self)
 	Baseline.changed.connect(_refresh_dev)
 	show_title()
 
@@ -56,7 +63,11 @@ func _process(_delta: float) -> void:
 	_refresh_dev()
 	var v := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if v.length() >= 0.5:
-		pad_move(v)
+		if combat.active:
+			if combat.is_climber_turn():
+				combat.step(screen_to_grid(v))
+		else:
+			pad_move(v)
 
 
 # --- Title and level flow -------------------------------------------------------------------
@@ -199,7 +210,7 @@ func examined_count() -> int:
 ## Saves mid-level, so closing the app never loses progress. Runs when the app is closed or
 ## sent to the background, when a level starts, and after every conversation.
 func autosave() -> void:
-	if level == null or _ended:
+	if level == null or _ended or (combat and combat.active):
 		return
 	var at := climber.cell
 	Baseline.resume = {"floor": Baseline.floor_num, "level": Baseline.level_num, "cell": [at.x, at.y]}
@@ -217,6 +228,8 @@ func _notification(what: int) -> void:
 # --- Input ----------------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
+	if combat.active and _combat_input(event):
+		return
 	if event.is_action_pressed("dev_overlay"):
 		ui.toggle_dev()
 	elif event.is_action_pressed("interact"):
@@ -259,6 +272,30 @@ func _touch_spread() -> float:
 		return 0.0
 	var pts: Array = _touches.values()
 	return (pts[0] as Vector2).distance_to(pts[1])
+
+
+## Fight controls: face buttons or 1-5 act; taps walk (or strike someone in reach).
+func _combat_input(event: InputEvent) -> bool:
+	var map := {"combat_strike": "strike", "combat_shove": "shove", "combat_guard": "guard",
+		"combat_talk": "talk", "combat_end_turn": "wait"}
+	for action in map:
+		if event.is_action_pressed(action):
+			if combat.is_climber_turn():
+				combat.act(map[action])
+			return true
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if ui.is_busy() or not combat.is_climber_turn():
+			return true
+		var obj := _pick_object(event.position)
+		if obj and combat.foes.has(obj) and level.chebyshev(obj.cell, climber.cell) <= 1:
+			combat.act("strike")
+			return true
+		var hit: Variant = Plane(Vector3.UP, 0.0).intersects_ray(
+			cam.project_ray_origin(event.position), cam.project_ray_normal(event.position))
+		if hit != null:
+			combat.move_to(level.world_to_cell(hit))
+		return true
+	return event.is_action_pressed("interact") or event.is_action_pressed("cancel")
 
 
 func _tap(screen_pos: Vector2) -> void:
@@ -449,7 +486,8 @@ func interact(obj: Interactable) -> void:
 	_talk_nodes = _dialogue_nodes(obj.def)
 	var start := String(obj.def.get("dialogue", {}).get("start", "l0"))
 	for rule in obj.def.get("dialogue", {}).get("start_if", []):
-		if Baseline.has_flag(String(rule.get("flag", ""))):
+		if Baseline.has_flag(String(rule.get("flag", ""))) \
+				and not (rule.has("unless") and Baseline.has_flag(String(rule["unless"]))):
 			start = String(rule.get("start", start))
 			break
 	_show_node(start)
@@ -479,6 +517,10 @@ func _show_node(node_id: String) -> void:
 			continue
 		if c.has("hide_if") and Baseline.has_flag(String(c["hide_if"])):
 			continue
+		if c.has("requires_knowledge") and not Baseline.knows(String(c["requires_knowledge"])):
+			continue
+		if c.get("requires_hurt", false) and Baseline.wounds >= Baseline.max_wounds:
+			continue
 		_talk_choices.append(c)
 	var labels: Array = []
 	for c in _talk_choices:
@@ -489,21 +531,78 @@ func _show_node(node_id: String) -> void:
 
 ## Picks a dialogue option by index (0 also means "Continue" on pages without choices).
 func choose(index: int) -> void:
+	if _note_open:
+		_close_note()
+		return
+	if combat.active and combat.handle_choice(index):
+		return
 	if _talk_obj == null:
 		return
 	var node: Dictionary = _talk_nodes.get(_talk_node_id, {})
 	if _talk_choices.is_empty():
+		if node.has("action"):
+			var obj := _talk_obj
+			_end_talk()
+			_do_action(String(node["action"]), obj)
+			return
 		_show_node(String(node.get("next", "")))
 		return
 	if index < 0 or index >= _talk_choices.size():
 		return
 	var c: Dictionary = _talk_choices[index]
 	Baseline.apply_once("%s/%s/%s" % [_talk_obj.id, _talk_node_id, c.get("text", index)], c.get("effects", {}))
-	if String(c.get("action", "")) == "end_level":
+	if c.has("action"):
+		var obj := _talk_obj
 		_end_talk()
-		end_level()
+		_do_action(String(c["action"]), obj)
 		return
 	_show_node(String(c.get("next", "")))
+
+
+## Things a dialogue choice can do besides talking:
+##   end_level | rest | leave (the speaker walks off) | fight:<id>[:<opening action>]
+func _do_action(action: String, obj: Interactable) -> void:
+	var parts := action.split(":")
+	match parts[0]:
+		"end_level":
+			end_level()
+		"rest":
+			Baseline.rest()
+			ui.set_wounds(Baseline.wounds, Baseline.max_wounds, false)
+			ui.toast("You rest until your wounds close.", 2.5)
+			autosave()
+		"leave":
+			if obj and is_instance_valid(obj):
+				level.remove_object(obj)
+			autosave()
+		"fight":
+			var id := parts[1] if parts.size() > 1 else ""
+			var data: Dictionary = level.data.get("fights", {}).get(id, {})
+			if data.is_empty():
+				push_error("No fight '%s' in this level" % id)
+				return
+			combat.start(id, data, parts[2] if parts.size() > 2 else "")
+		_:
+			push_warning("Unknown dialogue action '%s'" % action)
+
+
+## A narration page with a Continue button (e.g. how a fight ended).
+func show_note(text: String) -> void:
+	_note_open = true
+	ui.show_page("", text, [])
+
+
+func _close_note() -> void:
+	_note_open = false
+	ui.hide_page()
+	if climber.character and climber.character._held:
+		climber.character.release()
+	ui.set_wounds(Baseline.wounds, Baseline.max_wounds, false)
+	autosave()
+
+
+func climber_bark(text: String) -> void:
+	climber.bark(text)
 
 
 ## Picks the first visible option containing the given text. Used by tests.

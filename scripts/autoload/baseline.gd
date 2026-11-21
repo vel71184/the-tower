@@ -33,6 +33,13 @@ var level_num := 1
 ## Where to pick up inside a level after the app was closed mid-level:
 ## {"floor": int, "level": int, "cell": [x, y]}. Empty between levels.
 var resume: Dictionary = {}
+## The climber's wounds. A hit takes one; at zero they fall. Wounds last until rest.
+## Starts at 3; armor and other gear can raise the maximum later.
+var max_wounds := 3
+var wounds := 3
+## How the climber fights, for floor 100: {"openers": {action: n}, "actions": {action: n},
+## "fights": n, "spared": n, "killed": n, "talked_down": n, "fled": n, "lost": n}
+var habits: Dictionary = {}
 
 
 func _ready() -> void:
@@ -49,6 +56,9 @@ func reset() -> void:
 	floor_num = 1
 	level_num = 1
 	resume = {}
+	max_wounds = 3
+	wounds = 3
+	habits = {}
 	changed.emit()
 
 
@@ -184,6 +194,9 @@ func to_dict() -> Dictionary:
 		"knowledge": knowledge.duplicate(true),
 		"history": history.duplicate(true),
 		"resume": resume.duplicate(true),
+		"wounds": wounds,
+		"max_wounds": max_wounds,
+		"habits": habits.duplicate(true),
 	}
 
 
@@ -199,6 +212,36 @@ func from_dict(d: Dictionary) -> void:
 	floor_num = int(d.get("floor", 1))
 	level_num = int(d.get("level", 1))
 	resume = (d.get("resume", {}) as Dictionary).duplicate(true)
+	max_wounds = int(d.get("max_wounds", 3))
+	wounds = clampi(int(d.get("wounds", max_wounds)), 0, max_wounds)
+	habits = (d.get("habits", {}) as Dictionary).duplicate(true)
+	changed.emit()
+
+
+## Counts a fighting habit: habit("actions", "strike"), habit("openers", "shove"),
+## or a plain counter: habit("spared").
+func habit(group: String, key: String = "") -> void:
+	if key == "":
+		habits[group] = int(habits.get(group, 0)) + 1
+	else:
+		var g: Dictionary = habits.get(group, {})
+		g[key] = int(g.get(key, 0)) + 1
+		habits[group] = g
+	changed.emit()
+
+
+## The climber's most used entry in a habit group, e.g. their usual opener.
+func favorite(group: String) -> String:
+	var g: Dictionary = habits.get(group, {})
+	var best := ""
+	for k in g:
+		if best == "" or int(g[k]) > int(g[best]):
+			best = k
+	return best
+
+
+func rest() -> void:
+	wounds = max_wounds
 	changed.emit()
 
 
@@ -209,6 +252,7 @@ func debug_text() -> String:
 		var poles: Array = AXES[id]
 		var mark := "*" if PROTOTYPE_AXES.has(id) else " "
 		lines.append("%s %-9s %+5.1f %s" % [mark, poles[0], value(id), poles[1]])
+	lines.append("wounds %d/%d  habits %s" % [wounds, max_wounds, JSON.stringify(habits)])
 	lines.append("knows: " + ", ".join(PackedStringArray(knowledge.keys())))
 	var shown: Array[String] = []
 	for f in flags:

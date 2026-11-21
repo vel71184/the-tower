@@ -15,6 +15,7 @@ func _ready() -> void:
 	_test_characters()
 	_test_controls()
 	await _test_level_one()
+	await _test_brawl()
 	Baseline.delete_save()
 	print("\n%d checks, %d failed" % [_checks, _failures])
 	get_tree().quit(1 if _failures > 0 else 0)
@@ -168,6 +169,134 @@ func _test_controls() -> void:
 	check(Main.screen_to_grid(Vector2(0, 1)) == Vector2i(1, 1), "stick down walks down the screen")
 	check(Main.screen_to_grid(Vector2(0.7, -0.7)) == Vector2i(0, -1), "stick up-right follows a grid line")
 	check(Main.screen_to_grid(Vector2(-0.7, -0.7)) == Vector2i(-1, 0), "stick up-left follows a grid line")
+
+
+func _until(cond: Callable, frames: int = 600) -> bool:
+	for i in frames:
+		if cond.call():
+			return true
+		await get_tree().process_frame
+	return cond.call()
+
+
+## A fresh Waiting Hall with the climber next to Brann, and fights at full speed.
+func _brawl_setup(main, climber_cell: Vector2i = Vector2i(5, 5)) -> void:
+	main.start_level(1, 9)
+	main.combat.pace = 0.0
+	main.climber.place(climber_cell)
+
+
+func _test_brawl() -> void:
+	print("The Waiting Hall brawl (turn-based combat)")
+	var main = load("res://scenes/main.tscn").instantiate()
+	add_child(main)
+	await get_tree().process_frame
+	var c = main.combat
+
+	# Swing first, then spare him when he yields.
+	Baseline.reset()
+	_brawl_setup(main)
+	main.interact(main.find_object("brann"))
+	check(main.choose_text("Hit him first"), "you can swing first from the conversation")
+	check(await _until(func(): return c.is_climber_turn()), "after the opening strike and Brann's reply, it's your turn")
+	check(c.wounds[main.find_object("brann")] == 2, "the opening strike took one of Brann's 3 wounds")
+	check(Baseline.wounds == 2, "Brann hit back and took one of yours")
+	check(Baseline.habits.get("openers", {}).get("strike", 0) == 1, "the opener is recorded as a habit")
+	c.act("strike")
+	check(await _until(func(): return c._awaiting == "yield"), "at one wound left, Brann yields")
+	main.choose(0)
+	check(not c.active and main.find_object("brann") == null, "letting him go ends the fight and he leaves")
+	check(Baseline.has_flag("brann_spared") and Baseline.value("others_self") < 0.0, "sparing him is remembered and leans toward others")
+	check(Baseline.value("force_persuasion") < 0.0, "swinging first leans toward force")
+	main.choose(0)
+
+	# Finish him instead.
+	Baseline.reset()
+	_brawl_setup(main)
+	main.interact(main.find_object("brann"))
+	main.choose_text("Hit him first")
+	await _until(func(): return c.is_climber_turn())
+	c.act("strike")
+	await _until(func(): return c._awaiting == "yield")
+	main.choose(1)
+	check(Baseline.has_flag("brann_dead") and Baseline.habits.get("killed", 0) == 1, "finishing him is remembered")
+	var body = main.find_object("brann")
+	check(body != null and body.kind == "examine", "his body stays where he fell")
+	main.choose(0)
+	main.interact(main.find_object("tobin"))
+	check(main._talk_node_id == "after_kill", "Tobin reacts to the killing")
+	while main.is_talking():
+		main.choose(0)
+
+	# Talk him down in the middle of the fight, using what the letter taught you.
+	Baseline.reset()
+	Baseline.learn("marta_motive")
+	_brawl_setup(main)
+	main.interact(main.find_object("brann"))
+	main.choose_text("Let him go")
+	check(main.choose_text("Fight him"), "you can choose to fight him after he squares up")
+	await _until(func(): return c.is_climber_turn())
+	c.act("talk")
+	check(main.ui.is_busy(), "talking opens your lines")
+	main.choose(0)
+	check(not c.active and Baseline.has_flag("talked_down_brann") and main.find_object("brann") == null, "the right words end the fight")
+	check(Baseline.habits.get("actions", {}).get("talk", 0) == 1, "talking is counted as a fighting habit")
+	main.choose(0)
+
+	# Talk him down before any fight starts.
+	Baseline.reset()
+	Baseline.learn("marta_motive")
+	_brawl_setup(main)
+	main.interact(main.find_object("brann"))
+	check(main.choose_text("Marta's choosing"), "knowing Marta's motive opens a new line")
+	main.choose(0)
+	check(main.find_object("brann") == null and Baseline.has_flag("talked_down_brann"), "he walks off without a fight")
+	main.interact(main.find_object("tobin"))
+	check(main._talk_node_id == "thanks", "Tobin thanks you")
+	while main.is_talking():
+		main.choose(main._talk_choices.size() - 1 if not main._talk_choices.is_empty() else 0)
+
+	# Shove: into open floor he moves back; into someone he staggers.
+	Baseline.reset()
+	_brawl_setup(main, Vector2i(4, 6))
+	main.interact(main.find_object("brann"))
+	main.choose_text("Let him go")
+	main.choose_text("Fight him")
+	await _until(func(): return c.is_climber_turn())
+	var brann = main.find_object("brann")
+	c.act("shove")
+	await _until(func(): return c.is_climber_turn())
+	check(brann.cell != Vector2i(4, 5), "a shove pushes him back a cell")
+	check(c.wounds[brann] == 3, "a shove doesn't wound")
+	check(Baseline.habits.get("actions", {}).get("shove", 0) == 1, "shoves are counted")
+
+	# Losing: at zero wounds the climber falls, and the world moves on.
+	Baseline.reset()
+	Baseline.wounds = 1
+	_brawl_setup(main)
+	main.interact(main.find_object("brann"))
+	main.choose_text("Let him go")
+	main.choose_text("Fight him")
+	await _until(func(): return c.is_climber_turn())
+	c.act("wait")
+	check(await _until(func(): return not c.active), "the fight ends when you fall")
+	check(Baseline.has_flag("lost_to_brann") and Baseline.has_flag("bird_stolen"), "losing has consequences")
+	check(Baseline.wounds == 1, "you wake with one wound")
+	main.choose(0)
+	check(not main.climber.character._held, "you get back up")
+
+	# Rest at the bedrolls.
+	main.interact(main.find_object("bedrolls"))
+	check(main.choose_text("Rest"), "the bedrolls offer rest when you're hurt")
+	check(Baseline.wounds == Baseline.max_wounds, "resting closes your wounds")
+	main.interact(main.find_object("bedrolls"))
+	check(not main.choose_text("Rest"), "no rest offered when you're not hurt")
+	while main.is_talking():
+		main.choose(main._talk_choices.size() - 1 if not main._talk_choices.is_empty() else 0)
+
+	main.queue_free()
+	Baseline.delete_save()
+	await get_tree().process_frame
 
 
 func _test_level_one() -> void:

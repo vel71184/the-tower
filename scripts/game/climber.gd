@@ -60,6 +60,24 @@ func stop() -> void:
 	character.set_moving(false)
 
 
+## A short line floating over the climber (e.g. "-1 wound").
+func bark(text: String) -> void:
+	var l := Label3D.new()
+	l.text = text
+	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	l.no_depth_test = true
+	l.font_size = 40
+	l.outline_size = 12
+	l.pixel_size = 0.006
+	l.modulate = Color(1.0, 0.85, 0.5)
+	l.position = Vector3(0, 1.5, 0)
+	add_child(l)
+	var t := create_tween()
+	t.tween_interval(1.6)
+	t.tween_property(l, "modulate:a", 0.0, 0.5)
+	t.tween_callback(l.queue_free)
+
+
 ## Plays a one-off animation, e.g. "interact-right" when examining something.
 func act(animation: String) -> void:
 	character.act(animation)

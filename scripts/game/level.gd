@@ -106,6 +106,48 @@ func path_to_object(from: Vector2i, obj: Interactable) -> Array:
 	return best
 
 
+## Moves an object (e.g. someone in a fight) to another cell, keeping the walk grid right.
+func move_object(obj: Interactable, to: Vector2i) -> void:
+	_object_at.erase(obj.cell)
+	if obj.blocking:
+		astar.set_point_solid(obj.cell, false)
+	obj.cell = to
+	_object_at[to] = obj
+	if obj.blocking:
+		astar.set_point_solid(to, true)
+
+
+## Takes an object out of the level (someone who leaves, or is carried off).
+func remove_object(obj: Interactable) -> void:
+	_object_at.erase(obj.cell)
+	if obj.blocking:
+		astar.set_point_solid(obj.cell, false)
+	objects.erase(obj)
+	obj.queue_free()
+
+
+## Path for someone standing on a blocking cell, avoiding other cells (e.g. the climber).
+func find_path_for(obj: Interactable, to: Vector2i, avoid: Array = []) -> Array:
+	astar.set_point_solid(obj.cell, false)
+	var restore: Array = []
+	for c in avoid:
+		if in_bounds(c) and not astar.is_point_solid(c):
+			astar.set_point_solid(c, true)
+			restore.append(c)
+	var path: Array = []
+	if is_walkable(to):
+		path = Array(astar.get_id_path(obj.cell, to))
+	for c in restore:
+		astar.set_point_solid(c, false)
+	if obj.blocking:
+		astar.set_point_solid(obj.cell, true)
+	return path
+
+
+func chebyshev(a: Vector2i, b: Vector2i) -> int:
+	return _chebyshev(a, b)
+
+
 func _chebyshev(a: Vector2i, b: Vector2i) -> int:
 	return maxi(absi(a.x - b.x), absi(a.y - b.y))
 

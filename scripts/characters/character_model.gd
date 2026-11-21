@@ -38,6 +38,7 @@ var height := 1.0
 
 var _moving := false
 var _action := ""
+var _held := false
 
 
 static func parts() -> Dictionary:
@@ -193,7 +194,8 @@ func build(look: Dictionary) -> bool:
 
 ## Walking or standing still. Plays the matching animation.
 func set_moving(moving: bool) -> void:
-	if moving == _moving:
+	if moving == _moving or _held:
+		_moving = moving
 		return
 	_moving = moving
 	if _action == "":
@@ -206,6 +208,22 @@ func act(animation: String) -> void:
 		return
 	_action = animation
 	anim.play(animation, 0.1)
+
+
+## Plays an animation and stays on its last frame (e.g. "die" for someone who has fallen).
+func hold(animation: String) -> void:
+	if anim == null or not anim.has_animation(animation):
+		return
+	_held = true
+	_action = animation
+	anim.play(animation, 0.1)
+
+
+## Back on their feet after hold().
+func release() -> void:
+	_held = false
+	_action = ""
+	_update_animation()
 
 
 func has_animation(animation: String) -> bool:
@@ -347,6 +365,8 @@ func _update_animation() -> void:
 
 
 func _on_animation_finished(_name: StringName) -> void:
+	if _held:
+		return
 	_action = ""
 	_update_animation()
 

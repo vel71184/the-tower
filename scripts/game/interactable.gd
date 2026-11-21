@@ -16,6 +16,7 @@ var revealed := true
 var character = null
 
 var _label: Label3D
+var _status: Label3D
 var _top := 1.0
 
 const CharacterModel := preload("res://scripts/characters/character_model.gd")
@@ -95,6 +96,22 @@ func face(world_pos: Vector3) -> void:
 	var flat := Vector3(world_pos.x, global_position.y, world_pos.z)
 	if flat.distance_to(global_position) > 0.01:
 		character.look_at(flat, Vector3.UP)
+
+
+## A short status shown over someone, e.g. their wounds in a fight. Empty hides it.
+func set_status(text: String) -> void:
+	if _status == null:
+		_status = Label3D.new()
+		_status.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_status.no_depth_test = true
+		_status.font_size = 44
+		_status.outline_size = 12
+		_status.pixel_size = 0.006
+		_status.modulate = Color(1.0, 0.55, 0.45)
+		_status.position = Vector3(0, _top + 0.62, 0)
+		add_child(_status)
+	_status.text = text
+	_status.visible = text != ""
 
 
 ## Plays a one-off animation on a person, e.g. "emote-yes".
