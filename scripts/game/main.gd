@@ -12,6 +12,7 @@ const Combat := preload("res://scripts/game/combat.gd")
 ## Floor 1 is the tower's exterior and the way in: levels 1-8 are outside (not built yet),
 ## level 9 is the Waiting Hall just inside the gate, and level 10 is the Gatekeeper.
 const LEVELS := {
+	"1-1": "res://content/floors/floor_01/level_01.json",
 	"1-9": "res://content/floors/floor_01/level_09.json",
 }
 
@@ -162,6 +163,11 @@ func start_level(floor_n: int, level_n: int) -> bool:
 			obj.reveal()
 	Baseline.record("entered", String(data.get("id", key)))
 	ui.toast(String(data.get("title", key)), 3.0)
+	if data.has("hint"):
+		var hint := String(data["hint"])
+		get_tree().create_timer(3.2).timeout.connect(func() -> void:
+			if level and level.data == data:
+				ui.toast(hint, 4.0))
 	_on_entered_cell(climber.cell)
 	autosave()
 	return true
@@ -175,11 +181,30 @@ func end_level() -> void:
 	_apply_end_rules()
 	Baseline.record("completed", String(level.data.get("id", "")))
 	Baseline.advance_level()
+	var body := "Your climb is saved."
+	var next := next_built_level(Vector2i(Baseline.floor_num, Baseline.level_num))
+	if next.x > 0 and next != Vector2i(Baseline.floor_num, Baseline.level_num):
+		body += "\nThe next levels aren't built yet, so you'll skip ahead to level %d." % next.y
+		Baseline.floor_num = next.x
+		Baseline.level_num = next.y
 	Baseline.resume = {}
 	Baseline.save()
 	var title := "Level %d complete" % int(level.data.get("level", 0))
-	_card(title, "Your climb is saved.", ["Climb on"], func(_i: int) -> void:
+	_card(title, body, ["Climb on"], func(_i: int) -> void:
 		start_level(Baseline.floor_num, Baseline.level_num))
+
+
+## The first built level at or after a floor/level, or (-1, -1) if none.
+func next_built_level(from: Vector2i) -> Vector2i:
+	var best := Vector2i(-1, -1)
+	for key in LEVELS:
+		var parts := String(key).split("-")
+		var at := Vector2i(int(parts[0]), int(parts[1]))
+		var after := at.x > from.x or (at.x == from.x and at.y >= from.y)
+		var earlier := best.x < 0 or at.x < best.x or (at.x == best.x and at.y < best.y)
+		if after and earlier:
+			best = at
+	return best
 
 
 ## Applies the level's end rules: how the climber handled what they found, missed, or declined.

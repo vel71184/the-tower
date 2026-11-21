@@ -16,6 +16,7 @@ func _ready() -> void:
 	_test_controls()
 	await _test_level_one()
 	await _test_brawl()
+	await _test_road()
 	Baseline.delete_save()
 	print("\n%d checks, %d failed" % [_checks, _failures])
 	get_tree().quit(1 if _failures > 0 else 0)
@@ -309,13 +310,46 @@ func _test_brawl() -> void:
 	await get_tree().process_frame
 
 
+func _test_road() -> void:
+	print("Floor 1, Level 1: The Road (outdoors)")
+	Baseline.reset()
+	var main = load("res://scenes/main.tscn").instantiate()
+	add_child(main)
+	await get_tree().process_frame
+	check(main.start_level(1, 1), "The Road loads")
+	var level = main.level
+	check(level.get_node_or_null("Ground") != null, "the ground is one merged mesh")
+	check(level.get_node_or_null("Backdrop") != null, "the tower looms in the backdrop")
+	var props := 0
+	for child in level.get_children():
+		if child.scene_file_path.begins_with("res://assets/kenney/"):
+			props += 1
+	check(props > 40, "Kenney trees, rocks and plants dress the level (%d props)" % props)
+	check(level.is_walkable(level.spawn_cell), "the climber starts on the path")
+	for obj in level.objects:
+		check(not level.path_to_object(level.spawn_cell, obj).is_empty(), "%s is reachable" % obj.id)
+	check(not level.is_walkable(Vector2i(0, 0)), "trees block the way")
+	main.interact(main.find_object("wil"))
+	main.choose_text("Do you need anything")
+	main.choose_text("I'll tell her")
+	main.choose(0)
+	check(Baseline.has_flag("carrying_wil_message") and Baseline.knows("ada"), "you can promise Wil to find his daughter")
+	main.interact(main.find_object("road_on"))
+	main.choose_text("Go on")
+	check(Baseline.floor_num == 1 and Baseline.level_num == 9, "unbuilt levels 2-8 are skipped: next is the Waiting Hall")
+	check(Baseline.has_flag("carrying_wil_message"), "promises carry over between levels")
+	main.queue_free()
+	Baseline.delete_save()
+	await get_tree().process_frame
+
+
 func _test_level_one() -> void:
 	print("Floor 1, Level 9 (the Waiting Hall)")
 	Baseline.reset()
 	var main = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	await get_tree().process_frame
-	check(main.first_built_level() == Vector2i(1, 9), "the first built level is 1-9")
+	check(main.first_built_level() == Vector2i(1, 1), "the first built level is 1-1, The Road")
 	check(main.start_level(1, 9), "level 1-9 loads")
 	var level = main.level
 	check(level.width == 14 and level.height == 11, "map size is 14x11")
@@ -400,7 +434,8 @@ func _test_level_one() -> void:
 
 	print("Autosave and resume")
 	main.new_climb()
-	check(Baseline.floor_num == 1 and Baseline.level_num == 9, "a new climb starts at the first built level")
+	check(Baseline.floor_num == 1 and Baseline.level_num == 1, "a new climb starts on The Road")
+	main.start_level(1, 9)
 	var hidden = main.find_object("loose_board")
 	main._on_entered_cell(hidden.cell)
 	main.climber.place(Vector2i(4, 7))

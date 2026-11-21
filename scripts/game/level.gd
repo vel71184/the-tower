@@ -5,9 +5,29 @@ extends Node3D
 ## +X/+Z corner, so walls on those two edges are built low (a classic isometric cutaway).
 
 const Interactable := preload("res://scripts/game/interactable.gd")
+const Models := preload("res://scripts/game/models.gd")
 
 const WALL_HEIGHT := 1.6
 const LOW_WALL_HEIGHT := 0.3
+
+## Ground types and their two checker colours.
+const GROUND_COLORS := {
+	"floor": ["#5b5148", "#544a42"],
+	"grass": ["#6b9b4b", "#669546"],
+	"path": ["#b8925e", "#b18b58"],
+	"dirt": ["#8d6c49", "#876746"],
+	"stone": ["#8e877c", "#88817a"],
+	"water": ["#4b7fb5", "#4878ad"],
+}
+
+## What map characters mean unless a level's "legend" says otherwise. A legend entry can set:
+## "ground" (a GROUND_COLORS key), "wall": true, "spawn": true, "prop" (a Kenney model, e.g.
+## "fantasy-town/tree"), "solid", "rot" (degrees), "random_rot", "scale", "offset" [x, z].
+const DEFAULT_LEGEND := {
+	"#": {"wall": true},
+	".": {},
+	"S": {"spawn": true},
+}
 
 var data: Dictionary = {}
 var width := 0
@@ -43,24 +63,39 @@ func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 		defs[String(def["char"])] = def
 
 	var palette: Dictionary = data.get("palette", {})
+	var legend: Dictionary = DEFAULT_LEGEND.duplicate(true)
+	legend.merge(data.get("legend", {}), true)
+	var default_ground := String(data.get("ground", "floor"))
+	var ground: Dictionary = {}
 	for y in height:
 		var row := String(rows[y])
 		for x in width:
 			var c: String = row[x] if x < row.length() else "#"
 			var cell := Vector2i(x, y)
-			if c == "#":
+			var entry: Dictionary = legend.get(c, {})
+			if entry.get("wall", false):
 				_add_wall(cell, palette)
 				astar.set_point_solid(cell, true)
 				continue
-			_add_floor(cell, palette)
-			if c == "S":
+			var kind := String(entry.get("ground", defs[c].get("ground", default_ground) if defs.has(c) else default_ground))
+			ground[cell] = kind
+			if kind == "water":
+				astar.set_point_solid(cell, true)
+			if entry.get("spawn", false):
 				spawn_cell = cell
-			elif defs.has(c):
+			if entry.has("prop"):
+				_add_prop(entry, cell)
+				if entry.get("solid", false):
+					astar.set_point_solid(cell, true)
+			if defs.has(c):
 				var obj := _add_object(defs[c], cell)
 				if obj.blocking:
 					astar.set_point_solid(cell, true)
-			elif c != ".":
+			elif not legend.has(c):
 				push_warning("Level %s: unknown map character '%s'" % [data.get("id", "?"), c])
+	_build_ground(ground, palette)
+	for item in data.get("backdrop", []):
+		_add_backdrop(item)
 
 
 func cell_to_world(cell: Vector2i) -> Vector3:
@@ -162,16 +197,77 @@ func _material(color: Color) -> StandardMaterial3D:
 	return _materials[key]
 
 
-func _add_floor(cell: Vector2i, palette: Dictionary) -> void:
-	var a := Color(String(palette.get("floor_a", "#5b5148")))
-	var b := Color(String(palette.get("floor_b", "#544a42")))
+## All ground as one mesh (cheap to draw on phones), coloured per cell in a soft checker.
+func _build_ground(cells: Dictionary, palette: Dictionary) -> void:
+	if cells.is_empty():
+		return
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_normal(Vector3.UP)
+	for cell in cells:
+		var kind := String(cells[cell])
+		var pair: Array = GROUND_COLORS.get(kind, GROUND_COLORS["floor"])
+		if kind == "floor":
+			pair = [palette.get("floor_a", pair[0]), palette.get("floor_b", pair[1])]
+		var col := Color(String(pair[0] if (cell.x + cell.y) % 2 == 0 else pair[1]))
+		var y := -0.12 if kind == "water" else 0.0
+		var a := Vector3(cell.x, y, cell.y)
+		var b := Vector3(cell.x + 1, y, cell.y)
+		var c := Vector3(cell.x + 1, y, cell.y + 1)
+		var d := Vector3(cell.x, y, cell.y + 1)
+		for v in [a, b, c, a, c, d]:
+			st.set_color(col)
+			st.add_vertex(v)
 	var mi := MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(1.0, 0.1, 1.0)
-	mi.mesh = mesh
-	mi.material_override = _material(a if (cell.x + cell.y) % 2 == 0 else b)
-	mi.position = cell_to_world(cell) + Vector3(0, -0.05, 0)
+	mi.name = "Ground"
+	mi.mesh = st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 1.0
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mi.material_override = mat
 	add_child(mi)
+
+
+## A Kenney model standing on a cell (trees, rocks, fences...).
+func _add_prop(entry: Dictionary, cell: Vector2i) -> void:
+	var node := Models.make(String(entry["prop"]))
+	if node == null:
+		return
+	var off: Array = entry.get("offset", [0, 0])
+	node.position = cell_to_world(cell) + Vector3(float(off[0]), 0, float(off[1]))
+	var rot := float(entry.get("rot", 0.0))
+	if entry.get("random_rot", false):
+		rot += float(hash(cell) % 4) * 90.0 + float(hash(cell * 7) % 30) - 15.0
+	node.rotation_degrees.y = rot
+	var sc := float(entry.get("scale", 1.0))
+	if entry.get("random_scale", false):
+		sc *= 0.85 + float(hash(cell * 13) % 30) / 100.0
+	node.scale = Vector3(sc, sc, sc)
+	add_child(node)
+
+
+## Scenery outside the playable grid: a single model, or a "stack" of models piled up
+## (e.g. the tower). {"model" | "stack": [...], "at": [x, z], "scale": s, "rot": deg}
+func _add_backdrop(item: Dictionary) -> void:
+	var at: Array = item.get("at", [0, 0])
+	var holder := Node3D.new()
+	holder.name = "Backdrop"
+	holder.position = Vector3(float(at[0]), float(item.get("y", 0.0)), float(at[1]))
+	holder.rotation_degrees.y = float(item.get("rot", 0.0))
+	var sc := float(item.get("scale", 1.0))
+	holder.scale = Vector3(sc, sc, sc)
+	add_child(holder)
+	var pieces: Array = item.get("stack", [item.get("model", "")])
+	var top := 0.0
+	for p in pieces:
+		var node := Models.make(String(p))
+		if node == null:
+			continue
+		holder.add_child(node)
+		node.position.y = top
+		var box := Models.bounds(node)
+		top += box.size.y / sc if box.size.y > 0.0 else 1.0
 
 
 func _add_wall(cell: Vector2i, palette: Dictionary) -> void:

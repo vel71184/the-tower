@@ -20,6 +20,7 @@ var _status: Label3D
 var _top := 1.0
 
 const CharacterModel := preload("res://scripts/characters/character_model.gd")
+const Models := preload("res://scripts/game/models.gd")
 const Looks := preload("res://scripts/characters/looks.gd")
 
 
@@ -36,6 +37,8 @@ func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: C
 
 	if kind == "npc" and not d.has("shape"):
 		_build_character(d.get("look", {}), people)
+	elif d.has("model"):
+		_build_model(d)
 	else:
 		var color := Color(String(d.get("color", "#b8a48a")))
 		_build_shape(String(d.get("shape", "box")), d.get("size", []), material_for.call(color))
@@ -118,6 +121,24 @@ func set_status(text: String) -> void:
 func act(animation: String) -> void:
 	if character:
 		character.act(animation)
+
+
+## A Kenney model as this object's look, e.g. "model": "fantasy-town/cart", "rot": 70.
+## Hidden things don't know their height until shown, so it's measured from the mesh data.
+func _build_model(d: Dictionary) -> void:
+	var node := Models.make(String(d["model"]))
+	if node == null:
+		_build_shape("box", [], StandardMaterial3D.new())
+		return
+	node.rotation_degrees = Vector3(float(d.get("tilt", 0.0)), float(d.get("rot", 0.0)), 0.0)
+	var sc := float(d.get("scale", 1.0))
+	node.scale = Vector3(sc, sc, sc)
+	add_child(node)
+	var top := 0.0
+	for mi in Models._meshes(node, []):
+		var b: AABB = mi.get_aabb()
+		top = maxf(top, (b.position.y + b.size.y) * sc)
+	_top = maxf(top, 0.3)
 
 
 func _build_character(look: Dictionary, people: Dictionary) -> void:
