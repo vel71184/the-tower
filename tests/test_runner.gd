@@ -267,8 +267,11 @@ func _test_brawl() -> void:
 	c.act("shove")
 	await _until(func(): return c.is_climber_turn())
 	check(c.events.has("shove_moved:brann"), "a shove into open floor pushes him back a cell")
-	c.act("guard")
-	await _until(func(): return c.is_climber_turn())
+	var guarded: bool = await c.act("guard")
+	var back := await _until(func(): return c.is_climber_turn())
+	if not back or not c.events.has("strike_blocked:climber"):
+		print("    debug: guarded=%s active=%s turn=%s busy=%s awaiting=%s events=%s wounds=%d brann=%s climber=%s" % [
+			guarded, c.active, c.turn, c.busy, c._awaiting, c.events, Baseline.wounds, brann.cell, main.climber.cell])
 	check(c.events.has("strike_blocked:climber"), "guarding blocks his next strike")
 	check(c.wounds[brann] == 3, "a shove doesn't wound")
 	check(Baseline.habits.get("actions", {}).get("shove", 0) == 1, "shoves are counted")
@@ -281,8 +284,12 @@ func _test_brawl() -> void:
 	main.choose_text("Let him go")
 	main.choose_text("Fight him")
 	await _until(func(): return c.is_climber_turn())
-	c.act("wait")
-	check(await _until(func(): return not c.active), "the fight ends when you fall")
+	var waited: bool = await c.act("wait")
+	var ended := await _until(func(): return not c.active)
+	if not Baseline.has_flag("lost_to_brann"):
+		print("    debug: waited=%s ended=%s active=%s turn=%s busy=%s awaiting=%s events=%s wounds=%d flags=%s" % [
+			waited, ended, c.active, c.turn, c.busy, c._awaiting, c.events, Baseline.wounds, Baseline.flags.keys()])
+	check(ended, "the fight ends when you fall")
 	check(Baseline.has_flag("lost_to_brann") and Baseline.has_flag("bird_stolen"), "losing has consequences")
 	check(Baseline.wounds == 1, "you wake with one wound")
 	main.choose(0)
