@@ -40,6 +40,8 @@ func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: C
 		_build_character(d.get("look", {}), people)
 	elif d.has("model"):
 		_build_model(d)
+		if d.has("sign"):
+			_build_sign(d["sign"])
 	else:
 		var color := Color(String(d.get("color", "#b8a48a")))
 		_build_shape(String(d.get("shape", "box")), d.get("size", []), material_for.call(color))
@@ -156,6 +158,32 @@ func _build_model(d: Dictionary) -> void:
 		var b: AABB = mi.get_aabb()
 		top = maxf(top, (b.position.y + b.size.y) * sc)
 	_top = maxf(top, 0.3)
+
+
+## A board with readable words on it, on top of a post: {"text": "THE TOWER →", "height": 1.1}
+func _build_sign(spec: Dictionary) -> void:
+	var y := float(spec.get("height", _top - 0.25))
+	var board := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.95, 0.34, 0.06)
+	board.mesh = box
+	var wood := StandardMaterial3D.new()
+	wood.albedo_color = Color(String(spec.get("color", "#9c6b3f")))
+	wood.roughness = 0.9
+	board.material_override = wood
+	board.position = Vector3(0.18, y, 0)
+	board.rotation_degrees.y = float(spec.get("rot", 45.0))
+	add_child(board)
+	var words := Label3D.new()
+	words.text = String(spec.get("text", ""))
+	words.font_size = 44
+	words.pixel_size = 0.0045
+	words.outline_size = 0
+	words.modulate = Color(String(spec.get("ink", "#2b1d12")))
+	words.position = Vector3(0, 0, 0.035)
+	words.double_sided = false
+	board.add_child(words)
+	_top = maxf(_top, y + 0.2)
 
 
 func _build_character(look: Dictionary, people: Dictionary) -> void:

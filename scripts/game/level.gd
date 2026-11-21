@@ -34,6 +34,8 @@ var width := 0
 var height := 0
 var spawn_cell := Vector2i.ZERO
 var objects: Array = []
+## Props tall enough to hide the climber: [node, height]. They fade when in the way.
+var tall_props: Array = []
 var astar := AStarGrid2D.new()
 
 var _object_at: Dictionary = {}
@@ -94,8 +96,38 @@ func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 			elif not legend.has(c):
 				push_warning("Level %s: unknown map character '%s'" % [data.get("id", "?"), c])
 	_build_ground(ground, palette)
+	_add_surroundings(data.get("surround", {}))
 	for item in data.get("backdrop", []):
 		_add_backdrop(item)
+
+
+## Fades tall props standing between the camera and the climber, so nothing hides them.
+## Called a few times a second by the game.
+func fade_occluders(cam: Camera3D, target: Vector3) -> void:
+	var target_screen := cam.unproject_position(target + Vector3(0, 0.5, 0))
+	var reach := 110.0 * (cam.get_viewport().get_visible_rect().size.y / 720.0) * (7.0 / cam.size)
+	var cam_dir := -cam.global_transform.basis.z
+	var target_depth := cam_dir.dot(target - cam.global_position)
+	for entry in tall_props:
+		var node: Node3D = entry[0]
+		var h: float = entry[1]
+		var base := node.global_position
+		var depth := cam_dir.dot(base - cam.global_position)
+		var in_way := false
+		if depth < target_depth - 0.2:
+			var top_screen := cam.unproject_position(base + Vector3(0, h, 0))
+			var base_screen := cam.unproject_position(base)
+			var closest := Geometry2D.get_closest_point_to_segment(target_screen, base_screen, top_screen)
+			in_way = closest.distance_to(target_screen) < reach
+		_set_faded(node, in_way)
+
+
+func _set_faded(node: Node3D, faded: bool) -> void:
+	if bool(node.get_meta("faded", false)) == faded:
+		return
+	node.set_meta("faded", faded)
+	for mi in Models._meshes(node, []):
+		(mi as GeometryInstance3D).transparency = 0.72 if faded else 0.0
 
 
 func cell_to_world(cell: Vector2i) -> Vector3:
@@ -216,12 +248,24 @@ func _build_ground(cells: Dictionary, palette: Dictionary) -> void:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	st.set_normal(Vector3.UP)
+	var soft: bool = data.get("soft_ground", data.get("ground", "floor") != "floor")
 	for cell in cells:
 		var kind := String(cells[cell])
 		var pair: Array = GROUND_COLORS.get(kind, GROUND_COLORS["floor"])
 		if kind == "floor":
 			pair = [palette.get("floor_a", pair[0]), palette.get("floor_b", pair[1])]
 		var col := Color(String(pair[0] if (cell.x + cell.y) % 2 == 0 else pair[1]))
+		if soft:
+			# Outdoors: no checkerboard. Gentle per-cell variation, and grass worn where it
+			# meets a path.
+			col = Color(String(pair[0]))
+			var n := float(posmod(hash(cell * 31), 1000)) / 1000.0
+			col = col.lightened(0.05 * n) if n > 0.5 else col.darkened(0.06 * (1.0 - n))
+			if kind == "grass":
+				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+					if cells.get(cell + d, "") == "path":
+						col = col.lerp(Color(String(GROUND_COLORS["path"][0])), 0.28)
+						break
 		var y := -0.12 if kind == "water" else 0.0
 		var a := Vector3(cell.x, y, cell.y)
 		var b := Vector3(cell.x + 1, y, cell.y)
@@ -239,6 +283,51 @@ func _build_ground(cells: Dictionary, palette: Dictionary) -> void:
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mi.material_override = mat
 	add_child(mi)
+	if soft:
+		# Outdoors the land carries on past the edge of the playable map.
+		var around := MeshInstance3D.new()
+		around.name = "Surroundings"
+		var plane := PlaneMesh.new()
+		plane.size = Vector2(width + 80, height + 80)
+		around.mesh = plane
+		around.position = Vector3(width / 2.0, -0.03, height / 2.0)
+		var am := StandardMaterial3D.new()
+		var base_kind := String(data.get("ground", "grass"))
+		am.albedo_color = Color(String(GROUND_COLORS.get(base_kind, GROUND_COLORS["grass"])[0])).darkened(0.08)
+		am.roughness = 1.0
+		around.material_override = am
+		add_child(around)
+
+
+## Scenery past the map's edge so the world carries on: tall things on the far sides, low things
+## on the near (camera) sides. {"far": [models], "near": [models], "depth": cells, "density": 0-1}
+func _add_surroundings(spec: Dictionary) -> void:
+	if spec.is_empty():
+		return
+	var far: Array = spec.get("far", [])
+	var near: Array = spec.get("near", [])
+	var depth := int(spec.get("depth", 6))
+	var density := float(spec.get("density", 0.4))
+	for y in range(-depth, height + depth):
+		for x in range(-depth, width + depth):
+			if x >= 0 and y >= 0 and x < width and y < height:
+				continue
+			var cell := Vector2i(x, y)
+			var n := float(posmod(hash(cell * 97), 1000)) / 1000.0
+			if n > density:
+				continue
+			var is_near := x >= width or y >= height
+			var pool := near if is_near else far
+			if pool.is_empty():
+				continue
+			var node := Models.make(String(pool[posmod(hash(cell * 5), pool.size())]))
+			if node == null:
+				continue
+			node.position = cell_to_world(cell) + Vector3(n - 0.5, 0, 0.5 - n) * 0.5
+			node.rotation_degrees.y = float(posmod(hash(cell * 3), 360))
+			var sc := 0.8 + n * 0.5
+			node.scale = Vector3(sc, sc, sc)
+			add_child(node)
 
 
 ## A Kenney model standing on a cell (trees, rocks, fences...).
@@ -257,6 +346,9 @@ func _add_prop(entry: Dictionary, cell: Vector2i) -> void:
 		sc *= 0.85 + float(hash(cell * 13) % 30) / 100.0
 	node.scale = Vector3(sc, sc, sc)
 	add_child(node)
+	var h := Models.bounds(node).size.y
+	if h > 0.9:
+		tall_props.append([node, h])
 
 
 ## Scenery outside the playable grid: a single model, or a "stack" of models piled up

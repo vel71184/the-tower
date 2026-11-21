@@ -34,6 +34,7 @@ var _ended := false
 var _marker: MeshInstance3D
 var combat: Combat
 var _focus_ring: MeshInstance3D
+var _fade_timer := 0.0
 var _note_open := false
 var _touches: Dictionary = {}
 var _pinch_dist := 0.0
@@ -70,6 +71,10 @@ func _process(delta: float) -> void:
 	climber.move_free(screen_to_world(v), delta)
 	combat.set_blocking(free and (Input.is_action_pressed("block") or ui.block_held()))
 	_update_focus()
+	_fade_timer -= delta
+	if _fade_timer <= 0.0:
+		_fade_timer = 0.1
+		level.fade_occluders(cam, climber.global_position)
 
 
 # --- Title and level flow -------------------------------------------------------------------
@@ -150,6 +155,7 @@ func start_level(floor_n: int, level_n: int) -> bool:
 	level = Level.new()
 	add_child(level)
 	level.build(data, floor_info)
+	apply_mood(data)
 	climber.level = level
 	combat.reset(level)
 	ui.touch_actions_enabled = true
@@ -396,6 +402,24 @@ func _use(obj: Interactable) -> void:
 
 
 # --- Controller and keyboard ----------------------------------------------------------------
+
+func _on_entered_cell(cell: Vector2i) -> void:
+	for obj in level.objects:
+		var d := Vector2(cell).distance_to(Vector2(obj.cell))
+		if obj.kind == "hidden" and not obj.revealed and d <= 1.5:
+			obj.reveal()
+			Baseline.set_flag("noticed:" + obj.id)
+			var notice := String(obj.def.get("reveal_text", ""))
+			if notice != "":
+				obj.bark(notice)
+		obj.set_near(d <= NEAR_LABEL_RANGE)
+		var callout: Dictionary = obj.def.get("call_out", {})
+		if not callout.is_empty():
+			var flag := String(callout.get("flag", "heard:" + obj.id))
+			if not Baseline.has_flag(flag) and d <= float(callout.get("radius", 3.0)):
+				Baseline.set_flag(flag)
+				obj.bark(String(callout.get("text", "")))
+
 
 ## What the interact button would use right now (highlighted in the world), or null.
 var _focus: Interactable = null
@@ -657,28 +681,56 @@ func _show_focus_ring(obj: Interactable) -> void:
 		obj.set_near(true)
 
 
+## Sets lighting, sky colour and haze from a level's "mood" (see MOODS).
+func apply_mood(data: Dictionary) -> void:
+	var m: Dictionary = (MOODS.get(String(data.get("mood", "indoor")), MOODS["indoor"]) as Dictionary).duplicate()
+	m.merge(data.get("mood_overrides", {}), true)
+	_env.background_color = Color(String(m["background"]))
+	_env.ambient_light_color = Color(String(m["ambient"]))
+	_env.ambient_light_energy = float(m["ambient_energy"])
+	var fog := float(m.get("fog", 0.0))
+	_env.fog_enabled = fog > 0.0
+	if fog > 0.0:
+		_env.fog_light_color = Color(String(m.get("fog_color", m["background"])))
+		_env.fog_density = fog
+		_env.fog_sky_affect = 0.0
+	_sun.light_color = Color(String(m["sun"]))
+	_sun.light_energy = float(m["sun_energy"])
+	var ang: Array = m["sun_angle"]
+	_sun.rotation_degrees = Vector3(float(ang[0]), float(ang[1]), 0.0)
+
+
 func _show_marker(cell: Vector2i) -> void:
 	_marker.position = level.cell_to_world(cell) + Vector3(0, 0.02, 0)
 	_marker.visible = true
 
 
+## Indoor and outdoor moods. A level can pick one with "mood", or override parts of it.
+const MOODS := {
+	"indoor": {"background": "#15110f", "ambient": "#8c8070", "ambient_energy": 0.7,
+		"sun": "#ffe2b8", "sun_energy": 1.1, "sun_angle": [-60.0, 30.0], "fog": 0.0},
+	"outdoor_day": {"background": "#c9d6c8", "ambient": "#a7b4c4", "ambient_energy": 0.75,
+		"sun": "#ffdcae", "sun_energy": 1.25, "sun_angle": [-48.0, 55.0], "fog": 0.006, "fog_color": "#d8e0d4"},
+}
+
+var _env: Environment
+var _sun: DirectionalLight3D
+
+
 func _build_world() -> void:
-	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("#15110f")
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("#8c8070")
-	env.ambient_light_energy = 0.7
+	_env = Environment.new()
+	_env.background_mode = Environment.BG_COLOR
+	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var world_env := WorldEnvironment.new()
-	world_env.environment = env
+	world_env.environment = _env
 	add_child(world_env)
 
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-60.0, 30.0, 0.0)
-	sun.light_color = Color("#ffe2b8")
-	sun.light_energy = 1.1
-	sun.shadow_enabled = true
-	add_child(sun)
+	_sun = DirectionalLight3D.new()
+	_sun.shadow_enabled = true
+	_sun.shadow_blur = 1.5
+	add_child(_sun)
+	apply_mood({})
 
 	_marker = MeshInstance3D.new()
 	var disc := CylinderMesh.new()

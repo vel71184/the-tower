@@ -50,17 +50,34 @@
     },
     "p": {
       "prop": "mini-forest/plant",
-      "random_rot": true
+      "random_rot": true,
+      "random_scale": true
     },
     "o": {
       "prop": "mini-forest/stones",
       "random_rot": true,
       "scale": 0.6
     },
-    "L": {
-      "prop": "mini-forest/rocks-low",
+    "g": {
+      "prop": "castle-kit/tree-log",
       "solid": true,
       "random_rot": true
+    },
+    "u": {
+      "prop": "castle-kit/tree-trunk",
+      "solid": true,
+      "random_rot": true
+    },
+    "q": {
+      "prop": "fantasy-town/pillar-wood",
+      "solid": true,
+      "scale": 1.2
+    },
+    "n": {
+      "prop": "fantasy-town/fence-broken",
+      "solid": true,
+      "rot": 90,
+      "ground": "path"
     }
   },
   "backdrop": [
@@ -85,20 +102,20 @@
     }
   ],
   "map": [
-    "fkfT,,fYffkffffTfkkppL",
-    "Y...E,.opT.f.T.fff...L",
-    "f..p,,....f...fRfoprrL",
-    "YT...,,...fpr.f.T...pL",
-    "T.p...,,.....o...f.rrL",
-    "Y.fp..p,,o..w......opL",
-    "ff...p.p,,.C.h.....o.L",
-    "f......W.,,...p......L",
-    "f...ffpp.o,,,,.P....pL",
-    "kr.o..p.p....,,,...r.L",
-    "f....pT........,,,...L",
-    "pp..po....rr..oo.S,..L",
-    "rppp...ppo.......p,,.L",
-    "LLLLLLLLLLLLLLLLLLLLLL"
+    "fffkYfTffTkfkTkkfTkTYu",
+    "Y...E,.....ff.fpp....u",
+    "TfT.,,p..f..pf.f.p...f",
+    "kp...,,.pp.TYTrf.....u",
+    "T.T.o.,,p..p.ofY.p.ror",
+    "f.....p,,...w..kf.fT.u",
+    "fpp.....,,oCoh.puf.kfu",
+    "f....u.Wp,,p.p.p...p.u",
+    "Tk........,,,,.P.YT..g",
+    "k....o.p.....,,,o..pTg",
+    "YT.kkpfTT.o....,,,.p.g",
+    "k....fTff..f.p...S,p.g",
+    "YY.Tp..TT.f.......,,.r",
+    "TfffuufgffgTfffufqnnqT"
   ],
   "objects": [
     {
@@ -107,15 +124,19 @@
       "name": "Signpost",
       "kind": "examine",
       "model": "fantasy-town/pillar-wood",
-      "scale": 1.3,
+      "scale": 1.4,
       "lines": [
-        "A post with a board nailed to it: THE TOWER. An arrow points up the road.",
+        "A weathered board on a post: THE TOWER, and an arrow pointing up the road.",
         "Under it, someone has scratched: TURN BACK. Under that, in a different hand: DON'T."
       ],
       "effects": {
         "learn": [
           "signpost"
         ]
+      },
+      "sign": {
+        "text": "THE TOWER  →",
+        "height": 1.15
       }
     },
     {
@@ -368,5 +389,24 @@
         }
       }
     }
-  ]
+  ],
+  "surround": {
+    "far": [
+      "mini-forest/tree",
+      "mini-forest/tree-high",
+      "fantasy-town/tree",
+      "fantasy-town/tree-high",
+      "mini-forest/tree"
+    ],
+    "near": [
+      "mini-forest/plant",
+      "fantasy-town/rock-small",
+      "mini-forest/stones",
+      "castle-kit/tree-trunk",
+      "mini-forest/plant"
+    ],
+    "depth": 7,
+    "density": 0.45
+  },
+  "mood": "outdoor_day"
 }
