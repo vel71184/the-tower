@@ -292,9 +292,11 @@ func _test_brawl() -> void:
 
 	# Block: hold it facing him and his swing glances off.
 	c.set_blocking(true)
-	await _run(c, 6.0)
-	main.climber.face(brann.global_position)
-	await _run(c, 4.0)
+	for i in 40:
+		if not c.active or not is_instance_valid(brann) or c.events.has("strike_blocked:climber"):
+			break
+		main.climber.face(brann.global_position)
+		await _run(c, 0.25)
 	check(c.events.has("strike_blocked:climber"), "blocking stops his swing")
 	c.set_blocking(false)
 

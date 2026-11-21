@@ -35,6 +35,7 @@ var _marker: MeshInstance3D
 var combat: Combat
 var _focus_ring: MeshInstance3D
 var _fade_timer := 0.0
+var _block_input := false
 var _note_open := false
 var _touches: Dictionary = {}
 var _pinch_dist := 0.0
@@ -69,7 +70,10 @@ func _process(delta: float) -> void:
 	var free := not ui.is_busy() and not _note_open
 	var v := Input.get_vector("move_left", "move_right", "move_up", "move_down") if free else Vector2.ZERO
 	climber.move_free(screen_to_world(v), delta)
-	combat.set_blocking(free and (Input.is_action_pressed("block") or ui.block_held()))
+	var block_input: bool = free and (Input.is_action_pressed("block") or ui.block_held())
+	if block_input != _block_input:
+		_block_input = block_input
+		combat.set_blocking(block_input)
 	_update_focus()
 	_fade_timer -= delta
 	if _fade_timer <= 0.0:
