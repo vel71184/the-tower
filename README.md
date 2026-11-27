@@ -7,14 +7,17 @@ baseline records who the climber is becoming, and the tower adapts to it.
 - Design: [The Tower — Game Design Doc](https://claude.ai/artifact/9chnnz1zTjYc1NeqCQTxKF)
 - What's decided and what's open: [docs/DECISIONS.md](docs/DECISIONS.md)
 
-**Status:** first playable slice, Floor 1 · Level 9 (The Waiting Hall), with placeholder art.
+**Status:** two levels are playable, with Kenney art and real-time combat:
+- **Floor 0 · The Road.** Floor 0 (The Approach) is the 4-level prologue outside the tower.
+- **Floor 1 · The Waiting Hall.** This is Floor 1, Level 1, the lobby just inside the gate. It has the Brann brawl.
 
-Floor 1 is the tower's exterior and the way in. Levels 1–8 (outside) aren't built yet, so a new
-climb starts at level 9, the hall just inside the gate. Level 10 is the Gatekeeper.
+Levels that aren't built yet are skipped. As you go in through the gate, the tower's intro appears.
+You can walk back to earlier levels of the floor you're on, but you can't leave a floor until
+its boss is resolved.
 
-**Saving is automatic.** The game saves when a level starts, after every conversation, at the end
-of each level, and whenever the app is closed or sent to the background. **Continue** puts you
-back exactly where you stopped.
+**Saving is automatic.** The game saves when a level starts, after every conversation, when you
+move between levels, and whenever the app is closed or sent to the background. **Continue** puts
+you back exactly where you stopped.
 
 ## Playing a build
 
@@ -31,18 +34,21 @@ Every push builds the game on GitHub:
 
 | | Phone | Controller (8BitDo Pro 2, Xbox, PlayStation) | Keyboard |
 |---|---|---|---|
-| Walk | Tap where to go | D-pad or left stick | WASD or arrows |
-| Look, talk, use | Tap the thing | **Bottom** face button (faces it first) | E, Space or Enter |
-| Stop walking | | **Right** face button | Esc or Q |
-| Pick a dialogue choice | Tap it | D-pad + bottom face button | Arrows + Enter |
-| Zoom | Pinch | L1 / R1 | − / = or mouse wheel |
+| Walk | Tap where to go | Left stick or d-pad (smooth) | WASD or arrows |
+| Look, talk, use | Tap the thing | **Bottom** face button (uses the ringed thing) | E or Enter |
+| Attack | Attack button | **Left** face button | Space or J |
+| Kick (knockback, no wound) | Kick button | **Top** face button | K or F |
+| Block | Hold Block | Hold **right** face button | Hold Shift |
+| Lock on / next target | Lock on button | L1 / R1 | Q / Tab |
+| Zoom | Pinch | Triggers | − / = or mouse wheel |
 | Dev overlay (hidden baseline) | Three-finger tap | Select | F3 |
 
-Names appear over things when you're close. You can switch between touch and controller at any time.
+A swing only hits people already fighting you, or the person you've locked on to, so you never
+hurt a bystander by accident. Locking on to someone peaceful and attacking is a deliberate first
+strike, and it's remembered.
 
-**8BitDo Pro 2:** set the switch on the back to **X** (X-input). Pair it over Bluetooth on Android, or
-plug it in by USB on PC. Buttons are matched by **position**, not by the printed letter, so the
-bottom button always confirms, even in Switch mode where it's labelled B.
+**8BitDo Pro 2:** set the switch on the back to **X** (X-input). Buttons are matched by
+**position**, not by the printed letter.
 
 ## Project layout
 
@@ -65,7 +71,7 @@ bottom button always confirms, even in Switch mode where it's labelled B.
 ## Writing a level
 
 A level is one JSON file, registered in `LEVELS` in `scripts/game/main.gd` (the key is
-`"floor-level"`, e.g. `"1-9"`). A new climb starts at the lowest registered level.
+`"floor-level"`, e.g. `"1-1"`). A new climb starts at the lowest registered level.
 
 - `map`: rows of characters. `#` wall, `.` floor, `S` spawn; any other character is an object
   from `objects`. Rows run toward the camera; the bottom row and right column are drawn as
