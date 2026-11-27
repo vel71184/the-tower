@@ -189,7 +189,7 @@ func _until(cond: Callable, frames: int = 600) -> bool:
 
 ## A fresh Waiting Hall with the climber next to Brann, facing him, with fight time driven by tick().
 func _brawl_setup(main, climber_cell: Vector2i = Vector2i(5, 5)) -> void:
-	main.start_level(1, 9)
+	main.start_level(1, 1)
 	main.combat.manual = true
 	main.climber.place(climber_cell)
 	main.climber.face(main.find_object("brann").global_position)
@@ -244,6 +244,10 @@ func _test_brawl() -> void:
 	main.choose(1)
 	check(Baseline.has_flag("brann_dead") and Baseline.has_flag("killed:brann"), "finishing him is remembered")
 	check(brann.kind == "examine", "his body stays where he fell")
+	main.choose(0)
+	main.start_level(1, 1)
+	var body = main.find_object("brann")
+	check(body != null and body.kind == "examine" and body.character._held, "he's still lying there when you come back")
 	main.choose(0)
 	main.interact(main.find_object("tobin"))
 	check(main._talk_node_id == "after_kill", "Tobin reacts to the killing")
@@ -348,7 +352,7 @@ func _test_road() -> void:
 	var main = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	await get_tree().process_frame
-	check(main.start_level(1, 1), "The Road loads")
+	check(main.start_level(0, 1), "The Road (Floor 0) loads")
 	var level = main.level
 	check(level.get_node_or_null("Ground") != null, "the ground is one merged mesh")
 	check(level.get_node_or_null("Backdrop") != null, "the tower looms in the backdrop")
@@ -368,28 +372,52 @@ func _test_road() -> void:
 	check(Baseline.has_flag("carrying_wil_message") and Baseline.knows("ada"), "you can promise Wil to find his daughter")
 	main.interact(main.find_object("road_on"))
 	main.choose_text("Go on")
-	check(Baseline.floor_num == 1 and Baseline.level_num == 9, "unbuilt levels 2-8 are skipped: next is the Waiting Hall")
+	check(Baseline.floor_num == 1 and Baseline.level_num == 1, "Floor 0's unbuilt levels are skipped: next is the Waiting Hall")
+	check(main.ui.is_busy() and Baseline.has_flag("intro_seen:1"), "the tower's intro appears as you go in")
+	main._on_card_choice(0)
+	check(main.level.data.get("id") == "f01_l01", "then the Waiting Hall")
 	check(Baseline.has_flag("carrying_wil_message"), "promises carry over between levels")
+	check(Baseline.has_flag("completed:f00_l01"), "The Road is marked done")
+
+	print("Moving between levels")
+	main.go_back()
+	check(main._note_open and main.level.data.get("id") == "f01_l01", "no way back down past a floor's first level")
+	main.choose(0)
+	Baseline.level_num = 10
+	main.end_level()
+	check(main._note_open and not main._ended, "you can't leave a floor until its boss is faced")
+	main.choose(0)
+	Baseline.level_num = 1
+	main.start_level(0, 1, "back")
+	var exit_obj = main.find_object("road_on")
+	check(main.level.chebyshev(main.climber.cell, exit_obj.cell) <= 1, "coming back, you appear by the way forward")
+	main.start_level(1, 1)
+	Baseline.learn("marta_motive")
+	main.interact(main.find_object("brann"))
+	main.choose_text("Marta's choosing")
+	main.choose(0)
+	main.start_level(1, 1)
+	check(main.find_object("brann") == null, "someone who left stays gone when you return")
 	main.queue_free()
 	Baseline.delete_save()
 	await get_tree().process_frame
 
 
 func _test_level_one() -> void:
-	print("Floor 1, Level 9 (the Waiting Hall)")
+	print("Floor 1, Level 1: the Waiting Hall")
 	Baseline.reset()
 	var main = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	await get_tree().process_frame
-	check(main.first_built_level() == Vector2i(1, 1), "the first built level is 1-1, The Road")
-	check(main.start_level(1, 9), "level 1-9 loads")
+	check(main.first_built_level() == Vector2i(0, 1), "the first built level is Floor 0, The Road")
+	check(main.start_level(1, 1), "level 1-9 loads")
 	var level = main.level
 	check(level.width == 14 and level.height == 11, "map size is 14x11")
 	check(level.is_walkable(level.spawn_cell), "spawn is walkable")
 	for obj in level.objects:
 		check(not level.path_to_object(level.spawn_cell, obj).is_empty(), "%s is reachable" % obj.id)
 	check(not main.start_level(1, 10), "unbuilt level 1-10 reports not built")
-	main.start_level(1, 9)
+	main.start_level(1, 1)
 	level = main.level
 
 	check(main.climber.character != null and main.climber.character.body_name == "raider", "the climber is a built character")
@@ -433,14 +461,14 @@ func _test_level_one() -> void:
 
 	main.interact(main.find_object("passage"))
 	check(main.choose_text("Go on"), "the exit offers to go on")
-	check(Baseline.level_num == 10, "finishing the level advances to level 10")
+	check(Baseline.floor_num == 1 and Baseline.level_num == 2, "going on heads to Floor 1, Level 2")
 	check(Baseline.resume.is_empty(), "finishing the level clears the mid-level resume point")
 	check(Baseline.has_save(), "finishing the level saves")
 	check(is_equal_approx(Baseline.value("speed_patience"), 1.0), "a careful look around leans toward patience")
 
-	print("Floor 1, Level 9: walking past Tobin")
+	print("Floor 1, Level 1: walking past Tobin")
 	Baseline.reset()
-	main.start_level(1, 9)
+	main.start_level(1, 1)
 	main._on_entered_cell(main.find_object("tobin").cell + Vector2i(0, 1))
 	main.interact(main.find_object("passage"))
 	main.choose_text("Go on")
@@ -448,7 +476,7 @@ func _test_level_one() -> void:
 	check(is_equal_approx(Baseline.value("speed_patience"), -1.0), "rushing through leans toward speed")
 
 	print("Walking and talking with a controller")
-	main.start_level(1, 9)
+	main.start_level(1, 1)
 	main.climber.place(Vector2i(6, 8))
 	var before: Vector3 = main.climber.position
 	for i in 20:
@@ -467,8 +495,8 @@ func _test_level_one() -> void:
 
 	print("Autosave and resume")
 	main.new_climb()
-	check(Baseline.floor_num == 1 and Baseline.level_num == 1, "a new climb starts on The Road")
-	main.start_level(1, 9)
+	check(Baseline.floor_num == 0 and Baseline.level_num == 1, "a new climb starts on The Road (Floor 0)")
+	main.start_level(1, 1)
 	var hidden = main.find_object("loose_board")
 	main._on_entered_cell(hidden.cell)
 	main.climber.place(Vector2i(4, 7))

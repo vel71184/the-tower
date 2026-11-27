@@ -2,7 +2,7 @@
   "floor": 1,
   "name": "The Gatehouse",
   "era": "medieval",
-  "about": "The tower's exterior and the way in. Travelers, would-be climbers, and the Gatekeeper's people. Red marks the Gatekeeper's own.",
+  "about": "The first floor inside the tower. Level 1 is the Waiting Hall (the lobby) just inside the gate; level 10 is Marta, the Gatekeeper, at the stair. Red marks the Gatekeeper's own.",
   "people": {
     "shirt": [
       "slate",
@@ -61,5 +61,12 @@
       "male-g",
       "raider"
     ]
+  },
+  "levels": 10,
+  "boss_flag": "floor_cleared:1",
+  "intro": {
+    "title": "THE TOWER",
+    "body": "A hundred floors. Ten levels each.\nSomeone is waiting at the top.",
+    "button": "Go in"
   }
 }

@@ -9,11 +9,11 @@ const Interactable := preload("res://scripts/game/interactable.gd")
 const Combat := preload("res://scripts/game/combat.gd")
 
 ## "floor-level" -> content file. Levels not listed here aren't built yet.
-## Floor 1 is the tower's exterior and the way in: levels 1-8 are outside (not built yet),
-## level 9 is the Waiting Hall just inside the gate, and level 10 is the Gatekeeper.
+## Floor 0 (The Approach) is the prologue outside the tower: 4 levels, no boss.
+## Floor 1 (The Gatehouse) starts with the Waiting Hall; level 10 is Marta at the stair.
 const LEVELS := {
+	"0-1": "res://content/floors/floor_00/level_01.json",
 	"1-1": "res://content/floors/floor_01/level_01.json",
-	"1-9": "res://content/floors/floor_01/level_09.json",
 }
 
 const NEAR_LABEL_RANGE := 2.5
@@ -36,6 +36,8 @@ var combat: Combat
 var _focus_ring: MeshInstance3D
 var _fade_timer := 0.0
 var _block_input := false
+var _last_level := Vector2i(-1, -1)
+var _floor_cache: Dictionary = {}
 var _note_open := false
 var _touches: Dictionary = {}
 var _pinch_dist := 0.0
@@ -84,7 +86,7 @@ func _process(delta: float) -> void:
 # --- Title and level flow -------------------------------------------------------------------
 
 func show_title() -> void:
-	var body := "A hundred floors. Ten levels each.\nTap to walk. Tap things to look closer."
+	var body := ""
 	if Baseline.has_save():
 		_card("THE TOWER", body, ["Continue the climb", "Start a new climb"], func(i: int) -> void:
 			if i == 0 and Baseline.load_save():
@@ -130,16 +132,25 @@ func first_built_level() -> Vector2i:
 	return best
 
 
-func start_level(floor_n: int, level_n: int) -> bool:
+## Loads a level. arriving: "start" (from the level before, or a new climb) or "back"
+## (returning from the level after, so the climber appears by the way forward).
+func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool:
 	ui.hide_card()
 	ui.hide_page()
 	_note_open = false
 	var key := "%d-%d" % [floor_n, level_n]
 	if not LEVELS.has(key):
+		var from := _last_level
+		var buttons := ["Go back", "Start a new climb"] if LEVELS.has("%d-%d" % [from.x, from.y]) else ["Start a new climb"]
 		_card("Floor %d · Level %d" % [floor_n, level_n],
 			"This part of the tower isn't built yet.\nYour climb so far is saved.",
-			["Start a new climb"], func(_i: int) -> void:
-				new_climb())
+			buttons, func(i: int) -> void:
+				if buttons.size() == 2 and i == 0:
+					Baseline.floor_num = from.x
+					Baseline.level_num = from.y
+					start_level(from.x, from.y, "back")
+				else:
+					new_climb())
 		return false
 
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(LEVELS[key]))
@@ -150,12 +161,7 @@ func start_level(floor_n: int, level_n: int) -> bool:
 	if level:
 		remove_child(level)
 		level.queue_free()
-	var floor_info: Dictionary = {}
-	var floor_path := "res://content/floors/floor_%02d/floor.json" % floor_n
-	if FileAccess.file_exists(floor_path):
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(floor_path))
-		if typeof(parsed) == TYPE_DICTIONARY:
-			floor_info = parsed
+	var floor_info := floor_data(floor_n)
 	level = Level.new()
 	add_child(level)
 	level.build(data, floor_info)
@@ -164,13 +170,15 @@ func start_level(floor_n: int, level_n: int) -> bool:
 	combat.reset(level)
 	ui.touch_actions_enabled = true
 	_focus = null
-	climber.place(level.spawn_cell)
+	_restore_what_happened()
+	climber.place(level.return_cell() if arriving == "back" else level.spawn_cell)
 	cam.snap()
 	_pending = null
 	_talk_obj = null
 	_ended = false
 	Baseline.floor_num = floor_n
 	Baseline.level_num = level_n
+	_last_level = Vector2i(floor_n, level_n)
 	# Hidden things the climber already found stay found.
 	for obj in level.objects:
 		if obj.kind == "hidden" and Baseline.has_flag("noticed:" + obj.id):
@@ -187,25 +195,93 @@ func start_level(floor_n: int, level_n: int) -> bool:
 	return true
 
 
+## Leaves forward: the next level of this floor, or the next floor once its boss is resolved.
 func end_level() -> void:
 	if _ended:
 		return
+	var here := Vector2i(Baseline.floor_num, Baseline.level_num)
+	var info := floor_data(here.x)
+	var last := int(info.get("levels", 10))
+	var next := Vector2i(here.x, here.y + 1)
+	if here.y >= last:
+		var boss := String(info.get("boss_flag", "")) if info.get("boss_flag") != null else ""
+		if boss != "" and not Baseline.has_flag(boss):
+			show_note("The way up stays shut until you've faced whoever holds this floor.")
+			return
+		next = Vector2i(here.x + 1, 1)
 	_ended = true
 	climber.stop()
-	_apply_end_rules()
-	Baseline.record("completed", String(level.data.get("id", "")))
-	Baseline.advance_level()
-	var body := "Your climb is saved."
-	var next := next_built_level(Vector2i(Baseline.floor_num, Baseline.level_num))
-	if next.x > 0 and next != Vector2i(Baseline.floor_num, Baseline.level_num):
-		body += "\nThe next levels aren't built yet, so you'll skip ahead to level %d." % next.y
-		Baseline.floor_num = next.x
-		Baseline.level_num = next.y
+	var id := String(level.data.get("id", ""))
+	if not Baseline.has_flag("completed:" + id):
+		Baseline.set_flag("completed:" + id)
+		_apply_end_rules()
+		Baseline.record("completed", id)
+	# Levels that aren't built yet are skipped for now (never across a floor with a boss).
+	if not LEVELS.has("%d-%d" % [next.x, next.y]):
+		var built := next_built_level(next)
+		if built.x >= 0 and (built.x == next.x or _floors_open_between(next.x, built.x)):
+			next = built
+	_travel(next, "start")
+
+
+## Walks back to the previous level of this floor. You can't go back down past a floor's start.
+func go_back() -> void:
+	var here := Vector2i(Baseline.floor_num, Baseline.level_num)
+	var prev := here.y - 1
+	while prev >= 1 and not LEVELS.has("%d-%d" % [here.x, prev]):
+		prev -= 1
+	if prev < 1:
+		show_note("There's no way back from here.")
+		return
+	_ended = true
+	climber.stop()
+	_travel(Vector2i(here.x, prev), "back")
+
+
+func _travel(to: Vector2i, arriving: String) -> void:
+	var from_floor := Baseline.floor_num
+	Baseline.floor_num = to.x
+	Baseline.level_num = to.y
 	Baseline.resume = {}
 	Baseline.save()
-	var title := "Level %d complete" % int(level.data.get("level", 0))
-	_card(title, body, ["Climb on"], func(_i: int) -> void:
-		start_level(Baseline.floor_num, Baseline.level_num))
+	var intro: Dictionary = floor_data(to.x).get("intro", {})
+	if to.x != from_floor and not intro.is_empty() and not Baseline.has_flag("intro_seen:%d" % to.x):
+		Baseline.set_flag("intro_seen:%d" % to.x)
+		_card(String(intro.get("title", "")), String(intro.get("body", "")), [String(intro.get("button", "Go on"))],
+			func(_i: int) -> void:
+				start_level(to.x, to.y, arriving))
+		return
+	start_level(to.x, to.y, arriving)
+	ui.toast("Saved", 1.2)
+
+
+## A floor's rules and people (content/floors/floor_NN/floor.json).
+func floor_data(floor_n: int) -> Dictionary:
+	if not _floor_cache.has(floor_n):
+		var path := "res://content/floors/floor_%02d/floor.json" % floor_n
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+		_floor_cache[floor_n] = parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+	return _floor_cache[floor_n]
+
+
+## True if every floor from a up to (not including) b has no boss blocking the way.
+func _floors_open_between(a: int, b: int) -> bool:
+	for f in range(a, b):
+		var boss: Variant = floor_data(f).get("boss_flag")
+		if boss != null and String(boss) != "" and not Baseline.has_flag(String(boss)):
+			return false
+	return true
+
+
+## Makes a level match what already happened in it: people who left stay gone, the dead stay
+## where they fell.
+func _restore_what_happened() -> void:
+	for obj in level.objects.duplicate():
+		if Baseline.has_flag("gone:" + obj.id):
+			level.remove_object(obj)
+		elif Baseline.has_flag("killed:" + obj.id):
+			var out: Dictionary = combat._fight_for(obj).get("outcomes", {}).get("killed", {})
+			combat.lay_down(obj, out)
 
 
 ## The first built level at or after a floor/level, or (-1, -1) if none.
@@ -574,8 +650,10 @@ func choose(index: int) -> void:
 func _do_action(action: String, obj: Interactable) -> void:
 	var parts := action.split(":")
 	match parts[0]:
-		"end_level":
+		"end_level", "next":
 			end_level()
+		"go_back":
+			go_back()
 		"rest":
 			Baseline.rest()
 			ui.set_wounds(Baseline.wounds, Baseline.max_wounds, false)
@@ -583,6 +661,7 @@ func _do_action(action: String, obj: Interactable) -> void:
 			autosave()
 		"leave":
 			if obj and is_instance_valid(obj):
+				Baseline.set_flag("gone:" + obj.id)
 				level.remove_object(obj)
 			autosave()
 		"fight":

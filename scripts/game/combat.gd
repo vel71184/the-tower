@@ -398,19 +398,26 @@ func _end_foe(foe, outcome: String) -> void:
 	match outcome:
 		"killed":
 			Baseline.set_flag("killed:" + foe.id)
-			if foe.character:
-				foe.character.hold("die")
-			foe.kind = "examine"
-			foe.display_name = String(out.get("body_name", foe.display_name))
-			foe.def = {"lines": out.get("body_lines", ["%s doesn't move." % foe.display_name])}
+			lay_down(foe, out)
 		"spared", "talked_down":
 			Baseline.set_flag("spared:" + foe.id)
+			Baseline.set_flag("gone:" + foe.id)
 			level.remove_object(foe)
 	var text := String(out.get("text", ""))
 	if text != "":
 		main.show_note(text)
 	if foes.is_empty():
 		_end_encounter(outcome)
+
+
+## Someone who has died: they lie where they fell and can be looked at, nothing more.
+func lay_down(obj, out: Dictionary) -> void:
+	if obj.character:
+		obj.character.hold("die")
+	obj.kind = "examine"
+	obj.display_name = String(out.get("body_name", obj.display_name))
+	obj.def = {"lines": out.get("body_lines", ["%s doesn't move." % obj.display_name])}
+	obj.set_status("")
 
 
 func _lost() -> void:
@@ -426,6 +433,7 @@ func _lost() -> void:
 		if out.has("text"):
 			notes.append(String(out["text"]))
 		if out.get("leaves", true) and out.has("text"):
+			Baseline.set_flag("gone:" + foe.id)
 			level.remove_object(foe)
 	Baseline.habit("lost")
 	Baseline.record("lost", "")

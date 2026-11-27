@@ -2,345 +2,445 @@
   "id": "f01_l01",
   "floor": 1,
   "level": 1,
-  "title": "Floor 1 · The Road",
-  "hint": "Tap to walk, tap things to look closer. With a controller: stick to walk, bottom button to look.",
-  "draft_note": "First of Floor 1's outside levels: the approach to the tower.",
-  "ground": "grass",
-  "legend": {
-    ",": {
-      "ground": "path"
-    },
-    "S": {
-      "spawn": true,
-      "ground": "path"
-    },
-    "f": {
-      "prop": "mini-forest/tree",
-      "solid": true,
-      "random_rot": true,
-      "random_scale": true
-    },
-    "T": {
-      "prop": "fantasy-town/tree",
-      "solid": true,
-      "random_rot": true,
-      "random_scale": true
-    },
-    "Y": {
-      "prop": "fantasy-town/tree-high",
-      "solid": true,
-      "random_rot": true
-    },
-    "k": {
-      "prop": "fantasy-town/tree-crooked",
-      "solid": true,
-      "random_rot": true
-    },
-    "r": {
-      "prop": "fantasy-town/rock-small",
-      "solid": true,
-      "random_rot": true,
-      "scale": 0.7
-    },
-    "R": {
-      "prop": "fantasy-town/rock-large",
-      "solid": true,
-      "random_rot": true,
-      "scale": 0.6
-    },
-    "p": {
-      "prop": "mini-forest/plant",
-      "random_rot": true,
-      "random_scale": true
-    },
-    "o": {
-      "prop": "mini-forest/stones",
-      "random_rot": true,
-      "scale": 0.6
-    },
-    "g": {
-      "prop": "castle-kit/tree-log",
-      "solid": true,
-      "random_rot": true
-    },
-    "u": {
-      "prop": "castle-kit/tree-trunk",
-      "solid": true,
-      "random_rot": true
-    },
-    "q": {
-      "prop": "fantasy-town/pillar-wood",
-      "solid": true,
-      "scale": 1.2
-    },
-    "n": {
-      "prop": "fantasy-town/fence-broken",
-      "solid": true,
-      "rot": 90,
-      "ground": "path"
-    }
+  "title": "Floor 1 · The Waiting Hall",
+  "draft_note": "Floor 1, level 1: the lobby just inside the gate. Level 10 is Marta, the Gatekeeper, at the stair. Marta is a draft boss for testing.",
+  "palette": {
+    "floor_a": "#5b5148",
+    "floor_b": "#544a42",
+    "wall": "#8a7f72"
   },
-  "backdrop": [
-    {
-      "stack": [
-        "castle-kit/tower-hexagon-base",
-        "castle-kit/tower-hexagon-mid",
-        "castle-kit/tower-hexagon-mid",
-        "castle-kit/tower-hexagon-mid",
-        "castle-kit/tower-hexagon-mid",
-        "castle-kit/tower-hexagon-mid",
-        "castle-kit/tower-hexagon-mid",
-        "castle-kit/tower-hexagon-mid",
-        "castle-kit/tower-hexagon-top",
-        "castle-kit/tower-hexagon-roof"
-      ],
-      "at": [
-        -3.5,
-        -4.5
-      ],
-      "scale": 6
-    }
-  ],
   "map": [
-    "fffkYfTffTkfkTkkfTkTYu",
-    "Y...E,.....ff.fpp....u",
-    "TfT.,,p..f..pf.f.p...f",
-    "kp...,,.pp.TYTrf.....u",
-    "T.T.o.,,p..p.ofY.p.ror",
-    "f.....p,,...w..kf.fT.u",
-    "fpp.....,,oCoh.puf.kfu",
-    "f....u.Wp,,p.p.p...p.u",
-    "Tk........,,,,.P.YT..g",
-    "k....o.p.....,,,o..pTg",
-    "YT.kkpfTT.o....,,,.p.g",
-    "k....fTff..f.p...S,p.g",
-    "YY.Tp..TT.f.......,,.r",
-    "TfffuufgffgTfffufqnnqT"
+    "##############",
+    "#B.B...N.....#",
+    "#...........E#",
+    "#..C.........#",
+    "#.......##...#",
+    "#..TK...##...#",
+    "#............#",
+    "#.....h......#",
+    "#B...........#",
+    "#....GS......#",
+    "##############"
   ],
   "objects": [
     {
-      "char": "P",
-      "id": "signpost",
-      "name": "Signpost",
+      "char": "G",
+      "id": "entry_gate",
+      "name": "The gate",
       "kind": "examine",
-      "model": "fantasy-town/pillar-wood",
-      "scale": 1.4,
+      "shape": "arch",
+      "color": "#7d6a52",
       "lines": [
-        "A weathered board on a post: THE TOWER, and an arrow pointing up the road.",
-        "Under it, someone has scratched: TURN BACK. Under that, in a different hand: DON'T."
+        "The gate you came in through. It swung shut behind you on its own.",
+        "There's no handle on this side."
       ],
       "effects": {
         "learn": [
-          "signpost"
+          "no_way_back"
         ]
-      },
-      "sign": {
-        "text": "THE TOWER  →",
-        "height": 1.15
+      }
+    },
+    {
+      "char": "N",
+      "id": "notice_board",
+      "name": "Notice board",
+      "kind": "examine",
+      "shape": "box",
+      "size": [
+        0.9,
+        1.4,
+        0.2
+      ],
+      "color": "#a0784c",
+      "lines": [
+        "BY ORDER OF THE GATEKEEPER: the stair is closed. Climbers who wait will be seen in turn.",
+        "Below it, rows of tally marks. Someone has been counting days. The newest marks are in a child's hand."
+      ],
+      "effects": {
+        "learn": [
+          "stair_closed"
+        ]
       }
     },
     {
       "char": "C",
-      "id": "supply_cart",
-      "name": "Wrecked cart",
+      "id": "campfire",
+      "name": "Cold campfire",
       "kind": "examine",
-      "model": "fantasy-town/cart",
-      "rot": 70,
-      "lines": [
-        "A supply cart, tipped into the ditch. Its sacks are split and the birds have had the grain.",
-        "Painted on the side: a red gate. The Gatekeeper's mark."
-      ],
-      "effects": {
-        "learn": [
-          "gate_cart"
-        ]
-      }
-    },
-    {
-      "char": "w",
-      "id": "loose_wheel",
-      "name": "Loose wheel",
-      "kind": "examine",
-      "model": "fantasy-town/wheel",
-      "rot": 20,
-      "blocking": false,
-      "lines": [
-        "One of the cart's wheels, lying in the grass. Its spokes are snapped, all on one side, as if something very heavy stepped on it."
-      ],
-      "effects": {
-        "learn": [
-          "heavy_step"
-        ]
-      }
-    },
-    {
-      "char": "h",
-      "id": "torn_ledger",
-      "name": "Torn ledger page",
-      "kind": "hidden",
-      "shape": "plank",
+      "shape": "cylinder",
       "size": [
-        0.4,
-        0.03,
-        0.3
+        0.7,
+        0.2,
+        0.7
       ],
-      "color": "#e8dcc0",
-      "reveal_text": "Something pale in the grass.",
+      "color": "#3b3330",
       "lines": [
-        "A page torn from a ledger, half pulped by rain. 'Bread for the waiting hall: forty loaves.'",
-        "The last line is in a different hand: 'No more deliveries. By order of M.'"
+        "Ash, long cold. Someone cooked here for weeks, then stopped.",
+        "A pot lies on its side. Whoever left it didn't plan on coming back down."
+      ]
+    },
+    {
+      "char": "B",
+      "id": "bedrolls",
+      "name": "Bedrolls",
+      "kind": "examine",
+      "shape": "box",
+      "size": [
+        0.8,
+        0.15,
+        0.5
       ],
-      "effects": {
-        "learn": [
-          "deliveries_stopped"
-        ],
-        "set_flags": [
-          "found_ledger"
-        ]
+      "color": "#6e5a44",
+      "dialogue": {
+        "start": "look",
+        "nodes": {
+          "look": {
+            "text": "Bedrolls along the wall. Most have gathered dust. One is still warm.",
+            "choices": [
+              {
+                "text": "Rest a while.",
+                "action": "rest",
+                "requires_hurt": true
+              },
+              {
+                "text": "Leave them.",
+                "next": ""
+              }
+            ]
+          }
+        }
       }
     },
     {
-      "char": "W",
-      "id": "wil",
-      "name": "Wil",
+      "char": "T",
+      "id": "tobin",
+      "name": "Tobin",
       "kind": "npc",
-      "facing_deg": -45,
+      "call_out": {
+        "radius": 3,
+        "flag": "heard_tobin",
+        "text": "Hey! You're climbing too?"
+      },
+      "dialogue": {
+        "start": "hello",
+        "start_if": [
+          {
+            "flag": "brann_dead",
+            "unless": "tobin_saw_kill",
+            "start": "after_kill"
+          },
+          {
+            "flag": "brann_gone",
+            "unless": "thanked",
+            "start": "thanks"
+          },
+          {
+            "flag": "carrying_bird",
+            "start": "again_bird"
+          },
+          {
+            "flag": "tobin_done",
+            "start": "again"
+          }
+        ],
+        "nodes": {
+          "hello": {
+            "text": "Thirty-one days I've waited here. She says I'm not ready. Maybe nobody is.",
+            "effects": {
+              "set_flags": [
+                "talked_tobin"
+              ]
+            },
+            "choices": [
+              {
+                "text": "Who says you're not ready?",
+                "next": "marta"
+              },
+              {
+                "text": "Why are you climbing?",
+                "next": "sister"
+              },
+              {
+                "text": "Good luck.",
+                "next": "brush_off",
+                "effects": {
+                  "nudge": {
+                    "self": 0.5
+                  }
+                }
+              }
+            ]
+          },
+          "marta": {
+            "text": "Marta. The Gatekeeper. They say she used to wave everyone through. Then something came back down the stair, and now nobody goes up.",
+            "effects": {
+              "learn": [
+                "marta_name",
+                "something_came_down"
+              ]
+            },
+            "next": "more"
+          },
+          "more": {
+            "text": "Anything else?",
+            "choices": [
+              {
+                "text": "Why are you climbing?",
+                "next": "sister",
+                "hide_if": "tobin_done"
+              },
+              {
+                "text": "That's all.",
+                "next": ""
+              }
+            ]
+          },
+          "sister": {
+            "text": "My sister went up a year ago. Never sent word. I carved her this.",
+            "next": "ask"
+          },
+          "ask": {
+            "text": "He holds out a small wooden bird. \"If you get further than me... would you carry it up? Show it around?\"",
+            "choices": [
+              {
+                "text": "I'll carry it.",
+                "next": "took",
+                "effects": {
+                  "nudge": {
+                    "others": 1
+                  },
+                  "set_flags": [
+                    "carrying_bird",
+                    "tobin_done"
+                  ]
+                }
+              },
+              {
+                "text": "I travel light.",
+                "next": "refused",
+                "effects": {
+                  "nudge": {
+                    "self": 1
+                  },
+                  "set_flags": [
+                    "refused_bird",
+                    "tobin_done"
+                  ]
+                }
+              }
+            ]
+          },
+          "took": {
+            "text": "He presses it into your hand and doesn't let go right away. \"Her name's Wren.\"",
+            "effects": {
+              "learn": [
+                "wren"
+              ]
+            }
+          },
+          "refused": {
+            "text": "\"Right. Course.\" He tucks the bird back inside his coat."
+          },
+          "brush_off": {
+            "text": "\"Yeah. You too.\" He goes back to counting the marks on the board."
+          },
+          "again_bird": {
+            "text": "\"Her name's Wren. Don't forget.\""
+          },
+          "again": {
+            "text": "\"Still here.\""
+          },
+          "thanks": {
+            "text": "\"He's gone? He's been on me for weeks. Thank you.\"",
+            "effects": {
+              "nudge": {
+                "others": 0.5
+              },
+              "set_flags": [
+                "thanked"
+              ]
+            },
+            "next": "hello"
+          },
+          "after_kill": {
+            "text": "Tobin won't look at you. \"He was just... hungry. Like the rest of us.\"",
+            "effects": {
+              "set_flags": [
+                "tobin_saw_kill"
+              ]
+            },
+            "next": ""
+          }
+        }
+      },
       "look": {
-        "body": "worker",
-        "head": "male-g",
+        "body": "male-f",
+        "head": "male-e",
         "colors": {
           "skin": "tan",
-          "hair": "silver",
-          "shirt": "steel",
+          "hair": "coral",
+          "shirt": "sky",
           "pants": "brown",
+          "shoes": "charcoal"
+        }
+      }
+    },
+    {
+      "char": "K",
+      "id": "brann",
+      "name": "Brann",
+      "kind": "npc",
+      "facing_deg": 90,
+      "look": {
+        "body": "raider",
+        "head": "male-g",
+        "scale": 1.12,
+        "colors": {
+          "skin": "tan",
+          "hair": "charcoal",
+          "shirt": "brown",
+          "pants": "ink",
           "shoes": "charcoal",
           "accent": "sand"
         }
       },
       "call_out": {
         "radius": 3,
-        "flag": "heard_wil",
-        "text": "\"Turning back's allowed, you know.\""
+        "flag": "heard_brann",
+        "text": "\"Keep walking.\""
       },
       "dialogue": {
         "start": "hello",
-        "start_if": [
-          {
-            "flag": "wil_done",
-            "start": "again"
-          }
-        ],
         "nodes": {
           "hello": {
-            "text": "An old man with a heavy pack, walking away from the tower. \"Going up? Huh.\"",
-            "effects": {
-              "set_flags": [
-                "talked_wil"
-              ]
-            },
+            "text": "\"Keep walking. This one owes me.\" He has a fist in Tobin's coat.",
             "choices": [
               {
-                "text": "Why are you leaving?",
-                "next": "why",
-                "hide_if": "asked_wil_why"
+                "text": "Owes you what?",
+                "next": "toll",
+                "hide_if": "heard_toll"
               },
               {
-                "text": "What's up there?",
-                "next": "what",
-                "hide_if": "asked_wil_what"
+                "text": "Let him go.",
+                "next": "make_me"
               },
               {
-                "text": "Do you need anything?",
-                "next": "need",
-                "hide_if": "wil_done"
+                "text": "Marta's choosing who climbs. Think she'll open the stair for a thug?",
+                "requires_knowledge": "marta_motive",
+                "next": "talked_down"
               },
               {
-                "text": "Goodbye.",
-                "next": ""
+                "text": "(Hit him first.)",
+                "action": "fight:brann:strike",
+                "effects": {
+                  "nudge": {
+                    "force": 1
+                  }
+                }
+              },
+              {
+                "text": "Not my business.",
+                "next": "",
+                "effects": {
+                  "nudge": {
+                    "self": 1
+                  },
+                  "set_flags": [
+                    "ignored_brann"
+                  ]
+                }
               }
             ]
           },
-          "why": {
-            "text": "\"Waited at that gate forty days. Then one evening I looked up at the thing and thought: I like who I am down here.\"",
-            "effects": {
-              "set_flags": [
-                "asked_wil_why"
-              ]
-            },
-            "next": "hello"
-          },
-          "what": {
-            "text": "\"Floors. Ten rooms to a floor, they say, and someone at the top of each who won't let you by easy. First one's the Gatekeeper. Marta.\"",
+          "toll": {
+            "text": "\"Everyone who waits pays the one who's waited longest. That's me. Bread, coin, that stupid bird of his.\"",
             "effects": {
               "learn": [
-                "marta_name",
-                "tower_floors"
+                "brann_toll"
               ],
               "set_flags": [
-                "asked_wil_what"
+                "heard_toll"
               ]
             },
             "next": "hello"
           },
-          "need": {
-            "text": "He thinks about it. \"My daughter's at the climbers' camp, up the road. Tell her I went home. She'll know what it means.\"",
+          "make_me": {
+            "text": "\"Make me.\" He lets go of Tobin and squares up to you.",
             "choices": [
               {
-                "text": "I'll tell her.",
-                "next": "promise",
+                "text": "Fight him.",
+                "action": "fight:brann",
                 "effects": {
                   "nudge": {
-                    "others": 1
-                  },
-                  "set_flags": [
-                    "carrying_wil_message",
-                    "wil_done"
-                  ]
+                    "others": 0.5
+                  }
                 }
               },
               {
-                "text": "I can't promise that.",
-                "next": "no_promise",
+                "text": "Back off.",
+                "next": "",
                 "effects": {
                   "nudge": {
-                    "honesty": 0.5,
-                    "self": 0.5
+                    "self": 1
                   },
                   "set_flags": [
-                    "wil_done"
+                    "backed_off_brann"
                   ]
                 }
               }
             ]
           },
-          "promise": {
-            "text": "\"Her name's Ada. Thank you.\" He shifts his pack and keeps walking.",
+          "talked_down": {
+            "text": "He looks toward the stair, then back at you. \"...Not worth it.\" He lets go of Tobin and walks off into the dark.",
             "effects": {
-              "learn": [
-                "ada"
+              "nudge": {
+                "persuasion": 1,
+                "others": 1
+              },
+              "set_flags": [
+                "brann_gone",
+                "talked_down_brann"
               ]
-            }
-          },
-          "no_promise": {
-            "text": "\"Honest, at least. That's rarer up there than you'd think.\""
-          },
-          "again": {
-            "text": "\"Road's that way. Up.\" He nods toward the tower."
+            },
+            "action": "leave"
           }
         }
       }
     },
     {
+      "char": "h",
+      "id": "loose_board",
+      "name": "Loose floorboard",
+      "kind": "hidden",
+      "shape": "plank",
+      "color": "#8b6b47",
+      "reveal_text": "A floorboard shifts under your weight.",
+      "lines": [
+        "You pry the board up. Underneath, wrapped in oilcloth, is a folded letter.",
+        "\"Brother. I let the last one through, like all the others. You know what came back down. Forty houses on the lower stair.",
+        "I won't open the stair again until I know who's climbing. If they ask, tell them I'm cruel. It's easier. — M.\""
+      ],
+      "effects": {
+        "learn": [
+          "marta_motive"
+        ],
+        "set_flags": [
+          "found_letter"
+        ]
+      }
+    },
+    {
       "char": "E",
-      "id": "road_on",
-      "name": "Road to the river",
+      "id": "passage",
+      "name": "Passage into the gatehouse",
       "kind": "exit",
-      "model": "fantasy-town/lantern",
+      "shape": "arch",
+      "color": "#c2b49c",
       "dialogue": {
         "start": "ask",
         "nodes": {
           "ask": {
-            "text": "The road runs on toward the river and the tower beyond it. Go on?",
+            "text": "The passage leads deeper into the gatehouse. Somewhere beyond it is the stair, and the Gatekeeper. Go on?",
             "choices": [
               {
                 "text": "Go on.",
@@ -358,16 +458,16 @@
   ],
   "end_rules": [
     {
-      "note": "Heard Wil call out and walked past.",
+      "note": "Declined: heard Tobin call out and walked past him.",
       "if": [
-        "heard_wil"
+        "heard_tobin"
       ],
       "unless": [
-        "talked_wil"
+        "talked_tobin"
       ],
       "effects": {
         "nudge": {
-          "self": 1
+          "self": 2
         }
       }
     },
@@ -381,7 +481,7 @@
       }
     },
     {
-      "note": "Went straight up the road.",
+      "note": "Went straight through.",
       "max_examined": 1,
       "effects": {
         "nudge": {
@@ -390,23 +490,79 @@
       }
     }
   ],
-  "surround": {
-    "far": [
-      "mini-forest/tree",
-      "mini-forest/tree-high",
-      "fantasy-town/tree",
-      "fantasy-town/tree-high",
-      "mini-forest/tree"
-    ],
-    "near": [
-      "mini-forest/plant",
-      "fantasy-town/rock-small",
-      "mini-forest/stones",
-      "castle-kit/tree-trunk",
-      "mini-forest/plant"
-    ],
-    "depth": 7,
-    "density": 0.45
-  },
-  "mood": "outdoor_day"
+  "fights": {
+    "brann": {
+      "opponents": [
+        "brann"
+      ],
+      "wounds": 3,
+      "yield_at": 1,
+      "yield_text": "Brann drops to one knee and raises a hand. \"Enough! Enough. He's yours.\"",
+      "talk": [
+        {
+          "text": "Marta's choosing who climbs. Think she'll open the stair for a thug?",
+          "requires": "marta_motive",
+          "result": "yield",
+          "reply": "\"...Not worth it.\""
+        },
+        {
+          "text": "This isn't worth either of us bleeding.",
+          "reply": "\"Then stop swinging.\""
+        }
+      ],
+      "outcomes": {
+        "spared": {
+          "text": "Brann limps off into the dark. Behind you, Tobin lets out a long breath.",
+          "effects": {
+            "nudge": {
+              "others": 1
+            },
+            "set_flags": [
+              "brann_gone",
+              "brann_spared"
+            ]
+          }
+        },
+        "talked_down": {
+          "text": "Brann backs away with his hands open, and is gone.",
+          "effects": {
+            "nudge": {
+              "persuasion": 1,
+              "others": 1
+            },
+            "set_flags": [
+              "brann_gone",
+              "talked_down_brann"
+            ]
+          }
+        },
+        "killed": {
+          "text": "Brann doesn't get up. Tobin stares at you and says nothing.",
+          "effects": {
+            "nudge": {
+              "force": 2
+            },
+            "set_flags": [
+              "brann_dead"
+            ]
+          },
+          "body_name": "Brann",
+          "body_lines": [
+            "Brann. He doesn't move.",
+            "Tobin won't look at you."
+          ]
+        },
+        "lost": {
+          "text": "The floor comes up to meet you. When you come to, Brann is gone, and so is Tobin's bird.",
+          "effects": {
+            "set_flags": [
+              "lost_to_brann",
+              "brann_gone",
+              "bird_stolen"
+            ]
+          }
+        }
+      }
+    }
+  }
 }

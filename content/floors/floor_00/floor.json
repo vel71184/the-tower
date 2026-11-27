@@ -1,0 +1,67 @@
+{
+  "floor": 0,
+  "name": "The Approach",
+  "era": "medieval",
+  "levels": 4,
+  "boss_flag": null,
+  "about": "Floor 0: the prologue outside the tower. Not one of the hundred. Four levels: The Road, The Bridge, The Climbers' Camp, The Gate. No boss; the gate shuts behind you as you go in.",
+  "people": {
+    "shirt": [
+      "slate",
+      "sand",
+      "brown",
+      "steel",
+      "sky"
+    ],
+    "pants": [
+      "charcoal",
+      "ink",
+      "brown",
+      "slate"
+    ],
+    "shoes": [
+      "charcoal",
+      "brown",
+      "coral"
+    ],
+    "hair": [
+      "charcoal",
+      "brown",
+      "coral",
+      "sand",
+      "silver"
+    ],
+    "accent": [
+      "red",
+      "sand",
+      "brown"
+    ],
+    "bodies": [
+      "female-b",
+      "female-c",
+      "female-d",
+      "female-f",
+      "male-a",
+      "male-b",
+      "male-c",
+      "male-f",
+      "male-g",
+      "raider",
+      "worker"
+    ],
+    "heads": [
+      "female-a",
+      "female-b",
+      "female-d",
+      "female-e",
+      "female-f",
+      "male-a",
+      "male-b",
+      "male-d",
+      "male-e",
+      "male-f",
+      "male-g",
+      "raider"
+    ]
+  }
+}

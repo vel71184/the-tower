@@ -33,6 +33,8 @@ var data: Dictionary = {}
 var width := 0
 var height := 0
 var spawn_cell := Vector2i.ZERO
+## Set by a legend entry with "return": true; see return_cell().
+var return_spawn := Vector2i(-1, -1)
 var objects: Array = []
 ## Props tall enough to hide the climber: [node, height]. They fade when in the way.
 var tall_props: Array = []
@@ -85,6 +87,8 @@ func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 				astar.set_point_solid(cell, true)
 			if entry.get("spawn", false):
 				spawn_cell = cell
+			if entry.get("return", false):
+				return_spawn = cell
 			if entry.has("prop"):
 				_add_prop(entry, cell)
 				if entry.get("solid", false):
@@ -128,6 +132,24 @@ func _set_faded(node: Node3D, faded: bool) -> void:
 	node.set_meta("faded", faded)
 	for mi in Models._meshes(node, []):
 		(mi as GeometryInstance3D).transparency = 0.72 if faded else 0.0
+
+
+## Where the climber appears when coming back from the next level: a cell marked "return" in
+## the legend, or the open cell nearest the way forward.
+func return_cell() -> Vector2i:
+	if return_spawn.x >= 0:
+		return return_spawn
+	for obj in objects:
+		if obj.kind == "exit" and String(obj.def.get("to", "next")) == "next":
+			var best := Vector2i(-1, -1)
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					var c: Vector2i = obj.cell + Vector2i(dx, dy)
+					if is_walkable(c) and (best.x < 0 or Vector2(c - spawn_cell).length() < Vector2(best - spawn_cell).length()):
+						best = c
+			if best.x >= 0:
+				return best
+	return spawn_cell
 
 
 func cell_to_world(cell: Vector2i) -> Vector3:
