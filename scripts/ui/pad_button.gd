@@ -1,16 +1,19 @@
 extends Control
-## A round, see-through touch button in the on-screen pad. Handles every finger on its own
+## A round, see-through touch button (Kenney Mobile Controls) in the on-screen pad. Handles every finger on its own
 ## (ordinary Buttons only see the first finger), so you can hold the stick and press at once.
 ## Faint until it's useful; set `useful` to brighten it.
+
+const BUTTON := preload("res://assets/kenney/mobile-controls/button_circle.png")
 
 signal pressed_id(id: String)
 signal released_id(id: String)
 
-const FAINT := 0.32
-const BRIGHT := 0.85
+const FAINT := 0.4
+const BRIGHT := 0.9
 
 var id := ""
-var label := ""
+## The letter on the button (Kenney icon), matching the same button on a controller.
+var icon: Texture2D
 var radius := 44.0
 ## True while something makes this button worth pressing (someone to talk to, a fight).
 var useful := false
@@ -18,9 +21,9 @@ var held := false
 var _finger := -2
 
 
-func setup(button_id: String, text: String, r: float) -> void:
+func setup(button_id: String, letter: Texture2D, r: float) -> void:
 	id = button_id
-	label = text
+	icon = letter
 	radius = r
 	custom_minimum_size = Vector2(r * 2.0, r * 2.0)
 	size = custom_minimum_size
@@ -82,10 +85,11 @@ func _release() -> void:
 
 
 func _draw() -> void:
-	var c := size * 0.5
-	draw_circle(c, radius, Color(0.08, 0.07, 0.06, 0.75 if held else 0.55))
-	draw_arc(c, radius - 1.5, 0.0, TAU, 48, Color(0.95, 0.88, 0.72, 0.9), 3.0, true)
-	var font := get_theme_default_font()
-	var fs := int(clampf(radius * 0.42, 16.0, 26.0))
-	var w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	draw_string(font, c + Vector2(-w * 0.5, fs * 0.36), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.97, 0.93, 0.85))
+	# Kenney Mobile Controls: a dark round button with a white letter, like a real pad.
+	var r := Rect2(Vector2.ZERO, size)
+	if held:
+		r = r.grow(-radius * 0.06)
+	draw_texture_rect(BUTTON, r, false, Color(0.75, 0.75, 0.75) if held else Color.WHITE)
+	if icon:
+		var s := size.x * 0.46
+		draw_texture_rect(icon, Rect2(size * 0.5 - Vector2(s, s) * 0.5, Vector2(s, s)), false)

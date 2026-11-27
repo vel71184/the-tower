@@ -35,11 +35,11 @@ Every push builds the game on GitHub:
 | | Phone | Controller (8BitDo Pro 2, Xbox, PlayStation) | Keyboard |
 |---|---|---|---|
 | Walk | Thumb anywhere on the left half: a stick appears | Left stick or d-pad (smooth) | WASD or arrows |
-| Look, talk, use | Use button, or tap the thing | **Bottom** face button (uses the ringed thing) | E or Enter |
-| Attack | Hit button | **Left** face button | Space or J |
-| Kick (knockback, no wound) | Kick button | **Top** face button | K or F |
-| Block | Hold Block | Hold **right** face button | Hold Shift |
-| Lock on / next target | Lock button | L1 / R1 | Q / Tab |
+| Look, talk, use | A, or tap the thing | **Bottom** face button (uses the ringed thing) | E or Enter |
+| Attack | X | **Left** face button | Space or J |
+| Kick (knockback, no wound) | Y | **Top** face button | K or F |
+| Block | Hold B | Hold **right** face button | Hold Shift |
+| Lock on / next target | L | L1 / R1 | Q / Tab |
 | Zoom | Pinch | Triggers | − / = or mouse wheel |
 | Dev overlay (hidden baseline) | Three-finger tap | Select | F3 |
 

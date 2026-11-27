@@ -162,7 +162,7 @@ func how_to_play() -> String:
 	if Controls.using_pad or (Controls.has_controller() and not ui.is_touch_mode()):
 		return "Left stick: walk\nA: look, talk, use\nX: attack   Y: kick   hold B: block\nL1: lock on   R1: next target\nTriggers: zoom   Start: skip a scene"
 	if OS.has_feature("mobile"):
-		return "Put your thumb anywhere on the left side and slide it to walk.\nUse: look, talk, use what's in your ring (or just tap it).\nLock on to pick a fight. Hit, Kick, hold Block.\nPinch to zoom."
+		return "Thumb anywhere on the left side: walk\nA: look, talk, use what's in your ring (or tap it)\nX: attack   Y: kick   hold B: block\nL: lock on\nPinch: zoom"
 	return "WASD or arrows: walk (or click the ground)\nE / Enter: look, talk, use (or click it)\nSpace: attack   K: kick   hold Shift: block\nQ: lock on   Tab: next target\nWheel or - / =: zoom   Esc: skip a scene"
 
 

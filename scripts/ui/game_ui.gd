@@ -13,6 +13,8 @@ const TITLE_FONT := preload("res://assets/fonts/cinzel-bold.woff")
 const Speech := preload("res://scripts/ui/speech.gd")
 const Portrait := preload("res://scripts/ui/portrait.gd")
 const PadButton := preload("res://scripts/ui/pad_button.gd")
+const STICK_PAD := preload("res://assets/kenney/mobile-controls/joystick_pad.png")
+const STICK_NUB := preload("res://assets/kenney/mobile-controls/joystick_nub.png")
 
 const TEXT_SIZE := 24
 const BUTTON_HEIGHT := 60
@@ -455,17 +457,19 @@ func _build_touch_bar() -> void:
 	_pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_pad.visible = false
 	_root.add_child(_pad)
-	# [id, label, radius, centre measured from the pad's bottom-right corner]
+	# Laid out like a controller's face buttons, each doing what that button does on a pad:
+	# A (bottom) use, X (left) hit, Y (top) kick, B (right) block; L lock on.
+	# [id, letter, radius, centre measured from the pad's bottom-right corner]
 	var layout := [
-		["use", "Use", 58.0, Vector2(-92, -92)],
-		["strike", "Hit", 44.0, Vector2(-222, -78)],
-		["kick", "Kick", 44.0, Vector2(-104, -218)],
-		["block", "Block", 40.0, Vector2(-206, -192)],
-		["lock", "Lock", 34.0, Vector2(-290, -232)],
+		["use", "a", 46.0, Vector2(-150, -70)],
+		["strike", "x", 46.0, Vector2(-232, -152)],
+		["kick", "y", 46.0, Vector2(-150, -234)],
+		["block", "b", 46.0, Vector2(-68, -152)],
+		["lock", "l", 36.0, Vector2(-290, -262)],
 	]
 	for spec in layout:
 		var b := PadButton.new()
-		b.setup(String(spec[0]), String(spec[1]), float(spec[2]))
+		b.setup(String(spec[0]), load("res://assets/kenney/mobile-controls/icon_button_%s.png" % spec[1]), float(spec[2]))
 		var r: float = spec[2]
 		var c: Vector2 = spec[3]
 		b.position = Vector2(330, 300) + c - Vector2(r, r)
@@ -481,9 +485,9 @@ func _build_touch_bar() -> void:
 	_stick.draw.connect(func() -> void:
 		var o: Vector2 = _stick.get_meta("origin", Vector2.ZERO)
 		var k: Vector2 = _stick.get_meta("knob", Vector2.ZERO)
-		_stick.draw_circle(o, stick_radius(), Color(0.08, 0.07, 0.06, 0.3))
-		_stick.draw_arc(o, stick_radius(), 0.0, TAU, 48, Color(0.95, 0.88, 0.72, 0.5), 3.0, true)
-		_stick.draw_circle(k, 30.0, Color(0.95, 0.88, 0.72, 0.6)))
+		var pr := stick_radius() * 1.25
+		_stick.draw_texture_rect(STICK_PAD, Rect2(o - Vector2(pr, pr), Vector2(pr, pr) * 2.0), false, Color(1, 1, 1, 0.55))
+		_stick.draw_texture_rect(STICK_NUB, Rect2(k - Vector2(38, 38), Vector2(76, 76)), false, Color(1, 1, 1, 0.8)))
 	_full.add_child(_stick)
 
 
