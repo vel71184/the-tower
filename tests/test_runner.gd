@@ -609,22 +609,56 @@ func _test_polish() -> void:
 	while main.is_talking() or main._note_open:
 		main.choose(main._talk_choices.size() - 1 if not main._talk_choices.is_empty() else 0)
 
-	main.ui.touch_actions_enabled = true
+	print("Touch controls")
+	main.ui.force_touch = true
+	main.climber.place(Vector2i(6, 9))
+	main.cam.snap()
 	await get_tree().process_frame
-	var fight_buttons := 0
-	for b in main.ui._touch_bar.get_children():
-		if b.visible:
-			fight_buttons += 1
-	check(fight_buttons <= 1, "outside a fight only Lock on shows")
+	var pad: Dictionary = main.ui._pad_buttons
+	check(main.ui._pad.visible and pad.size() == 5, "the on-screen pad shows its five buttons")
+	check(not pad["strike"].useful and not pad["kick"].useful, "fight buttons stay faint outside a fight")
 	main.combat._set_lock(brann)
 	await get_tree().process_frame
-	await get_tree().process_frame
-	fight_buttons = 0
-	for b in main.ui._touch_bar.get_children():
-		if b.visible:
-			fight_buttons += 1
-	check(fight_buttons > 1, "locking on brings up the fight buttons")
+	check(pad["strike"].useful and pad["block"].useful, "locking on brightens the fight buttons")
 	main.combat._set_lock(null)
+	await get_tree().process_frame
+
+	var vp: Vector2 = main.get_viewport().get_visible_rect().size
+	var down := InputEventScreenTouch.new()
+	down.index = 0
+	down.pressed = true
+	down.position = Vector2(vp.x * 0.2, vp.y * 0.6)
+	main._unhandled_input(down)
+	check(main._stick_index == 0 and main.ui._stick.visible, "a thumb on the left becomes a stick")
+	var drag := InputEventScreenDrag.new()
+	drag.index = 0
+	drag.position = down.position + Vector2(0, -90)
+	main._unhandled_input(drag)
+	var before: Vector3 = main.climber.position
+	await get_tree().create_timer(0.4).timeout
+	check(main.climber.position.distance_to(before) > 0.3, "pushing the stick walks the climber")
+	var up := InputEventScreenTouch.new()
+	up.index = 0
+	up.pressed = false
+	up.position = drag.position
+	main._unhandled_input(up)
+	check(main._stick_index == -1 and not main.ui._stick.visible, "lifting the thumb lets go of the stick")
+
+	var tap_at: Vector2 = main.cam.unproject_position(tobin.world_center())
+	down.position = tap_at
+	up.position = tap_at
+	main._unhandled_input(down)
+	main._unhandled_input(up)
+	check(main._pending == tobin, "a quick tap on someone walks to them")
+	main.climber.stop()
+	main._pending = null
+	var ground_at: Vector2 = main.cam.unproject_position(main.level.cell_to_world(Vector2i(2, 2)))
+	down.position = ground_at
+	up.position = ground_at
+	main._unhandled_input(down)
+	main._unhandled_input(up)
+	check(not main.climber.is_moving(), "tapping empty ground doesn't walk (the stick does)")
+	main.ui.force_touch = false
 
 	print("Saves")
 	Baseline.reset()

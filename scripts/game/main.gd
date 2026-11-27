@@ -46,6 +46,15 @@ var _pending_arrival: Array = []
 var _note_open := false
 var _touches: Dictionary = {}
 var _pinch_dist := 0.0
+## Touch: index -> [start position, start time in ms], to tell taps from drags.
+var _touch_start: Dictionary = {}
+## The finger driving the floating stick (-1: none), where it went down, and the push (0-1).
+var _stick_index := -1
+var _stick_origin := Vector2.ZERO
+var _stick_vec := Vector2.ZERO
+
+const TAP_MOVE := 20.0
+const TAP_MS := 350
 
 
 func _ready() -> void:
@@ -82,8 +91,14 @@ func _process(delta: float) -> void:
 		return
 	var free := not ui.is_busy() and not _note_open and not cutscene.playing
 	var v := Input.get_vector("move_left", "move_right", "move_up", "move_down") if free else Vector2.ZERO
+	if free and _stick_index != -1:
+		v = (v + _stick_vec).limit_length(1.0)
+	elif _stick_index != -1 and not free:
+		_end_stick()
 	climber.move_free(screen_to_world(v), delta)
 	ui.combat_active = combat.active or combat.lock_target != null
+	ui.use_ready = _focus != null
+	ui.lock_ready = _someone_near(3.5)
 	var block_input: bool = free and (Input.is_action_pressed("block") or ui.block_held())
 	if block_input != _block_input:
 		_block_input = block_input
@@ -144,10 +159,10 @@ func _on_title_choice(id: String) -> void:
 ## The controls, for the device in use. Shown from the title menu; the game itself has no
 ## button hints.
 func how_to_play() -> String:
-	if Controls.using_pad or Controls.has_controller():
+	if Controls.using_pad or (Controls.has_controller() and not ui.is_touch_mode()):
 		return "Left stick: walk\nA: look, talk, use\nX: attack   Y: kick   hold B: block\nL1: lock on   R1: next target\nTriggers: zoom   Start: skip a scene"
 	if OS.has_feature("mobile"):
-		return "Tap the ground to walk there.\nTap someone or something to go to it and look, talk or use it.\nLock on to pick a fight; the other fight buttons appear once someone is hostile.\nPinch to zoom."
+		return "Put your thumb anywhere on the left side and slide it to walk.\nUse: look, talk, use what's in your ring (or just tap it).\nLock on to pick a fight. Hit, Kick, hold Block.\nPinch to zoom."
 	return "WASD or arrows: walk (or click the ground)\nE / Enter: look, talk, use (or click it)\nSpace: attack   K: kick   hold Shift: block\nQ: lock on   Tab: next target\nWheel or - / =: zoom   Esc: skip a scene"
 
 
@@ -494,29 +509,88 @@ func _unhandled_input(event: InputEvent) -> void:
 		cam.zoom_by(0.85)
 	elif event.is_action_pressed("zoom_out"):
 		cam.zoom_by(1.15)
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton and event.pressed and event.device != InputEvent.DEVICE_ID_EMULATION:
+		# A real mouse. (Touches arrive below; the mouse copies Godot makes of them are ignored.)
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
-				_tap(event.position)
+				_tap(event.position, true)
 			MOUSE_BUTTON_WHEEL_UP:
 				cam.zoom_by(0.9)
 			MOUSE_BUTTON_WHEEL_DOWN:
 				cam.zoom_by(1.1)
 	elif event is InputEventScreenTouch:
-		if event.pressed:
-			_touches[event.index] = event.position
-			if _touches.size() >= 3:
-				ui.toggle_dev()
-		else:
-			_touches.erase(event.index)
-		_pinch_dist = _touch_spread()
+		_on_touch(event)
 	elif event is InputEventScreenDrag:
+		_on_drag(event)
+
+
+## Touch controls: a thumb on the left half becomes a stick wherever it lands; a quick tap on
+## someone or something walks there and uses it; two fingers pinch to zoom.
+func _on_touch(event: InputEventScreenTouch) -> void:
+	if event.pressed:
 		_touches[event.index] = event.position
-		if _touches.size() == 2:
-			var d := _touch_spread()
-			if _pinch_dist > 0.0 and d > 0.0:
-				cam.zoom_by(_pinch_dist / d)
-			_pinch_dist = d
+		_touch_start[event.index] = [event.position, Time.get_ticks_msec()]
+		if _touches.size() >= 3:
+			ui.toggle_dev()
+		if _touches.size() == 2 and _stick_index != -1 and _stick_vec.length() < 0.15:
+			_end_stick()  # Two fingers down together: a pinch, not a walk.
+		elif _touches.size() == 1 and _can_steer() \
+				and event.position.x < get_viewport().get_visible_rect().size.x * 0.5:
+			_stick_index = event.index
+			_stick_origin = event.position
+			_stick_vec = Vector2.ZERO
+			ui.set_stick(true, _stick_origin, _stick_origin)
+	else:
+		var start: Array = _touch_start.get(event.index, [])
+		var alone := _touches.size() == 1
+		_touches.erase(event.index)
+		_touch_start.erase(event.index)
+		if event.index == _stick_index:
+			_end_stick()
+		if alone and start.size() == 2 \
+				and (start[0] as Vector2).distance_to(event.position) < TAP_MOVE \
+				and Time.get_ticks_msec() - int(start[1]) < TAP_MS:
+			_tap(event.position, false)
+	_pinch_dist = _touch_spread()
+
+
+func _on_drag(event: InputEventScreenDrag) -> void:
+	_touches[event.index] = event.position
+	if event.index == _stick_index:
+		var off := event.position - _stick_origin
+		var r := ui.stick_radius()
+		# The base follows a thumb that slides past the edge, so the stick never "runs out".
+		if off.length() > r:
+			_stick_origin = event.position - off.normalized() * r
+			off = event.position - _stick_origin
+		_stick_vec = off / r
+		if _stick_vec.length() < 0.15:
+			_stick_vec = Vector2.ZERO
+		ui.set_stick(true, _stick_origin, event.position)
+	elif _touches.size() == 2 and _stick_index == -1:
+		var d := _touch_spread()
+		if _pinch_dist > 0.0 and d > 0.0:
+			cam.zoom_by(_pinch_dist / d)
+		_pinch_dist = d
+
+
+func _end_stick() -> void:
+	_stick_index = -1
+	_stick_vec = Vector2.ZERO
+	ui.set_stick(false)
+
+
+func _can_steer() -> bool:
+	return level != null and not _ended and not ui.is_busy() and not _note_open \
+		and not cutscene.playing and ui.is_touch_mode()
+
+
+## True if a person is within reach of a lock-on.
+func _someone_near(dist: float) -> bool:
+	for obj in level.objects:
+		if obj.kind == "npc" and obj.revealed and obj.global_position.distance_to(climber.global_position) <= dist:
+			return true
+	return false
 
 
 func _touch_spread() -> float:
@@ -537,9 +611,13 @@ func _on_combat_button(id: String) -> void:
 		"talk":
 			if not combat.talk():
 				pad_interact()
+		"use":
+			pad_interact()
 
 
-func _tap(screen_pos: Vector2) -> void:
+## ground: a mouse click can walk to an empty spot; a touch tap only goes to people and things
+## (the stick does the walking).
+func _tap(screen_pos: Vector2, ground: bool = true) -> void:
 	if level == null or ui.is_busy() or _ended or _touches.size() > 1:
 		return
 	var obj := _pick_object(screen_pos)
@@ -548,6 +626,8 @@ func _tap(screen_pos: Vector2) -> void:
 		return
 	if obj:
 		go_to_object(obj)
+		return
+	if not ground:
 		return
 	var hit: Variant = Plane(Vector3.UP, 0.0).intersects_ray(
 		cam.project_ray_origin(screen_pos), cam.project_ray_normal(screen_pos))

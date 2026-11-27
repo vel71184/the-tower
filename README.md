@@ -34,12 +34,12 @@ Every push builds the game on GitHub:
 
 | | Phone | Controller (8BitDo Pro 2, Xbox, PlayStation) | Keyboard |
 |---|---|---|---|
-| Walk | Tap where to go | Left stick or d-pad (smooth) | WASD or arrows |
-| Look, talk, use | Tap the thing | **Bottom** face button (uses the ringed thing) | E or Enter |
-| Attack | Attack button | **Left** face button | Space or J |
+| Walk | Thumb anywhere on the left half: a stick appears | Left stick or d-pad (smooth) | WASD or arrows |
+| Look, talk, use | Use button, or tap the thing | **Bottom** face button (uses the ringed thing) | E or Enter |
+| Attack | Hit button | **Left** face button | Space or J |
 | Kick (knockback, no wound) | Kick button | **Top** face button | K or F |
 | Block | Hold Block | Hold **right** face button | Hold Shift |
-| Lock on / next target | Lock on button | L1 / R1 | Q / Tab |
+| Lock on / next target | Lock button | L1 / R1 | Q / Tab |
 | Zoom | Pinch | Triggers | − / = or mouse wheel |
 | Dev overlay (hidden baseline) | Three-finger tap | Select | F3 |
 
@@ -55,7 +55,7 @@ strike, and it's remembered.
 | Path | What it is |
 |---|---|
 | `scripts/autoload/baseline.gd` | The hidden baseline: tendency axes, flags, knowledge, history, save/load |
-| `scripts/game/main.gd` | Game flow: title, levels, tap-to-walk, proximity, dialogue, level end |
+| `scripts/game/main.gd` | Game flow: title, levels, touch stick and taps, proximity, dialogue, level end |
 | `scripts/game/level.gd` | Builds a level from its map and objects; grid pathfinding |
 | `scripts/game/interactable.gd` | Things to examine, people, hidden things, exits |
 | `scripts/game/climber.gd`, `iso_camera.gd` | The player character and the fixed isometric camera |

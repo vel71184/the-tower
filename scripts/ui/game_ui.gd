@@ -12,6 +12,7 @@ signal opening_done
 const TITLE_FONT := preload("res://assets/fonts/cinzel-bold.woff")
 const Speech := preload("res://scripts/ui/speech.gd")
 const Portrait := preload("res://scripts/ui/portrait.gd")
+const PadButton := preload("res://scripts/ui/pad_button.gd")
 
 const TEXT_SIZE := 24
 const BUTTON_HEIGHT := 60
@@ -47,8 +48,15 @@ var _cinematic := false
 var _opening: Control
 var _title: Control
 var _title_menu: VBoxContainer
-var _touch_bar: VBoxContainer
-var _block_button: Button
+var _pad: Control
+var _pad_buttons: Dictionary = {}
+var _stick: Control
+## Tests set this to get touch controls without a touch screen.
+var force_touch := false
+## Brightens the Use button: something is in the ring.
+var use_ready := false
+## Brightens Lock: someone is close enough to lock on to.
+var lock_ready := false
 ## Set once a level is playing, so touch action buttons can show.
 var touch_actions_enabled := false
 
@@ -366,20 +374,46 @@ func set_wounds(current: int, maximum: int, in_fight: bool) -> void:
 
 ## True while the on-screen Block button is held down.
 func block_held() -> bool:
-	return _block_button != null and _block_button.button_pressed and _block_button.is_visible_in_tree()
+	return _pad_buttons.has("block") and _pad_buttons["block"].held
+
+
+## True when touch controls are in use: a touch screen and no controller in hand.
+func is_touch_mode() -> bool:
+	if force_touch:
+		return true
+	var controls := get_node_or_null("/root/Controls")
+	var pad: bool = controls != null and controls.using_pad
+	return DisplayServer.is_touchscreen_available() and not pad
+
+
+## The floating stick: shown where the thumb went down, knob where it is now.
+func set_stick(active: bool, origin: Vector2 = Vector2.ZERO, knob: Vector2 = Vector2.ZERO) -> void:
+	_stick.visible = active
+	_stick.set_meta("origin", origin)
+	_stick.set_meta("knob", knob)
+	_stick.queue_redraw()
+
+
+## How far a thumb can push the stick, in screen pixels.
+func stick_radius() -> float:
+	return 70.0
 
 
 func _process(_delta: float) -> void:
-	if _touch_bar == null:
+	if _pad == null:
 		return
-	var controls := get_node_or_null("/root/Controls")
-	var pad: bool = controls != null and controls.using_pad
-	_touch_bar.visible = touch_actions_enabled and not pad and not is_busy() and not _cinematic
-	# Outside a fight only "Lock on" shows (picking a fight is always deliberate); the rest
-	# appear once someone is hostile.
-	for b in _touch_bar.get_children():
-		if b.has_meta("fight_only"):
-			b.visible = combat_active
+	_pad.visible = touch_actions_enabled and is_touch_mode() and not is_busy() and not _cinematic
+	if not _pad.visible and _stick.visible:
+		set_stick(false)
+	for id in _pad_buttons:
+		var b = _pad_buttons[id]
+		match id:
+			"use":
+				b.useful = use_ready
+			"lock":
+				b.useful = combat_active or lock_ready
+			_:
+				b.useful = combat_active
 	_fit_safe_area()
 
 
@@ -406,38 +440,51 @@ func _fit_safe_area() -> void:
 	_root.offset_bottom = -bottom
 
 
+## The on-screen pad: a gamepad-style cluster bottom right. Always there, faint until useful,
+## so buttons never move and thumbs learn where they are.
 func _build_touch_bar() -> void:
-	_touch_bar = VBoxContainer.new()
-	_touch_bar.anchor_left = 1.0
-	_touch_bar.anchor_right = 1.0
-	_touch_bar.anchor_top = 1.0
-	_touch_bar.anchor_bottom = 1.0
-	_touch_bar.offset_left = -150
-	_touch_bar.offset_right = -20
-	_touch_bar.offset_bottom = -20
-	_touch_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_touch_bar.add_theme_constant_override("separation", 10)
-	_touch_bar.visible = false
-	_root.add_child(_touch_bar)
-	for id in ["talk", "lock", "kick", "strike"]:
-		var label: String = {"talk": "Talk", "lock": "Lock on", "kick": "Kick", "strike": "Attack"}[id]
-		var b := _button(label, _on_combat.bind(id))
-		b.focus_mode = Control.FOCUS_NONE
-		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
-		b.custom_minimum_size = Vector2(130, 52)
-		b.modulate.a = 0.85
-		if id != "lock":
-			b.set_meta("fight_only", true)
-		_touch_bar.add_child(b)
-	_block_button = _button("Block", func() -> void: pass)
-	_block_button.focus_mode = Control.FOCUS_NONE
-	_block_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_block_button.toggle_mode = false
-	_block_button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-	_block_button.custom_minimum_size = Vector2(130, 52)
-	_block_button.modulate.a = 0.85
-	_block_button.set_meta("fight_only", true)
-	_touch_bar.add_child(_block_button)
+	_pad = Control.new()
+	_pad.anchor_left = 1.0
+	_pad.anchor_right = 1.0
+	_pad.anchor_top = 1.0
+	_pad.anchor_bottom = 1.0
+	_pad.offset_left = -330
+	_pad.offset_top = -300
+	_pad.offset_right = 0
+	_pad.offset_bottom = 0
+	_pad.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pad.visible = false
+	_root.add_child(_pad)
+	# [id, label, radius, centre measured from the pad's bottom-right corner]
+	var layout := [
+		["use", "Use", 58.0, Vector2(-92, -92)],
+		["strike", "Hit", 44.0, Vector2(-222, -78)],
+		["kick", "Kick", 44.0, Vector2(-104, -218)],
+		["block", "Block", 40.0, Vector2(-206, -192)],
+		["lock", "Lock", 34.0, Vector2(-290, -232)],
+	]
+	for spec in layout:
+		var b := PadButton.new()
+		b.setup(String(spec[0]), String(spec[1]), float(spec[2]))
+		var r: float = spec[2]
+		var c: Vector2 = spec[3]
+		b.position = Vector2(330, 300) + c - Vector2(r, r)
+		b.pressed_id.connect(func(id: String) -> void:
+			if id != "block":
+				combat_action.emit(id))
+		_pad.add_child(b)
+		_pad_buttons[String(spec[0])] = b
+	_stick = Control.new()
+	_stick.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_stick.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stick.visible = false
+	_stick.draw.connect(func() -> void:
+		var o: Vector2 = _stick.get_meta("origin", Vector2.ZERO)
+		var k: Vector2 = _stick.get_meta("knob", Vector2.ZERO)
+		_stick.draw_circle(o, stick_radius(), Color(0.08, 0.07, 0.06, 0.3))
+		_stick.draw_arc(o, stick_radius(), 0.0, TAU, 48, Color(0.95, 0.88, 0.72, 0.5), 3.0, true)
+		_stick.draw_circle(k, 30.0, Color(0.95, 0.88, 0.72, 0.6)))
+	_full.add_child(_stick)
 
 
 func _pad_hint(id: String) -> String:
@@ -582,9 +629,11 @@ func _focus_first(container: Node) -> void:
 
 ## Focuses a control next frame, if it's still on screen by then.
 func _focus_later(c: Control) -> void:
+	var id := c.get_instance_id()
 	(func() -> void:
-		if is_instance_valid(c) and c.is_inside_tree() and c.is_visible_in_tree():
-			c.grab_focus()).call_deferred()
+		var ctl := instance_from_id(id) as Control
+		if ctl and ctl.is_inside_tree() and ctl.is_visible_in_tree():
+			ctl.grab_focus()).call_deferred()
 
 
 func _clear(node: Node) -> void:

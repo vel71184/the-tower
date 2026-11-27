@@ -40,6 +40,7 @@ func _ready() -> void:
 	await _shot("05_opening")
 	main.ui.finish_opening()
 	main.start_level(1, 1)
+	main.ui.force_touch = true
 	await _frames(40)
 	await _shot("1_waiting_hall")
 	main.climber.place(Vector2i(4, 6))
