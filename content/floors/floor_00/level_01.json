@@ -176,7 +176,7 @@
       "char": "h",
       "id": "torn_ledger",
       "name": "Torn ledger page",
-      "kind": "hidden",
+      "kind": "examine",
       "shape": "plank",
       "size": [
         0.4,
@@ -184,7 +184,6 @@
         0.3
       ],
       "color": "#e8dcc0",
-      "reveal_text": "Something pale in the grass.",
       "lines": [
         "A page torn from a ledger, half pulped by rain. 'Bread for the waiting hall: forty loaves.'",
         "The last line is in a different hand: 'No more deliveries. By order of M.'"
@@ -196,7 +195,9 @@
         "set_flags": [
           "found_ledger"
         ]
-      }
+      },
+      "blocking": false,
+      "after_use": "taken"
     },
     {
       "char": "W",
@@ -478,9 +479,6 @@
       }
     },
     {
-      "reveal": "torn_ledger"
-    },
-    {
       "face": "torn_ledger"
     },
     {
@@ -509,6 +507,9 @@
           "examined:torn_ledger"
         ]
       }
+    },
+    {
+      "use": "torn_ledger"
     },
     {
       "walk_to": "wil"

@@ -51,6 +51,17 @@ func _ready() -> void:
 	_talk(main)
 	await _frames(20)
 	await _shot("3_talking")
+	while main.is_talking():
+		main.choose(0)
+	var board = main.find_object("loose_board")
+	main.climber.place(board.cell + Vector2i(1, 1))
+	main._on_entered_cell(board.cell)
+	main.interact(board)
+	while main.is_talking():
+		main.choose(0)
+	main.cam.snap()
+	await _frames(40)
+	await _shot("5_board_opened")
 	main.queue_free()
 	Baseline.delete_save()
 	await _frames(2)

@@ -414,7 +414,6 @@
       "kind": "hidden",
       "shape": "plank",
       "color": "#8b6b47",
-      "reveal_text": "A floorboard shifts under your weight.",
       "lines": [
         "You pry the board up. Underneath, wrapped in oilcloth, is a folded letter.",
         "\"Brother. I let the last one through, like all the others. You know what came back down. Forty houses on the lower stair.",
@@ -427,7 +426,14 @@
         "set_flags": [
           "found_letter"
         ]
-      }
+      },
+      "reveal": "step",
+      "after_use": {
+        "open": true
+      },
+      "lines_after": [
+        "The board's pried up. Nothing else under it."
+      ]
     },
     {
       "char": "E",

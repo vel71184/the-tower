@@ -8,6 +8,8 @@ records decisions made in chat that the doc may not have yet.
 
 | Decision | Detail | Source |
 |---|---|---|
+| The world shows what you did | Things you pick up disappear; things you open stay open (a level's "after_use": "taken" or {"open": true}), and that's remembered. Looking again gives an "after" line. | Chat, 2026-11-27 |
+| Hidden things don't announce themselves | No captions like "Something pale in the grass". A loose board rocks and shows itself when you step on it (with a short phone buzz); that's the hint. Things in plain sight just sit there: whether the player checks them is part of what the game measures. | Chat, 2026-11-27 |
 | Renderer | Mobile on Android, Forward+ on PC; Compatibility only as the automatic fallback for old devices. | Chat, 2026-11-27 |
 | Camera | A slight perspective (30° field of view, 48° tilt) instead of flat orthographic, so things have depth. Default zoom pulls back a little on wide phones. | Chat, 2026-11-27 |
 | Outlines | Thin dark outlines on characters, props and things you can use. | Chat, 2026-11-27 |

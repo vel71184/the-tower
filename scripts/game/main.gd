@@ -308,7 +308,7 @@ func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool
 	# Hidden things the climber already found stay found.
 	for obj in level.objects:
 		if obj.kind == "hidden" and Baseline.has_flag("noticed:" + obj.id):
-			obj.reveal()
+			obj.reveal(false)
 	Baseline.record("entered", String(data.get("id", key)))
 	ui.toast(String(data.get("title", key)), 3.0)
 	if data.has("hint"):
@@ -418,6 +418,8 @@ func _restore_what_happened() -> void:
 	for obj in level.objects.duplicate():
 		if Baseline.has_flag("gone:" + obj.id):
 			level.remove_object(obj)
+		elif Baseline.has_flag("used:" + obj.id):
+			obj.show_open(false)
 		elif Baseline.has_flag("killed:" + obj.id):
 			var out: Dictionary = combat._fight_for(obj).get("outcomes", {}).get("killed", {})
 			combat.lay_down(obj, out)
@@ -698,9 +700,13 @@ func _use(obj: Interactable) -> void:
 func _on_entered_cell(cell: Vector2i) -> void:
 	for obj in level.objects:
 		var d := Vector2(cell).distance_to(Vector2(obj.cell))
-		if obj.kind == "hidden" and not obj.revealed and d <= 1.5:
+		var underfoot := String(obj.def.get("reveal", "near")) == "step"
+		if obj.kind == "hidden" and not obj.revealed and (cell == obj.cell if underfoot else d <= 1.5):
 			obj.reveal()
 			Baseline.set_flag("noticed:" + obj.id)
+			if underfoot:
+				Input.vibrate_handheld(80)
+			# Optional, and best left out: seeing it is usually hint enough.
 			var notice := String(obj.def.get("reveal_text", ""))
 			if notice != "":
 				obj.notice(notice)
@@ -786,6 +792,8 @@ func interact(obj: Interactable) -> void:
 
 	_talk_obj = obj
 	_talk_nodes = _dialogue_nodes(obj.def)
+	if Baseline.has_flag("used:" + obj.id) and obj.def.has("lines_after"):
+		_talk_nodes = _dialogue_nodes({"lines": obj.def["lines_after"]})
 	var start := String(obj.def.get("dialogue", {}).get("start", "l0"))
 	for rule in obj.def.get("dialogue", {}).get("start_if", []):
 		if Baseline.has_flag(String(rule.get("flag", ""))) \
@@ -918,6 +926,24 @@ func _close_note() -> void:
 	autosave()
 
 
+## What a thing becomes once it's been used (a level's "after_use"):
+##   "taken"           picked up: it disappears, and stays gone
+##   {"open": true}    opened: it stays open (a pried-up board, a lifted lid)
+func use_up(obj: Interactable, animate: bool = true) -> void:
+	Baseline.set_flag("used:" + obj.id)
+	var after: Variant = obj.def.get("after_use", "")
+	if after is String and after == "taken":
+		Baseline.set_flag("gone:" + obj.id)
+		if animate:
+			obj.vanish().finished.connect(func() -> void:
+				if is_instance_valid(obj) and level and obj in level.objects:
+					level.remove_object(obj))
+		else:
+			level.remove_object(obj)
+	elif after is Dictionary and (after as Dictionary).get("open", false):
+		obj.show_open(animate)
+
+
 func climber_bark(text: String) -> void:
 	climber.bark(text)
 
@@ -936,7 +962,10 @@ func is_talking() -> bool:
 
 
 func _end_talk() -> void:
+	var was := _talk_obj
 	_talk_obj = null
+	if was and is_instance_valid(was) and was.def.has("after_use") and not Baseline.has_flag("used:" + was.id):
+		use_up(was)
 	_talk_nodes = {}
 	_talk_choices = []
 	ui.hide_page()

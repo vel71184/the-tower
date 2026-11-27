@@ -11,6 +11,8 @@ var display_name := ""
 var cell := Vector2i.ZERO
 var blocking := true
 var revealed := true
+## Set once it's been opened (see show_open).
+var opened := false
 
 ## For people: their CharacterModel (scripts/characters/character_model.gd).
 var character = null
@@ -75,13 +77,67 @@ func set_near(near: bool) -> void:
 	_label.visible = near and revealed
 
 
-func reveal() -> void:
+## Shows a hidden thing. Things found underfoot ("reveal": "step") rock and settle, like a
+## board shifting under weight; the rest pop up. Nothing is said: seeing it is the hint.
+func reveal(animate: bool = true) -> void:
 	if revealed:
 		return
 	revealed = true
 	visible = true
-	scale = Vector3(0.6, 0.6, 0.6)
-	create_tween().tween_property(self, "scale", Vector3.ONE, 0.35).set_trans(Tween.TRANS_BACK)
+	if not animate:
+		return
+	if String(def.get("reveal", "near")) == "step":
+		var t := create_tween()
+		for a in [7.0, -5.0, 3.0, 0.0]:
+			t.tween_property(self, "rotation_degrees:z", a, 0.07)
+	else:
+		scale = Vector3(0.6, 0.6, 0.6)
+		create_tween().tween_property(self, "scale", Vector3.ONE, 0.35).set_trans(Tween.TRANS_BACK)
+
+
+## Picked up: shrinks away. The caller removes it from the level afterwards.
+func vanish() -> Tween:
+	var t := create_tween()
+	t.tween_property(self, "scale", Vector3(0.05, 0.05, 0.05), 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	return t
+
+
+## Opened (a board pried up, a lid lifted): the piece tilts up on one edge over a dark gap.
+func show_open(animate: bool = true) -> void:
+	if opened:
+		return
+	opened = true
+	var piece: Node3D = null
+	for c in get_children():
+		if c is MeshInstance3D:
+			piece = c
+			break
+	if piece == null:
+		return
+	var w := 0.9
+	if piece.mesh is BoxMesh:
+		w = (piece.mesh as BoxMesh).size.x
+	var gap := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(w * 0.92, 0.004, 0.26)
+	gap.mesh = box
+	var dark := StandardMaterial3D.new()
+	dark.albedo_color = Color(0.06, 0.045, 0.035)
+	dark.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	gap.material_override = dark
+	gap.position = Vector3(0, 0.003, 0)
+	add_child(gap)
+	# Hinged on its far edge: lift the near end.
+	var tilt := 32.0
+	var lift := sin(deg_to_rad(tilt)) * w * 0.5
+	var goal_pos := piece.position + Vector3(-w * 0.5 * (1.0 - cos(deg_to_rad(tilt))), lift, 0)
+	if animate:
+		var t := create_tween().set_parallel()
+		t.tween_property(piece, "rotation_degrees:z", tilt, 0.35).set_trans(Tween.TRANS_BACK)
+		t.tween_property(piece, "position", goal_pos, 0.35).set_trans(Tween.TRANS_BACK)
+	else:
+		piece.rotation_degrees.z = tilt
+		piece.position = goal_pos
 
 
 ## Someone speaking in a scene: shown at once, ahead of anything waiting.

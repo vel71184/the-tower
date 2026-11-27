@@ -10,6 +10,7 @@ extends Node
 ##   {"say": "text", "time": seconds}    the climber speaks (floating text)
 ##   {"npc_say": "object id", "text": "...", "time": seconds}
 ##   {"reveal": "object id"}             a hidden thing appears
+##   {"use": "object id"}                it's used up: picked up, opened (its "after_use")
 ##   {"choice": "object id", "node": "dialogue node"}   hand the player that conversation
 ##   {"end": true}                       leave the level forward
 ## Skipping fast-forwards to the next "choice" the player hasn't made yet, then to the end.
@@ -104,6 +105,10 @@ func _run(step: Dictionary, gen: int) -> void:
 			who.face(climber.global_position)
 			who.say(String(step.get("text", "")), float(step.get("time", 2.5)) / speed)
 			await _wait(float(step.get("time", 2.5)), gen)
+	elif step.has("use"):
+		var obj = main.find_object(String(step["use"]))
+		if obj:
+			main.use_up(obj, not skipping)
 	elif step.has("reveal"):
 		var obj = main.find_object(String(step["reveal"]))
 		if obj and not obj.revealed:

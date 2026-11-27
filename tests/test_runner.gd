@@ -378,6 +378,7 @@ func _test_road() -> void:
 	check(await _until(func(): return main.is_talking()), "skipping jumps to Wil's question")
 	check(main._talk_node_id == "need" and not main.ui.is_cinematic(), "the player's first input is Wil's request")
 	check(Baseline.knows("signpost") and Baseline.knows("deliveries_stopped") and Baseline.knows("marta_name"), "what the climber saw along the way is still learned")
+	check(main.find_object("torn_ledger") == null, "the ledger page was picked up, so it's gone")
 	check(main.choose_text("I'll tell her"), "you can promise")
 	main.choose(0)
 	check(await _until(func(): return not main.cutscene.playing), "then the scene finishes by itself")
@@ -468,13 +469,20 @@ func _test_level_one() -> void:
 	check(board != null and not board.revealed, "the loose floorboard starts hidden")
 	main.interact(board)
 	check(not main.is_talking() and not Baseline.knows("marta_motive"), "hidden things can't be used before they're found")
+	main._on_entered_cell(board.cell + Vector2i(1, 0))
+	check(not board.revealed, "walking past the floorboard doesn't give it away")
 	main._on_entered_cell(board.cell)
-	check(board.revealed, "standing near the floorboard reveals it")
+	check(board.revealed and String(main.ui.speech._current.get("kind", "")) != "notice", "stepping on it shows it, without a word")
 	main.interact(board)
 	for i in 5:
 		if main.is_talking():
 			main.choose(0)
 	check(Baseline.knows("marta_motive") and Baseline.has_flag("found_letter"), "reading the letter teaches Marta's motive")
+	check(board.opened and Baseline.has_flag("used:loose_board"), "the board stays pried open")
+	main.interact(board)
+	check(main.ui._body.text.contains("Nothing else"), "looking again finds it empty")
+	while main.is_talking():
+		main.choose(0)
 
 	var tobin = main.find_object("tobin")
 	main._on_entered_cell(tobin.cell + Vector2i(1, 0))
@@ -539,6 +547,9 @@ func _test_level_one() -> void:
 	main.start_level(1, 1)
 	var hidden = main.find_object("loose_board")
 	main._on_entered_cell(hidden.cell)
+	main.interact(hidden)
+	while main.is_talking():
+		main.choose(0)
 	main.climber.place(Vector2i(4, 7))
 	main.interact(main.find_object("tobin"))
 	main.choose_text("Who says")
@@ -552,6 +563,7 @@ func _test_level_one() -> void:
 	check(main.resume_climb(), "resuming reopens the level")
 	check(main.climber.cell == Vector2i(4, 7), "the climber is back where they stopped")
 	check(main.find_object("loose_board").revealed, "found hidden things stay found")
+	check(main.find_object("loose_board").opened, "and opened things stay open")
 	check(Baseline.knows("marta_name") and Baseline.has_flag("talked_tobin"), "what the climber learned is kept")
 	check(is_equal_approx(Baseline.value("others_self"), saved_others), "the baseline is kept")
 
