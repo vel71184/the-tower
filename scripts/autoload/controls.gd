@@ -30,6 +30,7 @@ const ACTIONS := {
 	"zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "axes": [[JOY_AXIS_TRIGGER_LEFT, 1.0]]},
 	"dev_overlay": {"keys": [KEY_F3], "buttons": [JOY_BUTTON_BACK]},
 	"menu": {"keys": [], "buttons": [JOY_BUTTON_START]},
+	"skip": {"keys": [KEY_ESCAPE], "buttons": [JOY_BUTTON_START, JOY_BUTTON_B]},
 }
 
 ## Godot's built-in UI actions (menus, dialogue choices) get the same pad bindings.

@@ -146,6 +146,14 @@ func _test_characters() -> void:
 	check(clean, "floor 1's palette is valid and has no reserved colours")
 
 
+func _key(code: int) -> InputEventKey:
+	var e := InputEventKey.new()
+	e.physical_keycode = code
+	e.keycode = code
+	e.pressed = true
+	return e
+
+
 func Main_screen(v: Vector2) -> Vector3:
 	return load("res://scripts/game/main.gd").screen_to_world(v)
 
@@ -360,8 +368,25 @@ func _test_road() -> void:
 	check(not main.ui.is_title_visible() and main.climber.visible, "New climb starts the game")
 	check(main.level.data.get("id") == "f00_l01" and Baseline.floor_num == 0, "on The Road, Floor 0")
 
+	print("The opening scene")
+	check(main.cutscene.playing and main.ui.is_cinematic(), "a new climb opens with The Road playing itself")
+	var start_pos: Vector3 = main.climber.position
+	await get_tree().create_timer(2.5).timeout
+	check(main.climber.position.distance_to(start_pos) > 0.5, "the climber walks on their own")
+	main._unhandled_input(_key(KEY_ESCAPE))
+	check(await _until(func(): return main.is_talking()), "skipping jumps to Wil's question")
+	check(main._talk_node_id == "need" and not main.ui.is_cinematic(), "the player's first input is Wil's request")
+	check(Baseline.knows("signpost") and Baseline.knows("deliveries_stopped") and Baseline.knows("marta_name"), "what the climber saw along the way is still learned")
+	check(main.choose_text("I'll tell her"), "you can promise")
+	main.choose(0)
+	check(await _until(func(): return not main.cutscene.playing), "then the scene finishes by itself")
+	check(Baseline.has_flag("carrying_wil_message") and Baseline.has_flag("cutscene_seen:f00_l01"), "the promise is kept, and the scene won't replay")
+	check(Baseline.floor_num == 1 and main.ui.is_busy(), "the road leads on to the gate and the tower's intro")
+	check(not Baseline.has_flag("examined:wil") or Baseline.value("speed_patience") == 0.0, "watching the scene doesn't count toward how you play")
+
 	print("Floor 0, Level 1: The Road (outdoors)")
 	Baseline.reset()
+	Baseline.set_flag("cutscene_seen:f00_l01")
 	check(main.start_level(0, 1), "The Road (Floor 0) loads")
 	var level = main.level
 	check(level.get_node_or_null("Ground") != null, "the ground is one merged mesh")

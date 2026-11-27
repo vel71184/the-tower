@@ -7,6 +7,7 @@ const IsoCamera := preload("res://scripts/game/iso_camera.gd")
 const GameUI := preload("res://scripts/ui/game_ui.gd")
 const Interactable := preload("res://scripts/game/interactable.gd")
 const Combat := preload("res://scripts/game/combat.gd")
+const Cutscene := preload("res://scripts/game/cutscene.gd")
 
 ## "floor-level" -> content file. Levels not listed here aren't built yet.
 ## Floor 0 (The Approach) is the prologue outside the tower: 4 levels, no boss.
@@ -33,6 +34,7 @@ var _card_handler: Callable
 var _ended := false
 var _marker: MeshInstance3D
 var combat: Combat
+var cutscene: Cutscene
 var _focus_ring: MeshInstance3D
 var _fade_timer := 0.0
 var _block_input := false
@@ -65,6 +67,10 @@ func _ready() -> void:
 	combat = Combat.new()
 	add_child(combat)
 	combat.setup(self)
+	cutscene = Cutscene.new()
+	add_child(cutscene)
+	cutscene.setup(self)
+	ui.skip_pressed.connect(func() -> void: cutscene.skip())
 	Baseline.changed.connect(_refresh_dev)
 	show_title()
 
@@ -73,7 +79,7 @@ func _process(delta: float) -> void:
 	_refresh_dev()
 	if level == null or _ended:
 		return
-	var free := not ui.is_busy() and not _note_open
+	var free := not ui.is_busy() and not _note_open and not cutscene.playing
 	var v := Input.get_vector("move_left", "move_right", "move_up", "move_down") if free else Vector2.ZERO
 	climber.move_free(screen_to_world(v), delta)
 	var block_input: bool = free and (Input.is_action_pressed("block") or ui.block_held())
@@ -135,6 +141,9 @@ func _start_title_drift() -> void:
 		if obj.kind == "exit":
 			exit_obj = obj
 	var b: Vector3 = exit_obj.global_position if exit_obj else a + Vector3(-6, 0, -6)
+	var tower := level.get_node_or_null("Backdrop") as Node3D
+	if tower:
+		b = tower.global_position + Vector3(2.5, 3.0, 2.5)
 	_title_anchor.global_position = a
 	cam.target = _title_anchor
 	cam.snap()
@@ -184,6 +193,8 @@ func first_built_level() -> Vector2i:
 func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool:
 	if arriving != "title" and _in_title:
 		_leave_title()
+	if cutscene:
+		cutscene.stop()
 	ui.hide_card()
 	ui.hide_page()
 	_note_open = false
@@ -247,7 +258,11 @@ func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool
 			if level and level.data == data:
 				ui.toast(hint, 4.0))
 	_on_entered_cell(climber.cell)
-	autosave()
+	var scene: Array = data.get("cutscene", [])
+	if not scene.is_empty() and arriving == "start" and not Baseline.has_flag("cutscene_seen:" + String(data.get("id", ""))):
+		cutscene.play(scene)
+	else:
+		autosave()
 	return true
 
 
@@ -382,7 +397,7 @@ func examined_count() -> int:
 ## Saves mid-level, so closing the app never loses progress. Runs when the app is closed or
 ## sent to the background, when a level starts, and after every conversation.
 func autosave() -> void:
-	if level == null or _ended or (combat and combat.active):
+	if level == null or _ended or (combat and combat.active) or (cutscene and cutscene.playing):
 		return
 	var at := climber.cell
 	Baseline.resume = {"floor": Baseline.floor_num, "level": Baseline.level_num, "cell": [at.x, at.y]}
@@ -400,6 +415,10 @@ func _notification(what: int) -> void:
 # --- Input ----------------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
+	if cutscene.playing:
+		if event.is_action_pressed("skip"):
+			cutscene.skip()
+		return
 	if event.is_action_pressed("dev_overlay"):
 		ui.toggle_dev()
 	elif level == null or ui.is_busy() or _ended:
@@ -633,6 +652,15 @@ func interact(obj: Interactable) -> void:
 			start = String(rule.get("start", start))
 			break
 	_show_node(start)
+
+
+## Opens a conversation at a given node (cutscenes hand the player a choice this way).
+func talk_from(obj: Interactable, node_id: String) -> void:
+	_talk_obj = obj
+	_talk_nodes = _dialogue_nodes(obj.def)
+	if not Baseline.has_flag("examined:" + obj.id):
+		Baseline.set_flag("examined:" + obj.id)
+	_show_node(node_id)
 
 
 ## Plain "lines" become a chain of pages; "dialogue" holds branching nodes.

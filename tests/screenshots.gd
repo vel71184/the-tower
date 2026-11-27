@@ -14,13 +14,18 @@ func _ready() -> void:
 	if _out == "":
 		_out = "user://shots"
 	DirAccess.make_dir_recursive_absolute(_out)
-	get_tree().create_timer(60.0).timeout.connect(func() -> void: get_tree().quit(2))
+	get_tree().create_timer(90.0).timeout.connect(func() -> void: get_tree().quit(2))
 	Baseline.reset()
 
 	var main = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	await _frames(90)
 	await _shot("00_title")
+	main.start_level(0, 1)
+	await get_tree().create_timer(7.0).timeout
+	await _shot("0_road_scene")
+	main.cutscene.stop()
+	Baseline.set_flag("cutscene_seen:f00_l01")
 	main.start_level(0, 1)
 	await _frames(40)
 	await _shot("0_road_start")

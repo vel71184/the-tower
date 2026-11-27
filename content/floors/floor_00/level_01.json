@@ -3,7 +3,6 @@
   "floor": 0,
   "level": 1,
   "title": "Floor 0 · The Road",
-  "hint": "Tap to walk, tap things to look closer. With a controller: stick to walk, bottom button to look.",
   "draft_note": "Floor 0, level 1 of 4: the road toward the tower.",
   "ground": "grass",
   "legend": {
@@ -408,5 +407,162 @@
     "depth": 7,
     "density": 0.45
   },
-  "mood": "outdoor_day"
+  "mood": "outdoor_day",
+  "cutscene": [
+    {
+      "wait": 0.8
+    },
+    {
+      "walk_to": "signpost"
+    },
+    {
+      "face": "signpost"
+    },
+    {
+      "act": "interact-right"
+    },
+    {
+      "say": "\"The Tower.\" And an arrow, up the road.",
+      "time": 2.6
+    },
+    {
+      "say": "Someone's scratched under it. \"Turn back.\"",
+      "time": 2.6
+    },
+    {
+      "say": "And under that, another hand: \"Don't.\"",
+      "time": 2.6,
+      "effects": {
+        "learn": [
+          "signpost"
+        ],
+        "set_flags": [
+          "examined:signpost"
+        ]
+      }
+    },
+    {
+      "walk_to": "supply_cart"
+    },
+    {
+      "face": "supply_cart"
+    },
+    {
+      "act": "pick-up"
+    },
+    {
+      "say": "A supply cart, tipped over. The Gatekeeper's mark on the side.",
+      "time": 3.0,
+      "effects": {
+        "learn": [
+          "gate_cart"
+        ],
+        "set_flags": [
+          "examined:supply_cart"
+        ]
+      }
+    },
+    {
+      "face": "loose_wheel"
+    },
+    {
+      "say": "Spokes snapped, all on one side. Something stepped on this. Something big.",
+      "time": 3.4,
+      "effects": {
+        "learn": [
+          "heavy_step"
+        ],
+        "set_flags": [
+          "examined:loose_wheel"
+        ]
+      }
+    },
+    {
+      "reveal": "torn_ledger"
+    },
+    {
+      "face": "torn_ledger"
+    },
+    {
+      "say": "What's that, in the grass?",
+      "time": 1.8
+    },
+    {
+      "walk_to": "torn_ledger"
+    },
+    {
+      "act": "pick-up"
+    },
+    {
+      "say": "\"Bread for the waiting hall. Forty loaves.\"",
+      "time": 2.6
+    },
+    {
+      "say": "\"No more deliveries. By order of M.\"",
+      "time": 3.0,
+      "effects": {
+        "learn": [
+          "deliveries_stopped"
+        ],
+        "set_flags": [
+          "found_ledger",
+          "examined:torn_ledger"
+        ]
+      }
+    },
+    {
+      "walk_to": "wil"
+    },
+    {
+      "face": "wil"
+    },
+    {
+      "npc_say": "wil",
+      "text": "\"Going up? Huh.\"",
+      "time": 2.2
+    },
+    {
+      "say": "Is it far?",
+      "time": 1.8
+    },
+    {
+      "npc_say": "wil",
+      "text": "\"Far enough. Ten rooms to a floor, they say, and someone at the top of each who won't let you by easy.\"",
+      "time": 4.0
+    },
+    {
+      "npc_say": "wil",
+      "text": "\"First one's the Gatekeeper. Marta.\"",
+      "time": 2.8,
+      "effects": {
+        "learn": [
+          "marta_name",
+          "tower_floors"
+        ],
+        "set_flags": [
+          "talked_wil",
+          "asked_wil_what",
+          "examined:wil",
+          "heard_wil"
+        ]
+      }
+    },
+    {
+      "choice": "wil",
+      "node": "need"
+    },
+    {
+      "walk_to": "road_on"
+    },
+    {
+      "face": "road_on"
+    },
+    {
+      "say": "The river's this way. And past it...",
+      "time": 2.6
+    },
+    {
+      "end": true
+    }
+  ]
 }

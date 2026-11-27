@@ -6,6 +6,7 @@ signal choice_made(index: int)
 signal card_choice(index: int)
 signal combat_action(id: String)
 signal title_choice(id: String)
+signal skip_pressed
 
 const TITLE_FONT := preload("res://assets/fonts/cinzel-bold.woff")
 
@@ -29,6 +30,9 @@ var _combat: PanelContainer
 var _combat_hint: Label
 var _combat_buttons: HBoxContainer
 var _wounds: Label
+var _bars: Array = []
+var _skip: Button
+var _cinematic := false
 var _title: Control
 var _title_menu: VBoxContainer
 var _touch_bar: VBoxContainer
@@ -49,6 +53,7 @@ func _ready() -> void:
 	_build_combat()
 	_build_touch_bar()
 	_build_title()
+	_build_cinematic()
 
 
 # --- Dialogue -------------------------------------------------------------------------------
@@ -73,6 +78,55 @@ func is_busy() -> bool:
 	return _panel.visible or _card.visible or (_title != null and _title.visible)
 
 
+# --- Cutscenes ---------------------------------------------------------------------------
+
+## Letterbox bars and a Skip button while a scene plays.
+func set_cinematic(on: bool) -> void:
+	_cinematic = on
+	for i in _bars.size():
+		var bar: ColorRect = _bars[i]
+		var h := 64.0 if on else 0.0
+		var tw := create_tween()
+		if i == 0:
+			tw.tween_property(bar, "offset_bottom", h, 0.4)
+		else:
+			tw.tween_property(bar, "offset_top", -h, 0.4)
+	_skip.visible = on
+
+
+func is_cinematic() -> bool:
+	return _cinematic
+
+
+func _build_cinematic() -> void:
+	for i in 2:
+		var bar := ColorRect.new()
+		bar.color = Color(0, 0, 0, 0.92)
+		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar.anchor_left = 0.0
+		bar.anchor_right = 1.0
+		if i == 0:
+			bar.anchor_top = 0.0
+			bar.anchor_bottom = 0.0
+		else:
+			bar.anchor_top = 1.0
+			bar.anchor_bottom = 1.0
+		_root.add_child(bar)
+		_bars.append(bar)
+	_skip = _button("Skip  ▸", func() -> void: skip_pressed.emit())
+	_skip.focus_mode = Control.FOCUS_NONE
+	_skip.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_skip.anchor_left = 1.0
+	_skip.anchor_right = 1.0
+	_skip.offset_left = -150
+	_skip.offset_right = -16
+	_skip.offset_top = 8
+	_skip.offset_bottom = 56
+	_skip.modulate.a = 0.8
+	_skip.visible = false
+	_root.add_child(_skip)
+
+
 # --- Title screen ---------------------------------------------------------------------------
 
 ## Shows the title over whatever the camera is looking at. options: [[id, label], ...]
@@ -83,6 +137,7 @@ func show_title(options: Array) -> void:
 		b.custom_minimum_size = Vector2(300, 60)
 		b.add_theme_font_override("font", TITLE_FONT)
 		b.add_theme_font_size_override("font_size", 26)
+		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_title_menu.add_child(b)
 	_title.visible = true
 	_title.modulate.a = 0.0
@@ -198,7 +253,7 @@ func _process(_delta: float) -> void:
 		return
 	var controls := get_node_or_null("/root/Controls")
 	var pad: bool = controls != null and controls.using_pad
-	_touch_bar.visible = touch_actions_enabled and not pad and not is_busy()
+	_touch_bar.visible = touch_actions_enabled and not pad and not is_busy() and not _cinematic
 
 
 func _build_touch_bar() -> void:

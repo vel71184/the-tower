@@ -77,6 +77,26 @@ func reveal() -> void:
 	create_tween().tween_property(self, "scale", Vector3.ONE, 0.35).set_trans(Tween.TRANS_BACK)
 
 
+## Someone speaking in a scene: a longer line over their head.
+func say(text: String, seconds: float = 2.5) -> void:
+	var l := Label3D.new()
+	l.text = text
+	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	l.no_depth_test = true
+	l.font_size = 38
+	l.outline_size = 12
+	l.pixel_size = 0.006
+	l.width = 560
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.modulate = Color(1.0, 0.92, 0.7)
+	l.position = Vector3(0, _top + 0.8, 0)
+	add_child(l)
+	var t := create_tween()
+	t.tween_interval(maxf(0.3, seconds - 0.4))
+	t.tween_property(l, "modulate:a", 0.0, 0.4)
+	t.tween_callback(l.queue_free)
+
+
 ## A short line spoken or noticed in the world, floating above the object for a few seconds.
 func bark(text: String) -> void:
 	var l := Label3D.new()

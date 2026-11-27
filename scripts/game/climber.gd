@@ -18,6 +18,7 @@ var character
 var facing_dir := Vector3(1, 0, 1).normalized()
 var _path: Array = []
 var _free_moving := false
+var _speech: Label3D
 
 const CharacterModel := preload("res://scripts/characters/character_model.gd")
 const Looks := preload("res://scripts/characters/looks.gd")
@@ -64,6 +65,28 @@ func walk(path: Array) -> void:
 func stop() -> void:
 	_path.clear()
 	character.set_moving(false)
+
+
+## The climber speaking: a line over their head for a few seconds (cutscenes, asides).
+func say(text: String, seconds: float = 2.5) -> void:
+	if _speech and is_instance_valid(_speech):
+		_speech.queue_free()
+	_speech = Label3D.new()
+	_speech.text = text
+	_speech.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_speech.no_depth_test = true
+	_speech.font_size = 38
+	_speech.outline_size = 12
+	_speech.pixel_size = 0.006
+	_speech.width = 520
+	_speech.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_speech.position = Vector3(0, 1.75, 0)
+	add_child(_speech)
+	var l := _speech
+	var t := create_tween()
+	t.tween_interval(maxf(0.3, seconds - 0.4))
+	t.tween_property(l, "modulate:a", 0.0, 0.4)
+	t.tween_callback(l.queue_free)
 
 
 ## A short line floating over the climber (e.g. "-1 wound").
