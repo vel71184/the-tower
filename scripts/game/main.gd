@@ -17,7 +17,6 @@ const LEVELS := {
 	"1-1": "res://content/floors/floor_01/level_01.json",
 }
 
-const NEAR_LABEL_RANGE := 2.5
 const TAP_PICK_PIXELS := 48.0
 
 var level: Level
@@ -84,6 +83,7 @@ func _process(delta: float) -> void:
 	var free := not ui.is_busy() and not _note_open and not cutscene.playing
 	var v := Input.get_vector("move_left", "move_right", "move_up", "move_down") if free else Vector2.ZERO
 	climber.move_free(screen_to_world(v), delta)
+	ui.combat_active = combat.active
 	var block_input: bool = free and (Input.is_action_pressed("block") or ui.block_held())
 	if block_input != _block_input:
 		_block_input = block_input
@@ -101,21 +101,39 @@ func _process(delta: float) -> void:
 func show_title() -> void:
 	_in_title = true
 	start_level(0, 1, "title")
+	ui.show_title(_title_options())
+
+
+func _title_options() -> Array:
 	var opts: Array = []
 	if Baseline.has_save():
 		opts.append(["continue", "Continue"])
 	opts.append(["new", "New climb"])
+	opts.append(["how", "How to play"])
 	if not OS.has_feature("mobile") and not OS.has_feature("web"):
 		opts.append(["quit", "Quit"])
-	ui.show_title(opts)
+	return opts
 
 
 func _on_title_choice(id: String) -> void:
 	match id:
 		"continue":
+			if not Baseline.load_save():
+				# Never throw a save away on the player's behalf: say so and let them choose.
+				_card("The save couldn't be read", "It's been left as it is.",
+					["Back", "Start a new climb"], func(i: int) -> void:
+						if i == 1:
+							_leave_title()
+							new_climb()
+						else:
+							ui.show_title(_title_options()))
+				ui.hide_title()
+				return
 			_leave_title()
-			if not (Baseline.load_save() and resume_climb()):
-				new_climb()
+			resume_climb()
+		"how":
+			ui.hide_title()
+			_card("How to play", how_to_play(), ["Back"], func(_i: int) -> void: ui.show_title(_title_options()))
 		"new":
 			_leave_title()
 			new_climb()
@@ -123,11 +141,23 @@ func _on_title_choice(id: String) -> void:
 			get_tree().quit()
 
 
+## The controls, for the device in use. Shown from the title menu; the game itself has no
+## button hints.
+func how_to_play() -> String:
+	if Controls.using_pad or Controls.has_controller():
+		return "Left stick: walk\nA: look, talk, use\nX: attack   Y: kick   hold B: block\nL1: lock on   R1: next target\nTriggers: zoom   Start: skip a scene"
+	if OS.has_feature("mobile"):
+		return "Tap the ground to walk there.\nTap someone or something to go to it and look, talk or use it.\nLock on to pick a fight; the other fight buttons appear once someone is hostile.\nPinch to zoom."
+	return "WASD or arrows: walk (or click the ground)\nE / Enter: look, talk, use (or click it)\nSpace: attack   K: kick   hold Shift: block\nQ: lock on   Tab: next target\nWheel or - / =: zoom   Esc: skip a scene"
+
+
 func _on_opening_done() -> void:
 	if _pending_arrival.size() == 2:
 		var to: Vector2i = _pending_arrival[0]
 		var arriving: String = _pending_arrival[1]
 		_pending_arrival = []
+		# Only counts as seen once the player has read it to the end.
+		Baseline.set_flag("intro_seen:%d" % to.x)
 		start_level(to.x, to.y, arriving)
 
 
@@ -175,6 +205,9 @@ func new_climb() -> void:
 ## Picks up a loaded save: inside a level where the climber stopped, or at the next level.
 func resume_climb() -> bool:
 	var spot: Dictionary = Baseline.resume.duplicate()
+	# Closed the game on a floor's opening screen: show it again before going in.
+	if spot.is_empty() and Baseline.level_num == 1 and _show_floor_intro(Vector2i(Baseline.floor_num, 1), "start"):
+		return true
 	if not start_level(Baseline.floor_num, Baseline.level_num):
 		return false
 	if int(spot.get("floor", 0)) == Baseline.floor_num and int(spot.get("level", 0)) == Baseline.level_num:
@@ -207,6 +240,7 @@ func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool
 		cutscene.stop()
 	ui.hide_card()
 	ui.hide_page()
+	ui.speech.clear()
 	_note_open = false
 	var key := "%d-%d" % [floor_n, level_n]
 	if not LEVELS.has(key):
@@ -325,19 +359,24 @@ func _travel(to: Vector2i, arriving: String) -> void:
 	Baseline.level_num = to.y
 	Baseline.resume = {}
 	Baseline.save()
-	var intro: Dictionary = floor_data(to.x).get("intro", {})
-	if to.x != from_floor and not intro.is_empty() and not Baseline.has_flag("intro_seen:%d" % to.x):
-		Baseline.set_flag("intro_seen:%d" % to.x)
-		if intro.has("lines"):
-			_pending_arrival = [to, arriving]
-			ui.show_opening(intro["lines"], String(intro.get("button", "Go on")))
-			return
-		_card(String(intro.get("title", "")), String(intro.get("body", "")), [String(intro.get("button", "Go on"))],
-			func(_i: int) -> void:
-				start_level(to.x, to.y, arriving))
+	if to.x != from_floor and _show_floor_intro(to, arriving):
 		return
 	start_level(to.x, to.y, arriving)
 	ui.toast("Saved", 1.2)
+
+
+## Shows a floor's opening screen if the player hasn't read it yet. True if it's showing.
+func _show_floor_intro(to: Vector2i, arriving: String) -> bool:
+	var intro: Dictionary = floor_data(to.x).get("intro", {})
+	if intro.is_empty() or Baseline.has_flag("intro_seen:%d" % to.x):
+		return false
+	_pending_arrival = [to, arriving]
+	if intro.has("lines"):
+		ui.show_opening(intro["lines"], String(intro.get("button", "Go on")))
+	else:
+		_card(String(intro.get("title", "")), String(intro.get("body", "")), [String(intro.get("button", "Go on"))],
+			func(_i: int) -> void: _on_opening_done())
+	return true
 
 
 ## A floor's rules and people (content/floors/floor_NN/floor.json).
@@ -584,14 +623,15 @@ func _on_entered_cell(cell: Vector2i) -> void:
 			Baseline.set_flag("noticed:" + obj.id)
 			var notice := String(obj.def.get("reveal_text", ""))
 			if notice != "":
-				obj.bark(notice)
-		obj.set_near(d <= NEAR_LABEL_RANGE and not cutscene.playing)
+				obj.notice(notice)
 		var callout: Dictionary = obj.def.get("call_out", {})
 		if not callout.is_empty():
 			var flag := String(callout.get("flag", "heard:" + obj.id))
 			if not Baseline.has_flag(flag) and d <= float(callout.get("radius", 3.0)):
 				Baseline.set_flag(flag)
-				obj.bark(String(callout.get("text", "")))
+				# A scene has its own script; a call-out over it would talk across it.
+				if not cutscene.playing:
+					obj.bark(String(callout.get("text", "")))
 
 
 ## What the interact button would use right now (highlighted in the world), or null.
@@ -633,6 +673,9 @@ func focus_object() -> Interactable:
 func _update_focus() -> void:
 	var f := focus_object()
 	if f != _focus:
+		# Only the thing you'd use shows its name.
+		if _focus and is_instance_valid(_focus):
+			_focus.set_near(false)
 		_focus = f
 		_show_focus_ring(f)
 
@@ -714,7 +757,7 @@ func _show_node(node_id: String) -> void:
 	for c in _talk_choices:
 		labels.append(String(c.get("text", "...")))
 	var speaker := _talk_obj.display_name
-	ui.show_page(speaker, String(node.get("text", "")), labels)
+	ui.show_page(speaker, String(node.get("text", "")), labels, _talk_obj.resolved_look if _talk_obj.kind == "npc" else {})
 
 
 ## Picks a dialogue option by index (0 also means "Continue" on pages without choices).
@@ -850,12 +893,12 @@ func _show_focus_ring(obj: Interactable) -> void:
 	if _focus_ring == null:
 		_focus_ring = MeshInstance3D.new()
 		var ring := TorusMesh.new()
-		ring.inner_radius = 0.38
-		ring.outer_radius = 0.46
+		ring.inner_radius = 0.4
+		ring.outer_radius = 0.445
 		ring.rings = 24
 		_focus_ring.mesh = ring
 		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(1.0, 0.85, 0.45, 0.85)
+		mat.albedo_color = Color(1.0, 0.88, 0.55, 0.6)
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		_focus_ring.material_override = mat
@@ -866,6 +909,8 @@ func _show_focus_ring(obj: Interactable) -> void:
 	elif obj:
 		_focus_ring.global_position = obj.global_position + Vector3(0, 0.03, 0)
 		obj.set_near(true)
+		_focus_ring.scale = Vector3(0.7, 0.7, 0.7)
+		create_tween().tween_property(_focus_ring, "scale", Vector3.ONE, 0.18).set_trans(Tween.TRANS_BACK)
 
 
 ## Sets lighting, sky colour and haze from a level's "mood" (see MOODS).

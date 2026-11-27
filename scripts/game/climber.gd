@@ -18,10 +18,11 @@ var character
 var facing_dir := Vector3(1, 0, 1).normalized()
 var _path: Array = []
 var _free_moving := false
-var _speech: Label3D
 
 const CharacterModel := preload("res://scripts/characters/character_model.gd")
 const Looks := preload("res://scripts/characters/looks.gd")
+const Models := preload("res://scripts/game/models.gd")
+const Pop := preload("res://scripts/ui/pop.gd")
 
 
 func _ready() -> void:
@@ -29,10 +30,14 @@ func _ready() -> void:
 	add_child(character)
 	if not character.build(Looks.climber_look()):
 		push_error("Could not build the climber")
+	Models.outline(character, 0.012)
 
 
 func place(at: Vector2i) -> void:
 	_path.clear()
+	_free_moving = false
+	if character:
+		character.set_moving(false)
 	cell = at
 	position = level.cell_to_world(at)
 
@@ -67,44 +72,16 @@ func stop() -> void:
 	character.set_moving(false)
 
 
-## The climber speaking: a line over their head for a few seconds (cutscenes, asides).
+## The climber speaking (scenes, asides): shown at once, ahead of anything waiting.
 func say(text: String, seconds: float = 2.5) -> void:
-	if _speech and is_instance_valid(_speech):
-		_speech.queue_free()
-	_speech = Label3D.new()
-	_speech.text = text
-	_speech.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_speech.no_depth_test = true
-	_speech.font_size = 38
-	_speech.outline_size = 12
-	_speech.pixel_size = 0.006
-	_speech.width = 520
-	_speech.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_speech.position = Vector3(0, 2.3, 0)
-	add_child(_speech)
-	var l := _speech
-	var t := create_tween()
-	t.tween_interval(maxf(0.3, seconds - 0.4))
-	t.tween_property(l, "modulate:a", 0.0, 0.4)
-	t.tween_callback(l.queue_free)
+	var sp = get_tree().get_first_node_in_group("speech") if is_inside_tree() else null
+	if sp:
+		sp.say(self, 1.25, text, seconds, "line", true)
 
 
-## A short line floating over the climber (e.g. "-1 wound").
+## A quick word or number popping off the climber (e.g. "-1 wound").
 func bark(text: String) -> void:
-	var l := Label3D.new()
-	l.text = text
-	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.no_depth_test = true
-	l.font_size = 40
-	l.outline_size = 12
-	l.pixel_size = 0.006
-	l.modulate = Color(1.0, 0.85, 0.5)
-	l.position = Vector3(0, 1.5, 0)
-	add_child(l)
-	var t := create_tween()
-	t.tween_interval(1.6)
-	t.tween_property(l, "modulate:a", 0.0, 0.5)
-	t.tween_callback(l.queue_free)
+	Pop.spawn(self, text, 1.4)
 
 
 ## Plays a one-off animation, e.g. "interact-right" when examining something.

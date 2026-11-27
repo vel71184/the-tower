@@ -10,11 +10,21 @@ signal skip_pressed
 signal opening_done
 
 const TITLE_FONT := preload("res://assets/fonts/cinzel-bold.woff")
+const Speech := preload("res://scripts/ui/speech.gd")
+const Portrait := preload("res://scripts/ui/portrait.gd")
 
 const TEXT_SIZE := 24
 const BUTTON_HEIGHT := 60
 
+## Full screen (letterbox bars); everything else sits in _root, inside the phone's safe area.
+var _full: Control
 var _root: Control
+var speech: Speech
+var _portrait: Portrait
+var _portrait_frame: PanelContainer
+var _safe_key := Rect2i()
+## Set while the climber is in a fight, so all the fight buttons show.
+var combat_active := false
 var _panel: PanelContainer
 var _speaker: Label
 var _body: Label
@@ -44,6 +54,12 @@ var touch_actions_enabled := false
 
 
 func _ready() -> void:
+	_full = Control.new()
+	_full.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_full.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_full)
+	speech = Speech.new()
+	_full.add_child(speech)
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -60,7 +76,11 @@ func _ready() -> void:
 
 # --- Dialogue -------------------------------------------------------------------------------
 
-func show_page(speaker: String, text: String, choices: Array) -> void:
+## look: the speaker's character look, for a portrait beside the text ({} for none).
+func show_page(speaker: String, text: String, choices: Array, look: Dictionary = {}) -> void:
+	_portrait_frame.visible = not look.is_empty()
+	if not look.is_empty():
+		_portrait.show_look(look)
 	_speaker.text = speaker
 	_speaker.visible = speaker != ""
 	_body.text = text
@@ -87,13 +107,20 @@ func set_cinematic(on: bool) -> void:
 	_cinematic = on
 	for i in _bars.size():
 		var bar: ColorRect = _bars[i]
-		var h := 64.0 if on else 0.0
+		var h := letterbox_height() if on else 0.0
 		var tw := create_tween()
 		if i == 0:
 			tw.tween_property(bar, "offset_bottom", h, 0.4)
 		else:
 			tw.tween_property(bar, "offset_top", -h, 0.4)
 	_skip.visible = on
+
+
+## Thin bars: a hint of film, not a third of a wide phone's height.
+func letterbox_height() -> float:
+	var size := get_viewport().get_visible_rect().size
+	var aspect := size.x / maxf(1.0, size.y)
+	return size.y * (0.06 if aspect < 1.9 else 0.04)
 
 
 func is_cinematic() -> bool:
@@ -113,7 +140,7 @@ func _build_cinematic() -> void:
 		else:
 			bar.anchor_top = 1.0
 			bar.anchor_bottom = 1.0
-		_root.add_child(bar)
+		_full.add_child(bar)
 		_bars.append(bar)
 	_skip = _button("Skip  ▸", func() -> void: skip_pressed.emit())
 	_skip.focus_mode = Control.FOCUS_NONE
@@ -236,7 +263,7 @@ func show_title(options: Array) -> void:
 	_title.visible = true
 	_title.modulate.a = 0.0
 	create_tween().tween_property(_title, "modulate:a", 1.0, 1.2)
-	(_title_menu.get_child(0) as Control).call_deferred("grab_focus")
+	_focus_later(_title_menu.get_child(0) as Control)
 
 
 func hide_title() -> void:
@@ -339,7 +366,7 @@ func set_wounds(current: int, maximum: int, in_fight: bool) -> void:
 
 ## True while the on-screen Block button is held down.
 func block_held() -> bool:
-	return _block_button != null and _block_button.button_pressed and _touch_bar.visible
+	return _block_button != null and _block_button.button_pressed and _block_button.is_visible_in_tree()
 
 
 func _process(_delta: float) -> void:
@@ -348,6 +375,35 @@ func _process(_delta: float) -> void:
 	var controls := get_node_or_null("/root/Controls")
 	var pad: bool = controls != null and controls.using_pad
 	_touch_bar.visible = touch_actions_enabled and not pad and not is_busy() and not _cinematic
+	# Outside a fight only "Lock on" shows (picking a fight is always deliberate); the rest
+	# appear once someone is hostile.
+	for b in _touch_bar.get_children():
+		if b.has_meta("fight_only"):
+			b.visible = combat_active
+	_fit_safe_area()
+
+
+## Keeps buttons and text out of notches and rounded corners.
+func _fit_safe_area() -> void:
+	var safe := DisplayServer.get_display_safe_area()
+	var win := DisplayServer.window_get_size()
+	if safe == _safe_key or win.x <= 0 or win.y <= 0 or safe.size.x <= 0:
+		return
+	_safe_key = safe
+	var vp := get_viewport().get_visible_rect().size
+	var k := Vector2(vp.x / float(win.x), vp.y / float(win.y))
+	var pos := DisplayServer.window_get_position()
+	var left := maxf(0.0, float(safe.position.x - pos.x)) * k.x
+	var top := maxf(0.0, float(safe.position.y - pos.y)) * k.y
+	var right := maxf(0.0, float(pos.x + win.x - safe.end.x)) * k.x
+	var bottom := maxf(0.0, float(pos.y + win.y - safe.end.y)) * k.y
+	# Desktop windows report odd values; only trust small insets.
+	if left > vp.x * 0.15 or right > vp.x * 0.15 or top > vp.y * 0.15 or bottom > vp.y * 0.15:
+		return
+	_root.offset_left = left
+	_root.offset_top = top
+	_root.offset_right = -right
+	_root.offset_bottom = -bottom
 
 
 func _build_touch_bar() -> void:
@@ -370,14 +426,17 @@ func _build_touch_bar() -> void:
 		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		b.custom_minimum_size = Vector2(130, 52)
 		b.modulate.a = 0.85
+		if id != "lock":
+			b.set_meta("fight_only", true)
 		_touch_bar.add_child(b)
-	_block_button = _button("Block (hold)", func() -> void: pass)
+	_block_button = _button("Block", func() -> void: pass)
 	_block_button.focus_mode = Control.FOCUS_NONE
 	_block_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_block_button.toggle_mode = false
 	_block_button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	_block_button.custom_minimum_size = Vector2(130, 52)
 	_block_button.modulate.a = 0.85
+	_block_button.set_meta("fight_only", true)
 	_touch_bar.add_child(_block_button)
 
 
@@ -518,7 +577,14 @@ func _focus_first(container: Node) -> void:
 		return
 	var controls := get_node_or_null("/root/Controls")
 	if controls and (controls.using_pad or controls.has_controller()):
-		(container.get_child(0) as Control).call_deferred("grab_focus")
+		_focus_later(container.get_child(0) as Control)
+
+
+## Focuses a control next frame, if it's still on screen by then.
+func _focus_later(c: Control) -> void:
+	(func() -> void:
+		if is_instance_valid(c) and c.is_inside_tree() and c.is_visible_in_tree():
+			c.grab_focus()).call_deferred()
 
 
 func _clear(node: Node) -> void:
@@ -542,9 +608,24 @@ func _build_dialogue() -> void:
 	_panel.visible = false
 	_root.add_child(_panel)
 
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 18)
+	_panel.add_child(row)
+	_portrait_frame = PanelContainer.new()
+	var frame := _box(Color(0.2, 0.17, 0.14, 1.0))
+	frame.set_content_margin_all(4)
+	frame.border_color = Color(0.55, 0.43, 0.26)
+	frame.set_border_width_all(2)
+	_portrait_frame.add_theme_stylebox_override("panel", frame)
+	_portrait_frame.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_portrait_frame.visible = false
+	row.add_child(_portrait_frame)
+	_portrait = Portrait.new()
+	_portrait_frame.add_child(_portrait)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 12)
-	_panel.add_child(col)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(col)
 	_speaker = _label(TEXT_SIZE - 2, Color(0.88, 0.7, 0.36))
 	col.add_child(_speaker)
 	_body = _label(TEXT_SIZE)

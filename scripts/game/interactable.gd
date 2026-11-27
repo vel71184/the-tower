@@ -14,6 +14,8 @@ var revealed := true
 
 ## For people: their CharacterModel (scripts/characters/character_model.gd).
 var character = null
+## The look the person was built from (for their portrait in conversations).
+var resolved_look: Dictionary = {}
 
 var _label: Label3D
 var _status: Label3D
@@ -23,6 +25,7 @@ var _top := 1.0
 const CharacterModel := preload("res://scripts/characters/character_model.gd")
 const Models := preload("res://scripts/game/models.gd")
 const Looks := preload("res://scripts/characters/looks.gd")
+const Pop := preload("res://scripts/ui/pop.gd")
 
 
 func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: Callable, people: Dictionary = {}) -> void:
@@ -60,6 +63,10 @@ func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: C
 	visible = revealed
 
 
+func top_height() -> float:
+	return _top
+
+
 func world_center() -> Vector3:
 	return global_position + Vector3(0, _top * 0.5, 0)
 
@@ -77,42 +84,34 @@ func reveal() -> void:
 	create_tween().tween_property(self, "scale", Vector3.ONE, 0.35).set_trans(Tween.TRANS_BACK)
 
 
-## Someone speaking in a scene: a longer line over their head.
+## Someone speaking in a scene: shown at once, ahead of anything waiting.
 func say(text: String, seconds: float = 2.5) -> void:
-	var l := Label3D.new()
-	l.text = text
-	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.no_depth_test = true
-	l.font_size = 38
-	l.outline_size = 12
-	l.pixel_size = 0.006
-	l.width = 560
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.modulate = Color(1.0, 0.92, 0.7)
-	l.position = Vector3(0, _top + 0.8, 0)
-	add_child(l)
-	var t := create_tween()
-	t.tween_interval(maxf(0.3, seconds - 0.4))
-	t.tween_property(l, "modulate:a", 0.0, 0.4)
-	t.tween_callback(l.queue_free)
+	var sp = _speech()
+	if sp:
+		sp.say(self, _top + 0.25, text, seconds, "line", true)
 
 
-## A short line spoken or noticed in the world, floating above the object for a few seconds.
+## A line spoken in passing (a call-out, a reply mid-fight). Queued behind other lines.
 func bark(text: String) -> void:
-	var l := Label3D.new()
-	l.text = text
-	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	l.no_depth_test = true
-	l.font_size = 40
-	l.outline_size = 12
-	l.pixel_size = 0.006
-	l.modulate = Color(1.0, 0.92, 0.7)
-	l.position = Vector3(0, _top + 0.8, 0)
-	add_child(l)
-	var t := create_tween()
-	t.tween_interval(2.5)
-	t.tween_property(l, "modulate:a", 0.0, 0.6)
-	t.tween_callback(l.queue_free)
+	var sp = _speech()
+	if sp:
+		sp.say(self, _top + 0.25, text, 2.8, "line")
+
+
+## Something the climber notices about this thing ("Something pale in the grass.").
+func notice(text: String) -> void:
+	var sp = _speech()
+	if sp:
+		sp.say(self, _top + 0.2, text, 2.8, "notice")
+
+
+## A quick word or number popping off someone (a hit, a stagger). Not queued.
+func pop(text: String) -> void:
+	Pop.spawn(self, text, _top + 0.3)
+
+
+func _speech():
+	return get_tree().get_first_node_in_group("speech") if is_inside_tree() else null
 
 
 ## Turns a person to face a point in the world.
@@ -173,6 +172,7 @@ func _build_model(d: Dictionary) -> void:
 	var sc := float(d.get("scale", 1.0))
 	node.scale = Vector3(sc, sc, sc)
 	add_child(node)
+	Models.outline(node)
 	var top := 0.0
 	for mi in Models._meshes(node, []):
 		var b: AABB = mi.get_aabb()
@@ -209,7 +209,9 @@ func _build_sign(spec: Dictionary) -> void:
 func _build_character(look: Dictionary, people: Dictionary) -> void:
 	character = CharacterModel.new()
 	add_child(character)
-	if character.build(Looks.resolve(look, people, "npc:" + id)):
+	resolved_look = Looks.resolve(look, people, "npc:" + id)
+	if character.build(resolved_look):
+		Models.outline(character, 0.012)
 		_top = character.height
 		character.rotation.y = deg_to_rad(float(def.get("facing_deg", -135.0)))
 	else:

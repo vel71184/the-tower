@@ -22,6 +22,8 @@ var playing := false
 var skipping := false
 ## Speeds up waits and walking (tests).
 var speed := 1.0
+## Bumped by every play and stop, so a stopped scene's coroutine notices and quits.
+var _gen := 0
 
 
 func setup(main_node) -> void:
@@ -32,35 +34,40 @@ func play(list: Array) -> void:
 	steps = list
 	playing = true
 	skipping = false
+	_gen += 1
+	var gen := _gen
 	main.ui.set_cinematic(true)
 	for i in steps.size():
-		if not playing:
+		if gen != _gen:
 			return
 		var step: Dictionary = steps[i]
 		Baseline.apply(step.get("effects", {}))
-		await _run(step)
-	if playing:
+		await _run(step, gen)
+	if gen == _gen and playing:
 		_finish()
 
 
 ## Stops a scene without finishing it (a different level is starting).
 func stop() -> void:
+	_gen += 1
 	if playing:
 		playing = false
 		skipping = false
 		main.ui.set_cinematic(false)
+		main.ui.speech.clear()
 
 
 func skip() -> void:
 	if playing and not skipping:
 		skipping = true
+		main.ui.speech.clear()
 
 
-func _run(step: Dictionary) -> void:
+func _run(step: Dictionary, gen: int) -> void:
 	var level = main.level
 	var climber = main.climber
 	if step.has("wait"):
-		await _wait(float(step["wait"]))
+		await _wait(float(step["wait"]), gen)
 	elif step.has("walk_to"):
 		var obj = main.find_object(String(step["walk_to"]))
 		if obj == null:
@@ -73,8 +80,10 @@ func _run(step: Dictionary) -> void:
 			main._on_entered_cell(climber.cell)
 			return
 		climber.walk(path)
-		while climber.is_moving() and not skipping:
+		while climber.is_moving() and not skipping and gen == _gen:
 			await get_tree().process_frame
+		if gen != _gen:
+			return
 		if skipping:
 			climber.place(path.back())
 			main._on_entered_cell(climber.cell)
@@ -88,13 +97,13 @@ func _run(step: Dictionary) -> void:
 	elif step.has("say"):
 		if not skipping:
 			climber.say(String(step["say"]), float(step.get("time", 2.5)) / speed)
-			await _wait(float(step.get("time", 2.5)))
+			await _wait(float(step.get("time", 2.5)), gen)
 	elif step.has("npc_say"):
 		var who = main.find_object(String(step["npc_say"]))
 		if who and not skipping:
 			who.face(climber.global_position)
 			who.say(String(step.get("text", "")), float(step.get("time", 2.5)) / speed)
-			await _wait(float(step.get("time", 2.5)))
+			await _wait(float(step.get("time", 2.5)), gen)
 	elif step.has("reveal"):
 		var obj = main.find_object(String(step["reveal"]))
 		if obj and not obj.revealed:
@@ -114,18 +123,21 @@ func _run(step: Dictionary) -> void:
 		who.face(climber.global_position)
 		main.ui.set_cinematic(false)
 		main.talk_from(who, String(step.get("node", "")))
-		while main.is_talking():
+		while main.is_talking() and gen == _gen:
 			await get_tree().process_frame
+		if gen != _gen:
+			return
 		main.ui.set_cinematic(true)
-		skipping = was_skipping
+		# Skip pressed while the choice was open still counts.
+		skipping = was_skipping or skipping
 	elif step.has("end"):
 		_finish()
 		main.end_level()
 
 
-func _wait(seconds: float) -> void:
+func _wait(seconds: float, gen: int) -> void:
 	var t := 0.0
-	while t < seconds / speed and not skipping:
+	while t < seconds / speed and not skipping and gen == _gen:
 		await get_tree().process_frame
 		t += get_process_delta_time()
 
@@ -136,8 +148,10 @@ func _finish() -> void:
 	playing = false
 	skipping = false
 	main.ui.set_cinematic(false)
+	main.ui.speech.clear()
 	if main.level:
 		Baseline.set_flag("cutscene_seen:" + String(main.level.data.get("id", "")))
 		# A scene the player watched doesn't count toward how they handled the level.
 		Baseline.set_flag("completed:" + String(main.level.data.get("id", "")))
+		Baseline.record("completed", String(main.level.data.get("id", "")))
 	finished.emit()

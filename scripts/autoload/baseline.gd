@@ -171,9 +171,10 @@ func save() -> bool:
 func load_save() -> bool:
 	if not has_save():
 		return false
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	var json := JSON.new()
+	var parsed: Variant = json.data if json.parse(FileAccess.get_file_as_string(SAVE_PATH)) == OK else null
 	if typeof(parsed) != TYPE_DICTIONARY:
-		push_error("Baseline: save file is unreadable")
+		push_warning("Baseline: save file is unreadable")
 		return false
 	from_dict(parsed)
 	return true

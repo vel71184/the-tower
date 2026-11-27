@@ -134,7 +134,7 @@ func kick() -> bool:
 		events.append("kick_staggered:" + target.id)
 	foes[target]["stun"] = STUN
 	foes[target]["windup"] = 0.0
-	target.bark("Staggered")
+	target.pop("Staggered")
 	return true
 
 
@@ -286,13 +286,20 @@ func _foe_walk(foe, st: Dictionary, dt: float) -> void:
 
 
 func _next_cell_toward_climber(foe):
+	# Cells other foes are already stepping into are taken, so two fighters never overlap.
+	var taken: Array = [climber.cell]
+	for other in foes:
+		if other != foe and is_instance_valid(other):
+			var their_next = foes[other].get("next", null)
+			if their_next != null and their_next != foe.cell:
+				taken.append(their_next)
 	var best: Array = []
 	for dy in range(-1, 2):
 		for dx in range(-1, 2):
 			var spot: Vector2i = climber.cell + Vector2i(dx, dy)
-			if spot == climber.cell or (level.object_at(spot) != null and level.object_at(spot) != foe):
+			if spot in taken or (level.object_at(spot) != null and level.object_at(spot) != foe):
 				continue
-			var p: Array = level.find_path_for(foe, spot, [climber.cell])
+			var p: Array = level.find_path_for(foe, spot, taken)
 			if not p.is_empty() and (best.is_empty() or p.size() < best.size()):
 				best = p
 	return best[1] if best.size() > 1 else null
@@ -318,7 +325,7 @@ func _make_hostile(foe, by_climber: bool) -> void:
 	for other in level.objects:
 		if other != foe and other.kind == "npc" and other.character and not foes.has(other) \
 				and other.global_position.distance_to(foe.global_position) <= WITNESS_RANGE:
-			other.bark("!")
+			other.pop("!")
 			Baseline.record("witnessed", other.id + ":" + foe.id)
 
 
@@ -335,7 +342,7 @@ func _hurt(foe) -> void:
 	var st: Dictionary = foes[foe]
 	st["wounds"] = int(st["wounds"]) - 1
 	st["windup"] = 0.0
-	foe.bark("-1 wound")
+	foe.pop("-1 wound")
 	_show_hearts(foe)
 	if int(st["wounds"]) <= 0:
 		_end_foe(foe, "killed")

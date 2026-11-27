@@ -73,10 +73,10 @@ jobs:
       - name: Screenshots
         continue-on-error: true
         run: |
-          sudo apt-get update -qq > /dev/null && sudo apt-get install -y -qq xvfb > /dev/null
+          sudo apt-get update -qq > /dev/null && sudo apt-get install -y -qq xvfb mesa-vulkan-drivers > /dev/null
           mkdir -p build/shots
           SHOT_DIR="$PWD/build/shots" timeout 180 xvfb-run -a -s "-screen 0 1280x720x24" \
-            godot --path . --rendering-driver opengl3 --resolution 1280x720 res://tests/screenshots.tscn 2>&1 | tail -20
+            godot --path . --rendering-driver vulkan --resolution 1280x720 res://tests/screenshots.tscn 2>&1 | tail -20
           ls -la build/shots
 
       - name: Publish screenshots to the ci-screenshots branch

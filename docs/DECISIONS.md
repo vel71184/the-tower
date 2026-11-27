@@ -8,6 +8,16 @@ records decisions made in chat that the doc may not have yet.
 
 | Decision | Detail | Source |
 |---|---|---|
+| Renderer | Mobile on Android, Forward+ on PC; Compatibility only as the automatic fallback for old devices. | Chat, 2026-11-27 |
+| Camera | A slight perspective (30° field of view, 48° tilt) instead of flat orthographic, so things have depth. Default zoom pulls back a little on wide phones. | Chat, 2026-11-27 |
+| Outlines | Thin dark outlines on characters, props and things you can use. | Chat, 2026-11-27 |
+| Speech | Bubbles anchored to whoever speaks, queued so they never overlap; things you notice get a dark caption. Conversations use the bottom panel with the speaker's portrait. Hits and staggers pop off as quick words. | Chat, 2026-11-27 |
+| Names over things | Only the thing you'd use right now shows its name. | Chat, 2026-11-27 (recommended default) |
+| Fight buttons | On touch, only Lock on shows outside a fight; Attack, Kick, Block and Talk appear once someone is hostile. Buttons stay inside the phone's safe area. | Chat, 2026-11-27 (recommended default) |
+| Controls guidance | "How to play" on the title menu, written for the device in use, plus the sparring partner. Still no hints in play. | Chat, 2026-11-27 (recommended default) |
+| UI style | Kenney UI Pack – Adventure, recolored to the game's palette, in a later UI pass. | Chat, 2026-11-27 (recommended default) |
+| Visual passes still to do | Smooth curving paths and less grid-like ground; lighting and moods; world edge and sky; the tower always visible on Floor 0; hand-placed set pieces; muted props (no orange "traffic cones", no glaring whites); a real entry gate; Waiting Hall built from Kenney pieces; hit feedback, ambient life, transitions, a pause menu with settings, and sound (RPG Audio). | Chat, 2026-11-27 (recommended default) |
+| Code fixes | Done now: Continue never deletes a save, placing the climber stops the walk, stopped scenes leave nothing behind, the floor opening isn't lost if you quit on it, fighters can't overlap, skips during a choice still count, call-outs stay quiet in scenes. Before more levels: flags scoped per level, and save versioning. Later: split main.gd, load props off the main thread. | Chat, 2026-11-27 (recommended default) |
 | Isometric view | Switched from first person. The floor-100 twist lands through the boss using the climber's own moves and habits, not a face reveal. | Design doc + chat, 2026-11-20 |
 | Engine: Godot 4 | Built with Godot 4.7 (CI pins `4.7.2`). | Chat, 2026-11-20 |
 | Platforms | Android first, also playable on PC (Windows and Linux builds). | Chat, 2026-11-20 |
@@ -44,8 +54,6 @@ records decisions made in chat that the doc may not have yet.
 - Kenney packs: Mini Characters 1, Mini Dungeon, Furniture Kit, Modular Dungeon Kit,
   UI Pack – Adventure, RPG Audio, and Mobile Controls if combat needs a joystick.
 - Short levels that save when they end (the slice does this).
-- Simple lighting so it runs well on phones (the slice uses one light and the
-  Compatibility renderer).
 
 ## Still open
 

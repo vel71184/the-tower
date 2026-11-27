@@ -109,7 +109,8 @@ func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 ## Called a few times a second by the game.
 func fade_occluders(cam: Camera3D, target: Vector3) -> void:
 	var target_screen := cam.unproject_position(target + Vector3(0, 0.5, 0))
-	var reach := 110.0 * (cam.get_viewport().get_visible_rect().size.y / 720.0) * (7.0 / cam.size)
+	var view: float = cam.get("view_height") if cam.get("view_height") != null else 8.0
+	var reach := 110.0 * (cam.get_viewport().get_visible_rect().size.y / 720.0) * (8.0 / view)
 	var cam_dir := -cam.global_transform.basis.z
 	var target_depth := cam_dir.dot(target - cam.global_position)
 	for entry in tall_props:
@@ -368,6 +369,7 @@ func _add_prop(entry: Dictionary, cell: Vector2i) -> void:
 		sc *= 0.85 + float(hash(cell * 13) % 30) / 100.0
 	node.scale = Vector3(sc, sc, sc)
 	add_child(node)
+	Models.outline(node)
 	var h := Models.bounds(node).size.y
 	if h > 0.9:
 		tall_props.append([node, h])
@@ -406,6 +408,13 @@ func _add_wall(cell: Vector2i, palette: Dictionary) -> void:
 	mi.material_override = _material(Color(String(palette.get("wall", "#8a7f72"))))
 	mi.position = cell_to_world(cell) + Vector3(0, h * 0.5 - 0.1, 0)
 	add_child(mi)
+	if not near_camera:
+		# Walls and pillars fade like tall props when they stand between camera and climber.
+		var holder := Node3D.new()
+		holder.position = cell_to_world(cell)
+		add_child(holder)
+		mi.reparent(holder)
+		tall_props.append([holder, h])
 
 
 func _add_object(def: Dictionary, cell: Vector2i) -> Interactable:
@@ -414,4 +423,6 @@ func _add_object(def: Dictionary, cell: Vector2i) -> Interactable:
 	obj.setup(def, cell, cell_to_world(cell), _material, floor_data.get("people", {}))
 	objects.append(obj)
 	_object_at[cell] = obj
+	if obj.kind != "npc" and obj.top_height() > 0.9:
+		tall_props.append([obj, obj.top_height()])
 	return obj

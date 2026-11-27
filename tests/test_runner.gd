@@ -17,6 +17,7 @@ func _ready() -> void:
 	await _test_level_one()
 	await _test_brawl()
 	await _test_road()
+	await _test_polish()
 	Baseline.delete_save()
 	print("\n%d checks, %d failed" % [_checks, _failures])
 	get_tree().quit(1 if _failures > 0 else 0)
@@ -410,10 +411,11 @@ func _test_road() -> void:
 	main.interact(main.find_object("road_on"))
 	main.choose_text("Go on")
 	check(Baseline.floor_num == 1 and Baseline.level_num == 1, "Floor 0's unbuilt levels are skipped: next is the Waiting Hall")
-	check(main.ui.is_opening_visible() and Baseline.has_flag("intro_seen:1"), "the tower's opening appears as you go in")
+	check(main.ui.is_opening_visible() and not Baseline.has_flag("intro_seen:1"), "the tower's opening appears as you go in")
 	check(main.level.data.get("id") == "f00_l01", "the Waiting Hall waits until you choose to climb")
 	main.ui.finish_opening()
 	check(main.level.data.get("id") == "f01_l01", "then the Waiting Hall")
+	check(Baseline.has_flag("intro_seen:1"), "the opening counts as seen once read to the end")
 	check(Baseline.has_flag("carrying_wil_message"), "promises carry over between levels")
 	check(Baseline.has_flag("completed:f00_l01"), "The Road is marked done")
 
@@ -553,5 +555,85 @@ func _test_level_one() -> void:
 	check(Baseline.knows("marta_name") and Baseline.has_flag("talked_tobin"), "what the climber learned is kept")
 	check(is_equal_approx(Baseline.value("others_self"), saved_others), "the baseline is kept")
 
+	main.queue_free()
+	await get_tree().process_frame
+
+
+func _test_polish() -> void:
+	print("Speech, camera and fixes")
+	Baseline.reset()
+	Baseline.delete_save()
+	var main = load("res://scenes/main.tscn").instantiate()
+	add_child(main)
+	await get_tree().process_frame
+	check(main.cam.projection == Camera3D.PROJECTION_PERSPECTIVE and main.cam.fov < 40.0, "the camera has a slight perspective")
+	main._on_title_choice("how")
+	check(main.ui._card.visible and main.ui._card_body.text.contains("walk"), "How to play explains the controls")
+	main.ui._on_card(0)
+	check(main.ui.is_title_visible(), "and goes back to the title")
+
+	main._on_title_choice("new")
+	await get_tree().process_frame
+	check(main.cutscene.playing, "the road scene plays")
+	var wil = main.find_object("wil")
+	var callout := String(wil.def.get("call_out", {}).get("text", ""))
+	main._on_entered_cell(wil.cell)
+	check(callout == "" or main.ui.speech.current_text() != callout, "call-outs stay quiet during a scene")
+	main.start_level(1, 1)
+	for i in 30:
+		await get_tree().process_frame
+	check(not main.cutscene.playing and not main.ui.is_cinematic(), "a scene stopped by a level change leaves no letterbox behind")
+	check(main.ui.speech.is_idle(), "and no leftover speech")
+
+	var tobin = main.find_object("tobin")
+	var brann = main.find_object("brann")
+	main.ui.speech.clear()
+	tobin.bark("First")
+	brann.bark("Second")
+	check(main.ui.speech.current_text() == "First" and main.ui.speech.waiting() == 1, "lines queue instead of overlapping")
+	main.climber.say("Now")
+	check(main.ui.speech.current_text() == "Now" and main.ui.speech.waiting() == 0, "a scene's line goes first")
+	main.ui.speech.clear()
+
+	var path: Array = main.level.find_path(main.climber.cell, main.level.spawn_cell + Vector2i(0, -2))
+	main.climber.walk(path)
+	main.climber.place(main.level.spawn_cell)
+	check(not main.climber.character._moving, "placing the climber stops the walk")
+
+	main.interact(tobin)
+	check(main.ui._portrait_frame.visible, "people talk with their portrait beside the words")
+	while main.is_talking():
+		main.choose(main._talk_choices.size() - 1 if not main._talk_choices.is_empty() else 0)
+	main.interact(main.find_object("bedrolls"))
+	check(not main.ui._portrait_frame.visible, "things have no portrait")
+	while main.is_talking() or main._note_open:
+		main.choose(main._talk_choices.size() - 1 if not main._talk_choices.is_empty() else 0)
+
+	main.ui.touch_actions_enabled = true
+	await get_tree().process_frame
+	var fight_buttons := 0
+	for b in main.ui._touch_bar.get_children():
+		if b.visible:
+			fight_buttons += 1
+	check(fight_buttons <= 1, "outside a fight only Lock on shows")
+
+	print("Saves")
+	Baseline.reset()
+	Baseline.floor_num = 1
+	Baseline.level_num = 1
+	Baseline.resume = {}
+	Baseline.save()
+	Baseline.reset()
+	check(Baseline.load_save() and main.resume_climb() and main.ui.is_opening_visible(), "closing the game on the opening shows it again next time")
+	main.ui.finish_opening()
+	check(main.level.data.get("id") == "f01_l01" and Baseline.has_flag("intro_seen:1"), "then into the Waiting Hall")
+	var f := FileAccess.open(Baseline.SAVE_PATH, FileAccess.WRITE)
+	f.store_string("{not json")
+	f.close()
+	main.show_title()
+	main._on_title_choice("continue")
+	check(main.ui._card.visible and Baseline.has_save(), "an unreadable save is kept, and the player is asked")
+	main.ui._on_card(0)
+	check(main.ui.is_title_visible(), "Back returns to the title")
 	main.queue_free()
 	await get_tree().process_frame
