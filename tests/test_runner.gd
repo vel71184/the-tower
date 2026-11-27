@@ -616,6 +616,15 @@ func _test_polish() -> void:
 		if b.visible:
 			fight_buttons += 1
 	check(fight_buttons <= 1, "outside a fight only Lock on shows")
+	main.combat._set_lock(brann)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	fight_buttons = 0
+	for b in main.ui._touch_bar.get_children():
+		if b.visible:
+			fight_buttons += 1
+	check(fight_buttons > 1, "locking on brings up the fight buttons")
+	main.combat._set_lock(null)
 
 	print("Saves")
 	Baseline.reset()
