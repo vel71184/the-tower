@@ -24,7 +24,9 @@ records decisions made in chat that the doc may not have yet.
 | Characters from parts | Any Mini Characters head on any body (22 × 22), recolored by a palette-swap shader. Floor palettes act as factions. 99 bosses get unique combos, a signature color and item; the climber has a reserved color no floor may use. | Chat, 2026-11-21 |
 | Floor 0, The Approach | The outside is a 4-level prologue, not one of the hundred: The Road, The Bridge, The Climbers' Camp, The Gate. No boss. | Chat, 2026-11-27 |
 | Floor 1 starts inside | The Waiting Hall is Floor 1, Level 1 (the lobby). Marta is Floor 1's boss at level 10. | Chat, 2026-11-27 |
-| The tower's intro | "THE TOWER. A hundred floors. Ten levels each." appears as the gate shuts behind you, not on the title screen. | Chat, 2026-11-27 |
+| Opening text | "Welcome to the Tower. Once you begin the climb, there is no way back..." on a black screen between Floor 0 and Floor 1, as the gate shuts. Ominous, lines fade in, then Climb. | Chat, 2026-11-27 |
+| Fonts | Cinzel for titles and the opening; Nunito for speech, names, dialogue and menus (both OFL). | Chat, 2026-11-27 |
+| Title screen and opening scene | The game opens on a live Road; a new climb plays The Road as a skippable scene, and Wil's request is the first input. No button hints: characters teach everything. Combat is taught in a sparring ring at the Climbers' Camp. | Chat, 2026-11-27 |
 | Moving between levels | You can usually go back to earlier levels of your floor, but can't leave the floor until its boss is resolved. Levels remember what happened in them. | Chat, 2026-11-27 |
 | Real-time combat | Replaces turn-based: Zelda-style swing, kick, block, lock-on. Anyone can be attacked, but only deliberately (lock-on or already fighting). | Chat, 2026-11-21 |
 | Free movement | Smooth stick walking; a ring marks what you'll interact with. | Chat, 2026-11-21 |

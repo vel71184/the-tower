@@ -65,8 +65,13 @@
   "levels": 10,
   "boss_flag": "floor_cleared:1",
   "intro": {
-    "title": "THE TOWER",
-    "body": "A hundred floors. Ten levels each.\nSomeone is waiting at the top.",
-    "button": "Go in"
+    "lines": [
+      "Welcome to the Tower.",
+      "Once you begin the climb, there is no way back. You can only go up, or die.",
+      "You may stop on any floor, at any time, but that floor becomes your home until you die.",
+      "Or you can press on, and reach the top, or die trying."
+    ],
+    "button": "Climb",
+    "tone": "Ominous. Deliberately bleak: stopping is a one-way choice, not a rest stop."
   }
 }

@@ -7,6 +7,7 @@ signal card_choice(index: int)
 signal combat_action(id: String)
 signal title_choice(id: String)
 signal skip_pressed
+signal opening_done
 
 const TITLE_FONT := preload("res://assets/fonts/cinzel-bold.woff")
 
@@ -33,6 +34,7 @@ var _wounds: Label
 var _bars: Array = []
 var _skip: Button
 var _cinematic := false
+var _opening: Control
 var _title: Control
 var _title_menu: VBoxContainer
 var _touch_bar: VBoxContainer
@@ -75,7 +77,7 @@ func hide_page() -> void:
 
 
 func is_busy() -> bool:
-	return _panel.visible or _card.visible or (_title != null and _title.visible)
+	return _panel.visible or _card.visible or (_title != null and _title.visible) or _opening != null
 
 
 # --- Cutscenes ---------------------------------------------------------------------------
@@ -125,6 +127,98 @@ func _build_cinematic() -> void:
 	_skip.modulate.a = 0.8
 	_skip.visible = false
 	_root.add_child(_skip)
+
+
+# --- Opening screen ---------------------------------------------------------------------
+
+## A black screen with lines fading in one at a time, then a single button. Used once, as the
+## gate shuts between Floor 0 and Floor 1. Pressing anything early shows every line at once.
+func show_opening(lines: Array, button_text: String) -> void:
+	if _opening:
+		_opening.queue_free()
+	_opening = Control.new()
+	_opening.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_opening.mouse_filter = Control.MOUSE_FILTER_STOP
+	_opening.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed:
+			hurry_opening())
+	_root.add_child(_opening)
+	var black := ColorRect.new()
+	black.color = Color(0.02, 0.015, 0.015, 1.0)
+	black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_opening.add_child(black)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_opening.add_child(center)
+	var col := VBoxContainer.new()
+	col.custom_minimum_size = Vector2(820, 0)
+	col.add_theme_constant_override("separation", 26)
+	center.add_child(col)
+	var labels: Array = []
+	for i in lines.size():
+		var l := Label.new()
+		l.text = String(lines[i])
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.add_theme_font_override("font", TITLE_FONT)
+		l.add_theme_font_size_override("font_size", 52 if i == 0 else 27)
+		l.add_theme_color_override("font_color", Color(0.86, 0.8, 0.7) if i == 0 else Color(0.72, 0.68, 0.62))
+		l.modulate.a = 0.0
+		col.add_child(l)
+		labels.append(l)
+	var go := _button(button_text, func() -> void:
+		var o := _opening
+		_opening = null
+		var tw := create_tween()
+		tw.tween_property(o, "modulate:a", 0.0, 0.8)
+		tw.tween_callback(o.queue_free)
+		opening_done.emit())
+	go.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	go.add_theme_font_override("font", TITLE_FONT)
+	go.custom_minimum_size = Vector2(260, 58)
+	go.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	go.modulate.a = 0.0
+	go.disabled = true
+	col.add_child(go)
+	var tw := create_tween()
+	tw.tween_interval(0.8)
+	for l in labels:
+		tw.tween_property(l, "modulate:a", 1.0, 1.6)
+		tw.tween_interval(0.9)
+	tw.tween_callback(func() -> void: go.disabled = false)
+	tw.tween_property(go, "modulate:a", 1.0, 0.8)
+	tw.tween_callback(func() -> void: go.grab_focus())
+	_opening.set_meta("tween", tw)
+	_opening.set_meta("labels", labels)
+	_opening.set_meta("button", go)
+
+
+## Shows the whole opening at once (a player in a hurry pressed something).
+func hurry_opening() -> void:
+	if _opening == null:
+		return
+	var tw: Tween = _opening.get_meta("tween")
+	if tw and tw.is_valid():
+		tw.kill()
+	for l in _opening.get_meta("labels"):
+		l.modulate.a = 1.0
+	var go: Button = _opening.get_meta("button")
+	go.disabled = false
+	go.modulate.a = 1.0
+	go.grab_focus()
+
+
+## Presses the opening's button (tests).
+func finish_opening() -> void:
+	if _opening:
+		hurry_opening()
+		(_opening.get_meta("button") as Button).pressed.emit()
+
+
+func is_opening_visible() -> bool:
+	return _opening != null
 
 
 # --- Title screen ---------------------------------------------------------------------------

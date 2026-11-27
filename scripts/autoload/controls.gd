@@ -54,6 +54,11 @@ var using_pad := false
 
 
 func _ready() -> void:
+	# The game's text font (Nunito, OFL) for everything without its own font, including
+	# words floating in the world (speech, names). Titles use Cinzel.
+	var text_font := load("res://assets/fonts/nunito-extrabold.woff") as Font
+	if text_font:
+		ThemeDB.fallback_font = text_font
 	for action in ACTIONS:
 		var spec: Dictionary = ACTIONS[action]
 		if not InputMap.has_action(action):

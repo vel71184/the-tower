@@ -43,6 +43,7 @@ var _title_anchor: Node3D
 var _title_drift: Tween
 var _last_level := Vector2i(-1, -1)
 var _floor_cache: Dictionary = {}
+var _pending_arrival: Array = []
 var _note_open := false
 var _touches: Dictionary = {}
 var _pinch_dist := 0.0
@@ -63,6 +64,7 @@ func _ready() -> void:
 	ui.choice_made.connect(choose)
 	ui.card_choice.connect(_on_card_choice)
 	ui.title_choice.connect(_on_title_choice)
+	ui.opening_done.connect(_on_opening_done)
 	ui.combat_action.connect(_on_combat_button)
 	combat = Combat.new()
 	add_child(combat)
@@ -119,6 +121,14 @@ func _on_title_choice(id: String) -> void:
 			new_climb()
 		"quit":
 			get_tree().quit()
+
+
+func _on_opening_done() -> void:
+	if _pending_arrival.size() == 2:
+		var to: Vector2i = _pending_arrival[0]
+		var arriving: String = _pending_arrival[1]
+		_pending_arrival = []
+		start_level(to.x, to.y, arriving)
 
 
 func _leave_title() -> void:
@@ -318,6 +328,10 @@ func _travel(to: Vector2i, arriving: String) -> void:
 	var intro: Dictionary = floor_data(to.x).get("intro", {})
 	if to.x != from_floor and not intro.is_empty() and not Baseline.has_flag("intro_seen:%d" % to.x):
 		Baseline.set_flag("intro_seen:%d" % to.x)
+		if intro.has("lines"):
+			_pending_arrival = [to, arriving]
+			ui.show_opening(intro["lines"], String(intro.get("button", "Go on")))
+			return
 		_card(String(intro.get("title", "")), String(intro.get("body", "")), [String(intro.get("button", "Go on"))],
 			func(_i: int) -> void:
 				start_level(to.x, to.y, arriving))
@@ -418,6 +432,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if cutscene.playing:
 		if event.is_action_pressed("skip"):
 			cutscene.skip()
+		return
+	if ui.is_opening_visible():
+		if event.is_pressed() and not event.is_echo():
+			ui.hurry_opening()
 		return
 	if event.is_action_pressed("dev_overlay"):
 		ui.toggle_dev()
