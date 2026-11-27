@@ -19,7 +19,8 @@ func _ready() -> void:
 
 	var main = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
-	await _frames(3)
+	await _frames(90)
+	await _shot("00_title")
 	main.start_level(0, 1)
 	await _frames(40)
 	await _shot("0_road_start")

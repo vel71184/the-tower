@@ -347,11 +347,21 @@ func _test_brawl() -> void:
 
 
 func _test_road() -> void:
-	print("Floor 1, Level 1: The Road (outdoors)")
+	print("Title screen")
 	Baseline.reset()
+	Baseline.delete_save()
 	var main = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	await get_tree().process_frame
+	check(main.ui.is_title_visible(), "the game opens on the title screen")
+	check(main.level != null and main.level.data.get("id") == "f00_l01" and not main.climber.visible, "The Road plays behind it, with no climber yet")
+	check(Baseline.level_num == 1 and not Baseline.has_save(), "the title screen saves nothing")
+	main._on_title_choice("new")
+	check(not main.ui.is_title_visible() and main.climber.visible, "New climb starts the game")
+	check(main.level.data.get("id") == "f00_l01" and Baseline.floor_num == 0, "on The Road, Floor 0")
+
+	print("Floor 0, Level 1: The Road (outdoors)")
+	Baseline.reset()
 	check(main.start_level(0, 1), "The Road (Floor 0) loads")
 	var level = main.level
 	check(level.get_node_or_null("Ground") != null, "the ground is one merged mesh")

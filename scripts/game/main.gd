@@ -36,6 +36,9 @@ var combat: Combat
 var _focus_ring: MeshInstance3D
 var _fade_timer := 0.0
 var _block_input := false
+var _in_title := false
+var _title_anchor: Node3D
+var _title_drift: Tween
 var _last_level := Vector2i(-1, -1)
 var _floor_cache: Dictionary = {}
 var _note_open := false
@@ -57,6 +60,7 @@ func _ready() -> void:
 	add_child(ui)
 	ui.choice_made.connect(choose)
 	ui.card_choice.connect(_on_card_choice)
+	ui.title_choice.connect(_on_title_choice)
 	ui.combat_action.connect(_on_combat_button)
 	combat = Combat.new()
 	add_child(combat)
@@ -85,17 +89,60 @@ func _process(delta: float) -> void:
 
 # --- Title and level flow -------------------------------------------------------------------
 
+## The title screen: the real Road behind it, the camera drifting toward the tower, no climber yet.
 func show_title() -> void:
-	var body := ""
+	_in_title = true
+	start_level(0, 1, "title")
+	var opts: Array = []
 	if Baseline.has_save():
-		_card("THE TOWER", body, ["Continue the climb", "Start a new climb"], func(i: int) -> void:
-			if i == 0 and Baseline.load_save():
-				resume_climb()
-			else:
-				new_climb())
-	else:
-		_card("THE TOWER", body, ["Begin the climb"], func(_i: int) -> void:
-			new_climb())
+		opts.append(["continue", "Continue"])
+	opts.append(["new", "New climb"])
+	if not OS.has_feature("mobile") and not OS.has_feature("web"):
+		opts.append(["quit", "Quit"])
+	ui.show_title(opts)
+
+
+func _on_title_choice(id: String) -> void:
+	match id:
+		"continue":
+			_leave_title()
+			if not (Baseline.load_save() and resume_climb()):
+				new_climb()
+		"new":
+			_leave_title()
+			new_climb()
+		"quit":
+			get_tree().quit()
+
+
+func _leave_title() -> void:
+	_in_title = false
+	ui.hide_title()
+	if _title_drift:
+		_title_drift.kill()
+	climber.visible = true
+	cam.target = climber
+
+
+## Slowly pans the camera between the start of the road and the tower, back and forth.
+func _start_title_drift() -> void:
+	if _title_anchor == null:
+		_title_anchor = Node3D.new()
+		add_child(_title_anchor)
+	var a: Vector3 = level.cell_to_world(level.spawn_cell)
+	var exit_obj = null
+	for obj in level.objects:
+		if obj.kind == "exit":
+			exit_obj = obj
+	var b: Vector3 = exit_obj.global_position if exit_obj else a + Vector3(-6, 0, -6)
+	_title_anchor.global_position = a
+	cam.target = _title_anchor
+	cam.snap()
+	if _title_drift:
+		_title_drift.kill()
+	_title_drift = create_tween().set_loops()
+	_title_drift.tween_property(_title_anchor, "global_position", b, 22.0).set_trans(Tween.TRANS_SINE)
+	_title_drift.tween_property(_title_anchor, "global_position", a, 22.0).set_trans(Tween.TRANS_SINE)
 
 
 ## Starts over from the first level that exists so far.
@@ -135,6 +182,8 @@ func first_built_level() -> Vector2i:
 ## Loads a level. arriving: "start" (from the level before, or a new climb) or "back"
 ## (returning from the level after, so the climber appears by the way forward).
 func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool:
+	if arriving != "title" and _in_title:
+		_leave_title()
 	ui.hide_card()
 	ui.hide_page()
 	_note_open = false
@@ -176,6 +225,13 @@ func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool
 	_pending = null
 	_talk_obj = null
 	_ended = false
+	if arriving == "title":
+		# Scenery only: no climber, no saving, nothing counted.
+		climber.visible = false
+		ui.touch_actions_enabled = false
+		_ended = true
+		_start_title_drift()
+		return true
 	Baseline.floor_num = floor_n
 	Baseline.level_num = level_n
 	_last_level = Vector2i(floor_n, level_n)

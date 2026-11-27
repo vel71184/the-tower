@@ -5,6 +5,9 @@ extends CanvasLayer
 signal choice_made(index: int)
 signal card_choice(index: int)
 signal combat_action(id: String)
+signal title_choice(id: String)
+
+const TITLE_FONT := preload("res://assets/fonts/cinzel-bold.woff")
 
 const TEXT_SIZE := 24
 const BUTTON_HEIGHT := 60
@@ -26,6 +29,8 @@ var _combat: PanelContainer
 var _combat_hint: Label
 var _combat_buttons: HBoxContainer
 var _wounds: Label
+var _title: Control
+var _title_menu: VBoxContainer
 var _touch_bar: VBoxContainer
 var _block_button: Button
 ## Set once a level is playing, so touch action buttons can show.
@@ -43,6 +48,7 @@ func _ready() -> void:
 	_build_dev()
 	_build_combat()
 	_build_touch_bar()
+	_build_title()
 
 
 # --- Dialogue -------------------------------------------------------------------------------
@@ -64,7 +70,88 @@ func hide_page() -> void:
 
 
 func is_busy() -> bool:
-	return _panel.visible or _card.visible
+	return _panel.visible or _card.visible or (_title != null and _title.visible)
+
+
+# --- Title screen ---------------------------------------------------------------------------
+
+## Shows the title over whatever the camera is looking at. options: [[id, label], ...]
+func show_title(options: Array) -> void:
+	_clear(_title_menu)
+	for o in options:
+		var b := _button(String(o[1]), _on_title.bind(String(o[0])))
+		b.custom_minimum_size = Vector2(300, 60)
+		b.add_theme_font_override("font", TITLE_FONT)
+		b.add_theme_font_size_override("font_size", 26)
+		_title_menu.add_child(b)
+	_title.visible = true
+	_title.modulate.a = 0.0
+	create_tween().tween_property(_title, "modulate:a", 1.0, 1.2)
+	(_title_menu.get_child(0) as Control).call_deferred("grab_focus")
+
+
+func hide_title() -> void:
+	if _title:
+		_title.visible = false
+
+
+func is_title_visible() -> bool:
+	return _title != null and _title.visible
+
+
+func _on_title(id: String) -> void:
+	title_choice.emit(id)
+
+
+func _build_title() -> void:
+	_title = Control.new()
+	_title.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_title.visible = false
+	_root.add_child(_title)
+
+	# A soft dark vignette top and bottom, so the words read over the live scene.
+	var shade := TextureRect.new()
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shade.stretch_mode = TextureRect.STRETCH_SCALE
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.35, 0.65, 1.0])
+	grad.colors = PackedColorArray([Color(0.05, 0.04, 0.04, 0.75), Color(0, 0, 0, 0.0), Color(0, 0, 0, 0.0), Color(0.05, 0.04, 0.04, 0.85)])
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill_from = Vector2(0, 0)
+	tex.fill_to = Vector2(0, 1)
+	shade.texture = tex
+	_title.add_child(shade)
+
+	var name_label := Label.new()
+	name_label.text = "THE TOWER"
+	name_label.add_theme_font_override("font", TITLE_FONT)
+	name_label.add_theme_font_size_override("font_size", 112)
+	name_label.add_theme_color_override("font_color", Color(0.97, 0.9, 0.74))
+	name_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	name_label.add_theme_constant_override("shadow_offset_y", 5)
+	name_label.add_theme_constant_override("shadow_offset_x", 0)
+	name_label.add_theme_constant_override("shadow_outline_size", 10)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.anchor_left = 0.0
+	name_label.anchor_right = 1.0
+	name_label.offset_top = 70
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_title.add_child(name_label)
+
+	_title_menu = VBoxContainer.new()
+	_title_menu.add_theme_constant_override("separation", 12)
+	_title_menu.anchor_left = 0.5
+	_title_menu.anchor_right = 0.5
+	_title_menu.anchor_top = 1.0
+	_title_menu.anchor_bottom = 1.0
+	_title_menu.offset_left = -150
+	_title_menu.offset_right = 150
+	_title_menu.offset_bottom = -60
+	_title_menu.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_title.add_child(_title_menu)
 
 
 # --- Combat ---------------------------------------------------------------------------------
