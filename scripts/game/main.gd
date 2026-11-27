@@ -567,7 +567,7 @@ func _on_entered_cell(cell: Vector2i) -> void:
 			var notice := String(obj.def.get("reveal_text", ""))
 			if notice != "":
 				obj.bark(notice)
-		obj.set_near(d <= NEAR_LABEL_RANGE)
+		obj.set_near(d <= NEAR_LABEL_RANGE and not cutscene.playing)
 		var callout: Dictionary = obj.def.get("call_out", {})
 		if not callout.is_empty():
 			var flag := String(callout.get("flag", "heard:" + obj.id))
@@ -843,7 +843,9 @@ func _show_focus_ring(obj: Interactable) -> void:
 		_focus_ring.material_override = mat
 		add_child(_focus_ring)
 	_focus_ring.visible = obj != null
-	if obj:
+	if cutscene.playing:
+		_focus_ring.visible = false
+	elif obj:
 		_focus_ring.global_position = obj.global_position + Vector3(0, 0.03, 0)
 		obj.set_near(true)
 

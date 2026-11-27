@@ -80,7 +80,7 @@ func say(text: String, seconds: float = 2.5) -> void:
 	_speech.pixel_size = 0.006
 	_speech.width = 520
 	_speech.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_speech.position = Vector3(0, 1.75, 0)
+	_speech.position = Vector3(0, 2.3, 0)
 	add_child(_speech)
 	var l := _speech
 	var t := create_tween()
