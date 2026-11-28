@@ -821,9 +821,6 @@ func _update_focus() -> void:
 			_focus.set_near(false)
 		_focus = f
 		_show_focus_ring(f)
-	elif _focus_ring and _focus_ring.visible and is_instance_valid(_focus):
-		# People move (mid-fight, walking home): the ring stays under them.
-		_focus_ring.global_position = _focus.global_position + Vector3(0, 0.03, 0)
 
 
 ## The interact button: talk to a foe mid-fight, or use whatever is highlighted.

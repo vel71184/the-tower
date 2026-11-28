@@ -267,6 +267,5 @@ func debug_text() -> String:
 	for f in flags:
 		if not String(f).begins_with("once:"):
 			shown.append(String(f))
-	# The newest few only: the full list runs off a phone screen and covers the game.
-	lines.append("flags (%d), newest: %s" % [shown.size(), ", ".join(PackedStringArray(shown.slice(-8)))])
+	lines.append("flags: " + ", ".join(PackedStringArray(shown)))
 	return "\n".join(PackedStringArray(lines))
