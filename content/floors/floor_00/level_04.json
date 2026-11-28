@@ -74,8 +74,9 @@
     "C": {
       "prop": "fantasy-town/cart-high",
       "solid": true,
-      "rot": 20,
-      "ground": "dirt"
+      "rot": 0,
+      "ground": "dirt",
+      "scale": 0.8
     },
     "c": {
       "prop": "fantasy-town/stall-stool",
@@ -91,12 +92,12 @@
     "f..........,......C.c..k",
     "T.....R....,.M.........f",
     "T.....k....,...........f",
-    "Y..r.......,...........k",
-    "T..k......,....o.......k",
-    "f........,.............T",
-    "f.......,.....k.o......T",
-    "k......,............p..Y",
-    "T.....,................k",
+    "Y..r......,,...........k",
+    "T..k.....,,....o.......k",
+    "f.......,,.............T",
+    "f......,,.....k.o......T",
+    "k.....,,............p..Y",
+    "T....,,................k",
     "BS,,,,........p........f",
     "TTffTTTTYYTfTTTkYfYkTTYf"
   ],
@@ -190,7 +191,7 @@
         ],
         "nodes": {
           "shut": {
-            "text": "The gate into the tower. Iron-banded wood, taller than three of you. There's no handle on this side. It opens from within."
+            "text": "The gate into the tower. Iron-banded wood, twice your height. There's no handle on this side. It opens from within."
           },
           "open": {
             "text": "The gate stands open a crack. Beyond it, lamplight and a long hall. Once you're through, there's no coming back out. Go in?",
