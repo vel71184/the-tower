@@ -88,7 +88,10 @@
       "prop": "castle-kit/wall",
       "solid": true,
       "scale": 1.6,
-      "ground": "stone"
+      "ground": "stone",
+      "recolor": {
+        "#ebb48e": "#b3a999"
+      }
     },
     "C": {
       "prop": "fantasy-town/cart-high",
@@ -155,7 +158,10 @@
         10.0,
         -4.0
       ],
-      "scale": 11
+      "scale": 11,
+      "recolor": {
+        "#ebb48e": "#b3a999"
+      }
     }
   ],
   "objects": [
@@ -183,6 +189,9 @@
             ]
           }
         }
+      },
+      "recolor": {
+        "#a2a9cb": "#5d574f"
       }
     },
     {

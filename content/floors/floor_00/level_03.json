@@ -95,7 +95,10 @@
     "t": {
       "prop": "mini-forest/tent",
       "solid": true,
-      "random_rot": true
+      "random_rot": true,
+      "recolor": {
+        "#6794d9": "#b8a47e"
+      }
     }
   },
   "map": [
@@ -152,7 +155,10 @@
         4.0,
         -7.0
       ],
-      "scale": 9
+      "scale": 9,
+      "recolor": {
+        "#ebb48e": "#b3a999"
+      }
     }
   ],
   "objects": [
@@ -180,6 +186,9 @@
             ]
           }
         }
+      },
+      "recolor": {
+        "#a2a9cb": "#5d574f"
       }
     },
     {
@@ -205,6 +214,9 @@
             ]
           }
         }
+      },
+      "recolor": {
+        "#a2a9cb": "#5d574f"
       }
     },
     {
@@ -910,5 +922,8 @@
         }
       }
     }
-  ]
+  ],
+  "fence_recolor": {
+    "#ca8564": "#8a6c4e"
+  }
 }

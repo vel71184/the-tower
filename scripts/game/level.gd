@@ -278,6 +278,7 @@ func _add_fence_piece(holder: Node3D, model: String, dir: Vector2i, length: floa
 	var node := Models.make(model)
 	if node == null:
 		return
+	Models.recolor(node, data.get("fence_recolor", {}))
 	var arm := Node3D.new()
 	arm.rotation_degrees.y = {Vector2i(0, 1): 0.0, Vector2i(1, 0): 90.0, Vector2i(0, -1): 180.0, Vector2i(-1, 0): 270.0}[dir]
 	holder.add_child(arm)
@@ -392,6 +393,7 @@ func _build_ground(cells: Dictionary, palette: Dictionary) -> void:
 			var pick: String = tiles[0] if n < 78 or tiles.size() == 1 else tiles[1 + n % (tiles.size() - 1)]
 			var tile := Models.make(pick)
 			if tile:
+				Models.recolor(tile, data.get("floor_recolor", {}))
 				tile.position = cell_to_world(cell)
 				tile.rotation_degrees.y = 90.0 * float(posmod(hash(cell * 7), 4))
 				add_child(tile)
@@ -508,6 +510,7 @@ func _add_prop(entry: Dictionary, cell: Vector2i) -> void:
 		sc *= 0.85 + float(hash(cell * 13) % 30) / 100.0
 	node.scale = Vector3(sc, sc, sc)
 	add_child(node)
+	Models.recolor(node, entry.get("recolor", {}))
 	Models.outline(node)
 	# "light": a warm glow from this prop (a lantern, a brazier).
 	if entry.has("light"):
@@ -540,6 +543,7 @@ func _add_backdrop(item: Dictionary) -> void:
 		var node := Models.make(String(p))
 		if node == null:
 			continue
+		Models.recolor(node, item.get("recolor", {}))
 		holder.add_child(node)
 		node.position.y = top
 		var box := Models.bounds(node)
@@ -557,6 +561,7 @@ func _add_wall(cell: Vector2i, palette: Dictionary) -> void:
 		add_child(holder)
 		var node := Models.make(String(data["wall_model"]))
 		if node:
+			Models.recolor(node, data.get("wall_recolor", {}))
 			holder.add_child(node)
 			var box := Models.bounds(node)
 			var model_h: float = maxf(box.size.y, 0.01)

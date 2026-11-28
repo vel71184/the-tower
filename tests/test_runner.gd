@@ -2,6 +2,8 @@ extends Node
 ## Headless checks, run in CI with:  godot --headless --path . res://tests/test_runner.tscn
 ## Exits 0 when everything passes, 1 on any failure.
 
+const Models := preload("res://scripts/game/models.gd")
+
 var _failures := 0
 var _checks := 0
 
@@ -931,6 +933,12 @@ func _test_fight_fixes() -> void:
 	check(not lvl.can_stand(line, 0.26), "you can't walk through a fence")
 	check(lvl.can_stand(line + Vector3(0, 0, 0.36), 0.26), "but you can walk right up to it")
 	check(lvl.fences.has(Vector2i(16, 9)) and not lvl.fences.has(Vector2i(16, 10)), "the ring's way in is one clear gap")
+	var tent: MeshInstance3D = null
+	for child in lvl.get_children():
+		if child.scene_file_path.ends_with("mini-forest/tent.glb"):
+			tent = Models._meshes(child, [])[0]
+			break
+	check(tent != null and tent.get_surface_override_material(0) is ShaderMaterial, "any Kenney piece can be recoloured (the camp's tents are canvas, not blue)")
 	main.queue_free()
 	await get_tree().process_frame
 

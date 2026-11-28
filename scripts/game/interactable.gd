@@ -271,6 +271,7 @@ func _build_model(d: Dictionary) -> void:
 	var sc := float(d.get("scale", 1.0))
 	node.scale = Vector3(sc, sc, sc)
 	add_child(node)
+	Models.recolor(node, d.get("recolor", {}))
 	Models.outline(node)
 	var top := 0.0
 	for mi in Models._meshes(node, []):
