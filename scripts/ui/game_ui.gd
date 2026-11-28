@@ -26,8 +26,6 @@ var speech: Speech
 var _portrait: Portrait
 var _portrait_frame: PanelContainer
 var _safe_key := Rect2i()
-## Set while the climber is in a fight, so all the fight buttons show.
-var combat_active := false
 var _panel: PanelContainer
 var _speaker: Label
 var _body: Label
@@ -52,9 +50,7 @@ var _pad_buttons: Dictionary = {}
 var _stick: Control
 ## Tests set this to get touch controls without a touch screen.
 var force_touch := false
-## Brightens the Use button: something is in the ring.
-var use_ready := false
-## Brightens Lock: someone is close enough to lock on to.
+## Lock is active: pressing it would do something (someone in reach, or already locked on).
 var lock_ready := false
 ## Set once a level is playing, so touch action buttons can show.
 var touch_actions_enabled := false
@@ -381,15 +377,7 @@ func _process(_delta: float) -> void:
 	_pad.visible = touch_actions_enabled and is_touch_mode() and not is_busy() and not _cinematic
 	if not _pad.visible and _stick.visible:
 		set_stick(false)
-	for id in _pad_buttons:
-		var b = _pad_buttons[id]
-		match id:
-			"use":
-				b.useful = use_ready
-			"lock":
-				b.useful = combat_active or lock_ready
-			_:
-				b.useful = combat_active
+	(_pad_buttons["lock"] as PadButton).active = lock_ready
 	_fit_safe_area()
 
 
@@ -416,8 +404,9 @@ func _fit_safe_area() -> void:
 	_root.offset_bottom = -bottom
 
 
-## The on-screen pad: a gamepad-style cluster bottom right. Always there, faint until useful,
-## so buttons never move and thumbs learn where they are.
+## The on-screen pad: a gamepad-style cluster bottom right. Always there and always the same
+## (only Lock dims with no one in reach), so buttons never move, thumbs learn where they are,
+## and the pad never hints at what's nearby.
 func _build_touch_bar() -> void:
 	_pad = Control.new()
 	_pad.anchor_left = 1.0

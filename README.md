@@ -38,7 +38,7 @@ Every push builds the game on GitHub:
 | | Phone | Controller (8BitDo Pro 2, Xbox, PlayStation) | Keyboard |
 |---|---|---|---|
 | Walk | Thumb anywhere on the left half: a stick appears | Left stick or d-pad (smooth) | WASD or arrows |
-| Look, talk, use | A, or tap the thing | **Bottom** face button (uses the ringed thing) | E or Enter |
+| Look, talk, use | A, or tap the thing | **Bottom** face button (uses what's in front of you) | E or Enter |
 | Attack | X | **Left** face button | Space or J |
 | Kick (knockback, no wound) | Y | **Top** face button | K or F |
 | Block | Hold B | Hold **right** face button | Hold Shift |

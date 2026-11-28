@@ -23,6 +23,7 @@ func _ready() -> void:
 	await _test_floor_zero()
 	await _test_fight_fixes()
 	await _test_fx()
+	await _test_focus_cues()
 	await _test_consistency()
 	await _test_polish()
 	Baseline.delete_save()
@@ -640,10 +641,14 @@ func _test_polish() -> void:
 	await get_tree().process_frame
 	var pad: Dictionary = main.ui._pad_buttons
 	check(main.ui._pad.visible and pad.size() == 5, "the on-screen pad shows its five buttons")
-	check(not pad["strike"].useful and not pad["kick"].useful, "fight buttons stay faint outside a fight")
+	check(pad["use"].active and pad["strike"].active and pad["kick"].active and pad["block"].active, "A, X, Y and B are always on, fight or no fight")
+	check(not pad["lock"].active, "Lock is faint with no one in reach")
+	main.climber.place(brann.cell + Vector2i(0, 2))
+	await get_tree().process_frame
+	await get_tree().process_frame
+	check(pad["lock"].active, "and comes on with someone in reach")
 	main.combat._set_lock(brann)
 	await get_tree().process_frame
-	check(pad["strike"].useful and pad["block"].useful, "locking on brightens the fight buttons")
 	check(main.climber.character.is_holding("sword"), "locking on draws the climber's sword")
 	main.combat._set_lock(null)
 	await get_tree().process_frame
@@ -999,6 +1004,44 @@ func _test_fx() -> void:
 	check(body.material_overlay != outline and body.material_overlay != null, "a short flash ending doesn't cut a longer one short (the red wind-up stays readable)")
 	await get_tree().create_timer(0.3).timeout
 	check(body.material_overlay == outline, "and the outline comes back after")
+	main.queue_free()
+	await get_tree().process_frame
+
+
+func _test_focus_cues() -> void:
+	print("Nothing points out what's worth checking")
+	Baseline.reset()
+	var main = load("res://scenes/main.tscn").instantiate()
+	add_child(main)
+	await get_tree().process_frame
+	main._leave_title()
+	main.start_level(1, 1)
+	await get_tree().process_frame
+	var board = main.find_object("notice_board")
+	main.climber.place(board.cell + Vector2i(0, 1))
+	main.climber.face(board.global_position)
+	main._update_focus()
+	check(main._focus == board, "Use would pick the notice board in front")
+	check(not main._focus_ring.visible, "but no ring marks it: things don't announce themselves")
+	check(not board._label.visible, "and no name shows before you've looked at it")
+	main.interact(board)
+	_finish_talk(main)
+	check(board._label.visible, "once you've looked, its name shows when you're at it")
+	var tobin = main.find_object("tobin")
+	main.climber.place(tobin.cell + Vector2i(0, 1))
+	main.climber.face(tobin.global_position)
+	main._update_focus()
+	check(main._focus == tobin and main._focus_ring.visible, "people get a ring: they're plain to see anyway")
+	check(not tobin._label.visible, "but no name until you've met them")
+	main.interact(tobin)
+	_finish_talk(main)
+	check(tobin._label.visible, "after talking, their name shows")
+	main.climber.place(Vector2i(11, 5))
+	main._update_focus()
+	check(main._focus == null, "(nothing in front of the climber here)")
+	main.pad_interact()
+	check(main.climber.character.current_animation() == "pick-up" and not main.ui.is_busy(), "Use with nothing in front still does something: a crouch to check the ground")
+	check(main.how_to_play().find("ring") == -1, "How to play doesn't mention a ring")
 	main.queue_free()
 	await get_tree().process_frame
 

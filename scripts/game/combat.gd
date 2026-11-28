@@ -167,12 +167,20 @@ func set_blocking(on: bool) -> void:
 		climber.character.release()
 
 
-## Locks on to the nearest person in front, or releases the lock.
+## Locks on to the nearest person in front (or, with no one in front, the nearest in reach
+## at all, turning to face them), or releases the lock.
 func toggle_lock() -> void:
 	if lock_target != null:
 		_set_lock(null)
 		return
-	_set_lock(_people_in_front(LOCK_RANGE, -0.2).front() if not _people_in_front(LOCK_RANGE, -0.2).is_empty() else null)
+	var ahead := _people_in_front(LOCK_RANGE, -0.2)
+	var anyone := ahead if not ahead.is_empty() else _people_in_front(LOCK_RANGE, -1.0)
+	_set_lock(anyone.front() if not anyone.is_empty() else null)
+
+
+## True when Lock would do something: someone is in reach, or a lock is on to let go of.
+func can_lock() -> bool:
+	return lock_target != null or not _people_in_front(LOCK_RANGE, -1.0).is_empty()
 
 
 ## Moves the lock to the next nearest person.

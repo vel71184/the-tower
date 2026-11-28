@@ -116,8 +116,11 @@ func world_center() -> Vector3:
 	return global_position + Vector3(0, _top * 0.5, 0)
 
 
+## Shows the name while this is what Use would pick, but only once the climber has looked at
+## it or talked to them: names never point out what's worth checking, or who someone is
+## before you've met them.
 func set_near(near: bool) -> void:
-	_label.visible = near and revealed
+	_label.visible = near and revealed and Baseline.has_flag("examined:" + id)
 
 
 ## Shows a hidden thing. Things found underfoot ("reveal": "step") rock and settle, like a

@@ -100,9 +100,7 @@ func _process(delta: float) -> void:
 	elif _stick_index != -1 and not free:
 		_end_stick()
 	climber.move_free(screen_to_world(v), delta)
-	ui.combat_active = combat.active or combat.lock_target != null
-	ui.use_ready = _focus != null
-	ui.lock_ready = _someone_near(3.5)
+	ui.lock_ready = combat.can_lock()
 	var block_input: bool = free and (Input.is_action_pressed("block") or ui.block_held())
 	if block_input != _block_input:
 		_block_input = block_input
@@ -177,7 +175,7 @@ func how_to_play() -> String:
 	if Controls.using_pad or (Controls.has_controller() and not ui.is_touch_mode()):
 		return "Left stick: walk\nA: look, talk, use\nX: attack   Y: kick   hold B: block\nL1: lock on   R1: next target\nTriggers: zoom   Start: skip a scene"
 	if OS.has_feature("mobile"):
-		return "Thumb anywhere on the left side: walk\nA: look, talk, use what's in your ring (or tap it)\nX: attack   Y: kick   hold B: block\nL: lock on\nPinch: zoom"
+		return "Thumb anywhere on the left side: walk\nA: look, talk, use what's in front of you (or tap it)\nX: attack   Y: kick   hold B: block\nL: lock on\nPinch: zoom"
 	return "WASD or arrows: walk (or click the ground)\nE / Enter: look, talk, use (or click it)\nSpace: attack   K: kick   hold Shift: block\nQ: lock on   Tab: next target\nWheel or - / =: zoom   Esc: skip a scene"
 
 
@@ -654,14 +652,6 @@ func _can_steer() -> bool:
 		and not cutscene.playing and ui.is_touch_mode()
 
 
-## True if a person is within reach of a lock-on.
-func _someone_near(dist: float) -> bool:
-	for obj in level.objects:
-		if obj.kind == "npc" and obj.revealed and obj.global_position.distance_to(climber.global_position) <= dist:
-			return true
-	return false
-
-
 func _touch_spread() -> float:
 	if _touches.size() != 2:
 		return 0.0
@@ -840,9 +830,12 @@ func pad_interact() -> bool:
 	if combat.active and (_focus == null or combat.is_foe(_focus)):
 		return combat.talk()
 	var obj := focus_object()
-	if obj == null:
-		return false
 	climber.stop()
+	if obj == null:
+		# Nothing in front: the climber still crouches to check the ground, so pressing Use
+		# costs nothing and never tells you whether something was there.
+		climber.act("pick-up")
+		return false
 	_use(obj)
 	return true
 
@@ -867,6 +860,8 @@ func interact(obj: Interactable) -> void:
 	if not Baseline.has_flag("examined:" + obj.id):
 		Baseline.set_flag("examined:" + obj.id)
 		Baseline.record("examined", obj.id)
+		if obj == _focus:
+			obj.set_near(true)  # Now you know what it is, its name can show.
 	Baseline.apply_once(obj.id, obj.def.get("effects", {}))
 
 	_talk_obj = obj
@@ -1114,7 +1109,8 @@ func _refresh_dev() -> void:
 		ui.set_dev_text(speed + "\n" + Baseline.debug_text())
 
 
-## A soft ring under whatever the interact button would use.
+## A soft ring under the person the interact button would talk to. Only people get one: they're
+## plain to see anyway, while a ring under things would point out which ones are worth checking.
 func _show_focus_ring(obj: Interactable) -> void:
 	if _focus_ring == null:
 		_focus_ring = MeshInstance3D.new()
@@ -1129,12 +1125,11 @@ func _show_focus_ring(obj: Interactable) -> void:
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		_focus_ring.material_override = mat
 		add_child(_focus_ring)
-	_focus_ring.visible = obj != null
-	if cutscene.playing:
-		_focus_ring.visible = false
-	elif obj:
-		_focus_ring.global_position = obj.global_position + Vector3(0, 0.03, 0)
+	_focus_ring.visible = obj != null and obj.kind == "npc" and not cutscene.playing
+	if obj and not cutscene.playing:
 		obj.set_near(true)
+	if _focus_ring.visible:
+		_focus_ring.global_position = obj.global_position + Vector3(0, 0.03, 0)
 		_focus_ring.scale = Vector3(0.7, 0.7, 0.7)
 		create_tween().tween_property(_focus_ring, "scale", Vector3.ONE, 0.18).set_trans(Tween.TRANS_BACK)
 
