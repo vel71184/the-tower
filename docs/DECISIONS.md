@@ -70,6 +70,8 @@ records decisions made in chat that the doc may not have yet.
 | Controllers | Full controller and keyboard support, matched by button position. 8BitDo Pro 2 in X-input mode. | Chat, 2026-11-21 |
 | CI screenshots | CI renders screenshots and force-pushes them to the `ci-screenshots` branch. | Chat, 2026-11-21 |
 | Kenney zips | Kept in `kenney_zips/` (ignored by Godot); used parts get extracted to `assets/`. | Chat, 2026-11-21 |
+| Android Back | Back on the title leaves the app; mid-climb it asks "Leave the game?", and Back again keeps climbing. Never quits by accident (the edge swipe is easy to hit with a thumb on the stick). | Audit, 2026-11-28 |
+| New climb | With a climb saved, New climb asks before throwing it away. | Audit, 2026-11-28 |
 
 ## Suggested, not yet confirmed
 
