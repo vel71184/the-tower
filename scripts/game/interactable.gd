@@ -329,7 +329,8 @@ func _build_fire() -> void:
 	_top = maxf(_top, 0.7)
 
 
-## A board with readable words on it, on top of a post: {"text": "THE TOWER →", "height": 1.1}
+## A plain board on a post or frame: {"height": 1.1, "size": [w, h], "rot": deg}. Boards carry
+## no painted words; what's written on them is read by looking ("lines").
 func _build_sign(spec: Dictionary) -> void:
 	var y := float(spec.get("height", _top - 0.25))
 	var board := MeshInstance3D.new()
@@ -344,26 +345,7 @@ func _build_sign(spec: Dictionary) -> void:
 	board.position = Vector3(float(spec.get("x", 0.18)), y, float(spec.get("z", 0.0)))
 	board.rotation_degrees.y = float(spec.get("rot", 45.0))
 	add_child(board)
-	var words := Label3D.new()
-	words.text = String(spec.get("text", ""))
-	words.pixel_size = 0.0045
-	# The words always fit on the board: shrink the text until the longest line does.
-	var font: Font = words.font if words.font else ThemeDB.fallback_font
-	var size := 44
-	var lines := words.text.split("\n")
-	while size > 12:
-		var widest := 0.0
-		for line in lines:
-			widest = maxf(widest, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
-		if widest * words.pixel_size <= box.size.x * 0.88 and size * 1.25 * lines.size() * words.pixel_size <= box.size.y * 0.9:
-			break
-		size -= 2
-	words.font_size = size
-	words.outline_size = 0
-	words.modulate = Color(String(spec.get("ink", "#2b1d12")))
-	words.position = Vector3(0, 0, 0.035)
-	words.double_sided = false
-	board.add_child(words)
+	Models.outline(board)
 	_top = maxf(_top, y + 0.2)
 
 
