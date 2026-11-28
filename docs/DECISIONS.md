@@ -8,6 +8,7 @@ records decisions made in chat that the doc may not have yet.
 
 | Decision | Detail | Source |
 |---|---|---|
+| Waiting Hall look | Rebuilt from Kenney Mini Dungeon (same "Mini" style as the characters): stone walls and tiled floor, columns, the Gatekeeper's red banners, bedrolls, a cold fire ring, a notice board, table and chairs, barrels and chests by the passage, lanterns for light. Signs shrink their words to fit their boards. | Chat, 2026-11-28 |
 | Losing a fight | You're knocked out, not killed: you come to at the level's resting spot with one wound, and the text says where. Whoever beat you goes back to what they were doing (or leaves, if the fight says so). A spar is different: you're helped up in the ring and patched up. | Chat, 2026-11-28 |
 | Healing | Every level has one resting spot (a flat rock, the camp fire, a bench, the bedrolls). Resting closes every wound. Not while someone's attacking you. | Chat, 2026-11-28 |
 | People remember | Someone you attacked won't chat as if nothing happened; anyone who saw an unprovoked attack keeps their distance. Scripted fights (defending Tobin, Dunmore's toll) and spars don't count as unprovoked. | Chat, 2026-11-28 |

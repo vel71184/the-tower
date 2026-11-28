@@ -36,6 +36,7 @@ apply to Mini Characters.
 |---|---|---|---|
 | 20 people, robots, aliens, zombies | Mini Characters | **Yes** (in use) | Any head on any body, recolourable, 32 animations |
 | human, orc | Mini Dungeon | **Yes** (in use) | |
+| walls, floors, columns, banners, furniture | Mini Dungeon | **Yes** (in use) | The Waiting Hall |
 | soldier (Roman) | Mini Arena | **Yes** (in use) | No wheelchair animations |
 | archer | Mini Forest | **Yes** (in use) | |
 | employee | Mini Shop | **Yes** (in use) | |

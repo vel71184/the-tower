@@ -43,9 +43,9 @@ func _ready() -> void:
 	main.ui.force_touch = true
 	await _frames(40)
 	await _shot("1_waiting_hall")
-	main.climber.place(Vector2i(4, 6))
+	main.climber.place(Vector2i(6, 5))
 	main.cam.snap()
-	main._on_entered_cell(Vector2i(4, 6))
+	main._on_entered_cell(Vector2i(6, 5))
 	main.ui.set_stick(true, Vector2(220, 520), Vector2(260, 490))
 	await _frames(10)
 	await _shot("2_near_tobin")

@@ -200,7 +200,7 @@ func _until(cond: Callable, frames: int = 600) -> bool:
 
 
 ## A fresh Waiting Hall with the climber next to Brann, facing him, with fight time driven by tick().
-func _brawl_setup(main, climber_cell: Vector2i = Vector2i(5, 5)) -> void:
+func _brawl_setup(main, climber_cell: Vector2i = Vector2i(8, 4)) -> void:
 	main.start_level(1, 1)
 	main.combat.manual = true
 	main.climber.place(climber_cell)
@@ -295,7 +295,7 @@ func _test_brawl() -> void:
 
 	# Kick: knocks him back a cell, never wounds.
 	Baseline.reset()
-	_brawl_setup(main, Vector2i(4, 6))
+	_brawl_setup(main, Vector2i(7, 5))
 	brann = main.find_object("brann")
 	main.interact(brann)
 	main.choose_text("Let him go")
@@ -303,7 +303,7 @@ func _test_brawl() -> void:
 	c.tick(1.0)
 	main.climber.face(brann.global_position)
 	check(c.kick(), "the kick connects")
-	check(c.events.has("kick_moved:brann") and brann.cell == Vector2i(4, 4), "a kick knocks him back a cell")
+	check(c.events.has("kick_moved:brann") and brann.cell == Vector2i(7, 3), "a kick knocks him back a cell")
 	check(c.foes[brann]["wounds"] == 3, "a kick doesn't wound")
 
 	# Block: hold it facing him and his swing glances off.
@@ -341,7 +341,7 @@ func _test_brawl() -> void:
 
 	# Anyone can be attacked, but only on purpose (design doc: residents, not enemies).
 	Baseline.reset()
-	_brawl_setup(main, Vector2i(3, 6))
+	_brawl_setup(main, Vector2i(6, 5))
 	var tobin = main.find_object("tobin")
 	main.climber.face(tobin.global_position)
 	c._cooldown = 0.0
@@ -461,7 +461,7 @@ func _test_level_one() -> void:
 	check(main.first_built_level() == Vector2i(0, 1), "the first built level is Floor 0, The Road")
 	check(main.start_level(1, 1), "level 1-9 loads")
 	var level = main.level
-	check(level.width == 14 and level.height == 11, "map size is 14x11")
+	check(level.width == 15 and level.height == 11, "map size is 15x11")
 	check(level.is_walkable(level.spawn_cell), "spawn is walkable")
 	for obj in level.objects:
 		check(not level.path_to_object(level.spawn_cell, obj).is_empty(), "%s is reachable" % obj.id)
@@ -542,7 +542,7 @@ func _test_level_one() -> void:
 	for i in 30:
 		main.climber.move_free(Main_screen(Vector2(0, -1)), 0.05)
 	check(main.climber.position.x > 1.0 and main.climber.position.z > 1.0, "walls stop you")
-	main.climber.place(Vector2i(3, 6))
+	main.climber.place(main.find_object("tobin").cell + Vector2i(0, 1))
 	main.climber.face(main.find_object("tobin").global_position)
 	check(main.focus_object() == main.find_object("tobin"), "the person you face is highlighted")
 	check(main.pad_interact() and main.is_talking(), "the interact button talks to them")
@@ -558,7 +558,7 @@ func _test_level_one() -> void:
 	main.interact(hidden)
 	while main.is_talking():
 		main.choose(0)
-	main.climber.place(Vector2i(4, 7))
+	main.climber.place(Vector2i(5, 6))
 	main.interact(main.find_object("tobin"))
 	main.choose_text("Who says")
 	main.choose(0)
@@ -569,7 +569,7 @@ func _test_level_one() -> void:
 	Baseline.reset()
 	check(Baseline.load_save(), "the mid-level save loads")
 	check(main.resume_climb(), "resuming reopens the level")
-	check(main.climber.cell == Vector2i(4, 7), "the climber is back where they stopped")
+	check(main.climber.cell == Vector2i(5, 6), "the climber is back where they stopped")
 	check(main.find_object("loose_board").revealed, "found hidden things stay found")
 	check(main.find_object("loose_board").opened, "and opened things stay open")
 	check(Baseline.knows("marta_name") and Baseline.has_flag("talked_tobin"), "what the climber learned is kept")

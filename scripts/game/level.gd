@@ -383,6 +383,19 @@ func _material(color: Color) -> StandardMaterial3D:
 func _build_ground(cells: Dictionary, palette: Dictionary) -> void:
 	if cells.is_empty():
 		return
+	# Indoors a level can lay Kenney floor tiles instead ("floor_tiles": [models], the first
+	# most often).
+	var tiles: Array = data.get("floor_tiles", [])
+	if not tiles.is_empty():
+		for cell in cells:
+			var n := posmod(hash(cell * 17), 100)
+			var pick: String = tiles[0] if n < 78 or tiles.size() == 1 else tiles[1 + n % (tiles.size() - 1)]
+			var tile := Models.make(pick)
+			if tile:
+				tile.position = cell_to_world(cell)
+				tile.rotation_degrees.y = 90.0 * float(posmod(hash(cell * 7), 4))
+				add_child(tile)
+		return
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	st.set_normal(Vector3.UP)
@@ -496,6 +509,15 @@ func _add_prop(entry: Dictionary, cell: Vector2i) -> void:
 	node.scale = Vector3(sc, sc, sc)
 	add_child(node)
 	Models.outline(node)
+	# "light": a warm glow from this prop (a lantern, a brazier).
+	if entry.has("light"):
+		var lamp := OmniLight3D.new()
+		lamp.light_color = Color(String(entry["light"]))
+		lamp.light_energy = float(entry.get("light_energy", 1.4))
+		lamp.omni_range = float(entry.get("light_range", 5.0))
+		lamp.shadow_enabled = false
+		lamp.position = Vector3(0, float(entry.get("light_height", 1.0)), 0)
+		node.add_child(lamp)
 	var h := Models.bounds(node).size.y
 	if h > 0.9:
 		tall_props.append([node, h])
@@ -527,6 +549,22 @@ func _add_backdrop(item: Dictionary) -> void:
 func _add_wall(cell: Vector2i, palette: Dictionary) -> void:
 	var near_camera := cell.x == width - 1 or cell.y == height - 1
 	var h := LOW_WALL_HEIGHT if near_camera else WALL_HEIGHT
+	# A level can build its walls from a Kenney piece ("wall_model"); the camera-side walls
+	# are cut down low so the room stays visible.
+	if data.has("wall_model"):
+		var holder := Node3D.new()
+		holder.position = cell_to_world(cell)
+		add_child(holder)
+		var node := Models.make(String(data["wall_model"]))
+		if node:
+			holder.add_child(node)
+			var box := Models.bounds(node)
+			var model_h: float = maxf(box.size.y, 0.01)
+			node.scale = Vector3(1.0, h / model_h, 1.0)
+			Models.outline(holder)
+		if not near_camera:
+			tall_props.append([holder, h])
+		return
 	var mi := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
 	mesh.size = Vector3(1.0, h, 1.0)

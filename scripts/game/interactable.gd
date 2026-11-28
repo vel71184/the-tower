@@ -55,6 +55,7 @@ func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: C
 	else:
 		var color := Color(String(d.get("color", "#b8a48a")))
 		_build_shape(String(d.get("shape", "box")), d.get("size", []), material_for.call(color))
+		Models.outline(self)
 
 	_label = Label3D.new()
 	_label.text = display_name
@@ -332,19 +333,31 @@ func _build_sign(spec: Dictionary) -> void:
 	var y := float(spec.get("height", _top - 0.25))
 	var board := MeshInstance3D.new()
 	var box := BoxMesh.new()
-	box.size = Vector3(0.95, 0.34, 0.06)
+	var bs: Array = spec.get("size", [0.95, 0.34])
+	box.size = Vector3(float(bs[0]), float(bs[1]), 0.06)
 	board.mesh = box
 	var wood := StandardMaterial3D.new()
 	wood.albedo_color = Color(String(spec.get("color", "#9c6b3f")))
 	wood.roughness = 0.9
 	board.material_override = wood
-	board.position = Vector3(0.18, y, 0)
+	board.position = Vector3(float(spec.get("x", 0.18)), y, float(spec.get("z", 0.0)))
 	board.rotation_degrees.y = float(spec.get("rot", 45.0))
 	add_child(board)
 	var words := Label3D.new()
 	words.text = String(spec.get("text", ""))
-	words.font_size = 44
 	words.pixel_size = 0.0045
+	# The words always fit on the board: shrink the text until the longest line does.
+	var font: Font = words.font if words.font else ThemeDB.fallback_font
+	var size := 44
+	var lines := words.text.split("\n")
+	while size > 12:
+		var widest := 0.0
+		for line in lines:
+			widest = maxf(widest, font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x)
+		if widest * words.pixel_size <= box.size.x * 0.88 and size * 1.25 * lines.size() * words.pixel_size <= box.size.y * 0.9:
+			break
+		size -= 2
+	words.font_size = size
 	words.outline_size = 0
 	words.modulate = Color(String(spec.get("ink", "#2b1d12")))
 	words.position = Vector3(0, 0, 0.035)
@@ -365,6 +378,15 @@ func _build_character(look: Dictionary, people: Dictionary) -> void:
 		character.queue_free()
 		character = null
 		_build_shape("npc", [], StandardMaterial3D.new())
+
+
+## A slightly darker copy of a plain material (the rolled end of a bedroll).
+func material_for_dark(mat: Material) -> Material:
+	if mat is StandardMaterial3D:
+		var m := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+		m.albedo_color = m.albedo_color.darkened(0.2)
+		return m
+	return mat
 
 
 func _size(raw: Variant, fallback: Vector3) -> Vector3:
@@ -398,6 +420,22 @@ func _build_shape(shape: String, raw_size: Variant, mat: Material) -> void:
 			cyl.height = s.y
 			_add_mesh(cyl, mat, Vector3(0, s.y * 0.5, 0))
 			_top = s.y
+		"bedroll":
+			# A blanket laid out with a rolled end for a pillow.
+			var blanket := BoxMesh.new()
+			blanket.size = Vector3(0.5, 0.05, 0.82)
+			_add_mesh(blanket, mat, Vector3(0, 0.025, 0.05))
+			var roll := CylinderMesh.new()
+			roll.top_radius = 0.09
+			roll.bottom_radius = 0.09
+			roll.height = 0.5
+			var mi := MeshInstance3D.new()
+			mi.mesh = roll
+			mi.material_override = material_for_dark(mat)
+			mi.rotation_degrees.z = 90.0
+			mi.position = Vector3(0, 0.09, -0.36)
+			add_child(mi)
+			_top = 0.2
 		"plank":
 			var p := BoxMesh.new()
 			p.size = _size(raw_size, Vector3(0.9, 0.03, 0.3))
