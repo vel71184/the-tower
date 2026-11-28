@@ -22,10 +22,10 @@ Never refuse or stall a task because of the model. The suggestion is advice, not
 
 | Model | Use it for |
 |---|---|
-| **Opus** | New systems; anything touching `scripts/game/main.gd`, `combat.gd` or `scripts/autoload/baseline.gd`; bugs that cross several files; refactors (splitting `main.gd`, save versioning, per-level flag scoping); designing bosses or how the tower reacts to the baseline. |
-| **Sonnet** | Writing or editing level JSON in `content/floors/`; dialogue and text changes; recolours and prop placement; new tests in `tests/test_runner.gd`; small, contained fixes; README and DECISIONS updates. |
-| **Fable** (if the plan includes it) | Only the hardest problems, such as a bug Opus has failed on twice or a deep architectural rework. |
-| **Haiku** | Not for this repo. The systems are too interconnected. |
+| **Opus** | Building new systems or mechanics; changing core game logic (game flow, combat, saving, the hidden baseline, how systems talk to each other); bugs whose cause spans several parts of the game; restructuring or reorganizing code; design work such as bosses, floor arcs, and how the tower reacts to the climber. |
+| **Sonnet** | Adding or editing content that uses existing systems (new levels, rooms, characters, dialogue, text); visual tweaks like recolouring and placing props; writing tests for behaviour that already exists; small, contained fixes; documentation updates. |
+| **Fable** (if the plan includes it) | The hardest problems: a bug that has resisted repeated attempts, or a deep rework of how the game is built. |
+| **Haiku** | Quick questions about the project, like where something lives or what a setting does. |
 
 A good rhythm: plan a feature with Opus, then let Sonnet fill in levels and content.
 
