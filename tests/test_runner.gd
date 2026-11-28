@@ -707,6 +707,22 @@ func _test_polish() -> void:
 	check(main.ui._card.visible and Baseline.has_save(), "an unreadable save is kept, and the player is asked")
 	main.ui._on_card(0)
 	check(main.ui.is_title_visible(), "Back returns to the title")
+	main._on_title_choice("new")
+	check(main.ui.is_card_visible() and main.ui._card_title.text.contains("new climb") and Baseline.has_save(), "New climb asks before throwing a saved climb away")
+	main.ui._on_card(0)
+	check(main.ui.is_title_visible() and Baseline.has_save(), "and Back keeps it")
+	main._on_title_choice("new")
+	main.ui._on_card(1)
+	check(not main.ui.is_title_visible() and main.climber.visible and Baseline.floor_num == 0, "Start over begins a new climb")
+	main.on_back()
+	check(not main.ui.is_card_visible(), "Back does nothing while a scene plays")
+	main.start_level(0, 2)
+	await get_tree().process_frame
+	main.on_back()
+	check(main.ui.is_card_visible() and main.ui._card_title.text.contains("Leave"), "Android's Back asks before leaving a climb")
+	main.on_back()
+	check(not main.ui.is_card_visible() and not main.ui.is_busy() and main.level != null, "and Back again keeps climbing")
+	check(Baseline.save() and not FileAccess.file_exists(Baseline.SAVE_PATH + ".tmp") and Baseline.load_save(), "saving swaps in a whole new file, never a half-written one")
 	main.queue_free()
 	await get_tree().process_frame
 

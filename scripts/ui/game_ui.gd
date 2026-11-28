@@ -558,6 +558,10 @@ func show_card(title: String, body: String, buttons: Array) -> void:
 	_focus_first(_card_buttons)
 
 
+func is_card_visible() -> bool:
+	return _card.visible
+
+
 func hide_card() -> void:
 	_dim.visible = false
 	_card.visible = false

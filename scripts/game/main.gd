@@ -47,6 +47,7 @@ var _last_level := Vector2i(-1, -1)
 var _floor_cache: Dictionary = {}
 var _pending_arrival: Array = []
 var _note_open := false
+var _quit_asked := false
 var _touches: Dictionary = {}
 var _pinch_dist := 0.0
 ## Touch: index -> [start position, start time in ms], to tell taps from drags.
@@ -153,6 +154,17 @@ func _on_title_choice(id: String) -> void:
 			ui.hide_title()
 			_card("How to play", how_to_play(), ["Back"], func(_i: int) -> void: ui.show_title(_title_options()))
 		"new":
+			if Baseline.has_save():
+				# One tap shouldn't throw away a whole climb.
+				ui.hide_title()
+				_card("Start a new climb?", "Your climb so far will be gone for good.",
+					["Back", "Start over"], func(i: int) -> void:
+						if i == 1:
+							_leave_title()
+							new_climb()
+						else:
+							ui.show_title(_title_options()))
+				return
 			_leave_title()
 			new_climb()
 		"quit":
@@ -260,6 +272,7 @@ func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool
 	ui.hide_page()
 	ui.speech.clear()
 	_note_open = false
+	_quit_asked = false
 	var key := "%d-%d" % [floor_n, level_n]
 	if not LEVELS.has(key):
 		var from := _last_level
@@ -509,9 +522,31 @@ func autosave() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED \
 			or what == NOTIFICATION_APPLICATION_FOCUS_OUT \
-			or what == NOTIFICATION_WM_CLOSE_REQUEST \
-			or what == NOTIFICATION_WM_GO_BACK_REQUEST:
+			or what == NOTIFICATION_WM_CLOSE_REQUEST:
 		autosave()
+	elif what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		on_back()
+
+
+## Android's Back button (or a swipe in from the screen's edge, easy to do by accident with a
+## thumb on the stick). On the title it leaves the game, as Back does in any app; mid-climb it
+## asks first, and Back again means "keep climbing".
+func on_back() -> void:
+	autosave()
+	if _quit_asked:
+		_on_card_choice(0)
+		return
+	if ui.is_title_visible():
+		get_tree().quit()
+		return
+	# A scene playing, a floor's opening, or a card with its own choices: Back does nothing.
+	if cutscene.playing or ui.is_opening_visible() or ui.is_card_visible():
+		return
+	_quit_asked = true
+	_card("Leave the game?", "Your climb so far is saved.", ["Keep climbing", "Quit"], func(i: int) -> void:
+		_quit_asked = false
+		if i == 1:
+			get_tree().quit())
 
 
 # --- Input ----------------------------------------------------------------------------------

@@ -160,13 +160,27 @@ func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
 
+## Writes a new copy beside the old one, then swaps it in, so a phone closing the app halfway
+## through a save never leaves a broken file behind.
 func save() -> bool:
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var tmp := SAVE_PATH + ".tmp"
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		push_error("Baseline: could not write save (%s)" % FileAccess.get_open_error())
 		return false
 	f.store_string(JSON.stringify(to_dict(), "\t"))
 	f.close()
+	var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(SAVE_PATH))
+	if err == OK:
+		return true
+	# Couldn't swap it in: write it in place rather than not saving at all.
+	push_warning("Baseline: could not swap in the save (%s); writing it directly" % error_string(err))
+	f = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f == null:
+		return false
+	f.store_string(JSON.stringify(to_dict(), "\t"))
+	f.close()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp))
 	return true
 
 
