@@ -1108,7 +1108,10 @@ func _on_card_choice(i: int) -> void:
 
 func _refresh_dev() -> void:
 	if ui.is_dev_visible():
-		ui.set_dev_text(Baseline.debug_text())
+		# Speed first, so it can be read on a phone at a glance.
+		var speed := "%d fps   %d draws" % [Engine.get_frames_per_second(),
+			int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))]
+		ui.set_dev_text(speed + "\n" + Baseline.debug_text())
 
 
 ## A soft ring under whatever the interact button would use.

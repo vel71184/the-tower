@@ -725,6 +725,10 @@ func _test_polish() -> void:
 	main.on_back()
 	check(not main.ui.is_card_visible() and not main.ui.is_busy() and main.level != null, "and Back again keeps climbing")
 	check(Baseline.save() and not FileAccess.file_exists(Baseline.SAVE_PATH + ".tmp") and Baseline.load_save(), "saving swaps in a whole new file, never a half-written one")
+	main.ui.toggle_dev()
+	main._process(0.016)
+	check(main.ui._dev.text.contains("fps") and main.ui._dev.text.contains("BASELINE"), "the dev overlay shows the frame rate first (for checking speed on a phone)")
+	main.ui.toggle_dev()
 	main.queue_free()
 	await get_tree().process_frame
 
