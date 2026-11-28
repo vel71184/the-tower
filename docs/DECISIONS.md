@@ -8,8 +8,14 @@ records decisions made in chat that the doc may not have yet.
 
 | Decision | Detail | Source |
 |---|---|---|
-| No way back | People can never come back down or out of the tower. Things and animals can: something thrown from an opening, a bird with a note tied to it. It's unreliable, so people outside mostly live on rumor and hope. | Chat, 2026-11-28 |
-| Marta's motive | The last climber she let up burned Floor 1's houses on the way to the stair; she only heard after they'd gone up. Then birds came down from Floor 2 with burnt feathers and worse notes. So she won't open the stair until she's watched a climber all the way across her floor: how you treat Floor 1 is her test. | Chat, 2026-11-28 |
+| No way down | People can't go back down. It's the tower itself, a kind of magic with no reason given: you can walk to the door, even stand there as someone comes up, but you can't make yourself step through. Floor bosses are the only exception. | Chat, 2026-11-28 |
+| Things going up | Animals and things sometimes make it up, but usually get lost; things can turn up on the wrong floor. Ropes never work. The only reliable way is to hand it to a climber and hope they meet the person. | Chat, 2026-11-28 |
+| The dead | Stay on their floor. Each floor buries or keeps its own. | Chat, 2026-11-28 |
+| News between floors | Floor bosses talk regularly with the bosses directly above and below. Everything else is local and physical: smoke or noise from the stair only reaches the level next to it; cracks to throw things down or see outside are rare finds. | Chat, 2026-11-28 |
+| Reputation | The boss you just passed tells the next boss about you. Bosses keep what they know among bosses, but can tell their own people how to treat you, without saying why. Climbers ahead of you spread word among ordinary people. | Chat, 2026-11-28 |
+| Marta's motive | The last climber she let up burned Floor 1's houses on the way to the stair, far from where she could see the smoke; she heard only after they'd gone up. Floor 2's boss has told her what that climber is doing up there. So she won't open the stair until she's watched a climber all the way across her floor: how you treat Floor 1 is her test. | Chat, 2026-11-28 |
+| Sparring ring | Hitting a partner who has yielded is possible and remembered. | Chat, 2026-11-28 (recommended default) |
+| The Gate | A person keeps it, so getting in rehearses kill, negotiate or neutralize: force, talk, pay, or the bread hatch. | Chat, 2026-11-28 (recommended default) |
 | Floor 0 people | Nobody on Floor 0 has been inside. The Camp is people who haven't gone in yet (waiting, scared, changing their minds), families watching the tower for birds, and people who live off climbers. | Chat, 2026-11-28 |
 | The Bridge | A hurt climber heading for the tower. The plank was cut by a rival climber ahead of you, someone you may meet inside. | Chat, 2026-11-28 |
 | The world shows what you did | Things you pick up disappear; things you open stay open (a level's "after_use": "taken" or {"open": true}), and that's remembered. Looking again gives an "after" line. | Chat, 2026-11-27 |
