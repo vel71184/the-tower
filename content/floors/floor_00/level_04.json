@@ -1,0 +1,454 @@
+{
+  "id": "f00_l04",
+  "floor": 0,
+  "level": 4,
+  "title": "Floor 0 · The Gate",
+  "draft_note": "Floor 0, level 4 of 4: the foot of the tower. Dunmore keeps the gate and charges his own toll. Ways in: pay (Pell's coin), talk (he's taxing Marta's gate while she's stopped the bread), wait for dusk, fight him, or find the unbarred bread hatch. A rehearsal of kill / negotiate / neutralize before Marta. The gate shuts behind you, then the opening text.",
+  "ground": "grass",
+  "mood": "outdoor_day",
+  "palette": {
+    "wall": "#6d665c"
+  },
+  "legend": {
+    ",": {
+      "ground": "path"
+    },
+    "S": {
+      "spawn": true,
+      "ground": "path"
+    },
+    "f": {
+      "prop": "mini-forest/tree",
+      "solid": true,
+      "random_rot": true,
+      "random_scale": true
+    },
+    "T": {
+      "prop": "fantasy-town/tree",
+      "solid": true,
+      "random_rot": true,
+      "random_scale": true
+    },
+    "Y": {
+      "prop": "fantasy-town/tree-high",
+      "solid": true,
+      "random_rot": true
+    },
+    "k": {
+      "prop": "fantasy-town/tree-crooked",
+      "solid": true,
+      "random_rot": true
+    },
+    "r": {
+      "prop": "fantasy-town/rock-small",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.7
+    },
+    "R": {
+      "prop": "fantasy-town/rock-large",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.6
+    },
+    "p": {
+      "prop": "mini-forest/plant",
+      "random_rot": true,
+      "random_scale": true
+    },
+    "o": {
+      "prop": "mini-forest/stones",
+      "random_rot": true,
+      "scale": 0.6
+    },
+    "g": {
+      "prop": "castle-kit/tree-log",
+      "solid": true,
+      "random_rot": true
+    },
+    "u": {
+      "prop": "castle-kit/tree-trunk",
+      "solid": true,
+      "random_rot": true
+    },
+    "q": {
+      "prop": "fantasy-town/pillar-wood",
+      "solid": true,
+      "scale": 1.2
+    },
+    "n": {
+      "prop": "fantasy-town/fence-broken",
+      "solid": true,
+      "rot": 90,
+      "ground": "path"
+    },
+    "w": {
+      "prop": "castle-kit/wall",
+      "solid": true,
+      "scale": 1.6,
+      "ground": "stone"
+    },
+    "C": {
+      "prop": "fantasy-town/cart-high",
+      "solid": true,
+      "rot": 20,
+      "ground": "dirt"
+    },
+    "c": {
+      "prop": "fantasy-town/stall-stool",
+      "solid": true,
+      "random_rot": true,
+      "ground": "dirt"
+    }
+  },
+  "map": [
+    "########################",
+    "wwwwwwwwwwwwwwwwwwwwwwww",
+    "Y..........G.....c.h...Y",
+    "f..........,......C.c..k",
+    "T.....R....,.M.........f",
+    "T.....k....,...........f",
+    "Y..r.......,...........k",
+    "T..k......,....o.......k",
+    "f........,.............T",
+    "f.......,.....k.o......T",
+    "k......,............p..Y",
+    "T.....,................k",
+    "BS,,,,........p........f",
+    "TTffTTTTYYTfTTTkYfYkTTYf"
+  ],
+  "surround": {
+    "far": [
+      "mini-forest/tree",
+      "mini-forest/tree-high",
+      "fantasy-town/tree",
+      "fantasy-town/tree-high",
+      "mini-forest/tree"
+    ],
+    "near": [
+      "mini-forest/plant",
+      "fantasy-town/rock-small",
+      "mini-forest/stones",
+      "castle-kit/tree-trunk",
+      "mini-forest/plant"
+    ],
+    "depth": 7,
+    "density": 0.45
+  },
+  "backdrop": [
+    {
+      "stack": [
+        "castle-kit/tower-hexagon-base",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-top",
+        "castle-kit/tower-hexagon-roof"
+      ],
+      "at": [
+        10.0,
+        -4.0
+      ],
+      "scale": 11
+    }
+  ],
+  "objects": [
+    {
+      "char": "B",
+      "id": "camp_back",
+      "name": "Back to the camp",
+      "kind": "exit",
+      "to": "back",
+      "model": "fantasy-town/lantern",
+      "dialogue": {
+        "start": "ask",
+        "nodes": {
+          "ask": {
+            "text": "The road back down to the camp. Go back?",
+            "choices": [
+              {
+                "text": "Go back.",
+                "action": "go_back"
+              },
+              {
+                "text": "Not yet.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "char": "G",
+      "id": "tower_gate",
+      "name": "The gate",
+      "kind": "exit",
+      "model": "castle-kit/gate",
+      "scale": 2.2,
+      "rot": 90,
+      "dialogue": {
+        "start": "shut",
+        "start_if": [
+          {
+            "flag": "gate_open",
+            "start": "open"
+          }
+        ],
+        "nodes": {
+          "shut": {
+            "text": "The gate into the tower. Iron-banded wood, taller than three of you. There's no handle on this side. It opens from within."
+          },
+          "open": {
+            "text": "The gate stands open a crack. Beyond it, lamplight and a long hall. Once you're through, there's no coming back out. Go in?",
+            "choices": [
+              {
+                "text": "Go in.",
+                "action": "end_level"
+              },
+              {
+                "text": "Not yet.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "char": "h",
+      "id": "bread_hatch",
+      "name": "Bread hatch",
+      "kind": "hidden",
+      "model": "castle-kit/door",
+      "scale": 0.45,
+      "dialogue": {
+        "start": "hatch",
+        "nodes": {
+          "hatch": {
+            "text": "A low wooden hatch at the foot of the wall, the kind bread gets pushed through. Since the deliveries stopped, nobody's barred it. It's just wide enough to crawl through. Once you're through, there's no coming back out.",
+            "choices": [
+              {
+                "text": "Crawl through.",
+                "action": "end_level",
+                "effects": {
+                  "set_flags": [
+                    "sneaked_in"
+                  ],
+                  "nudge": {
+                    "speed": 0.5,
+                    "deception": 0.5
+                  }
+                }
+              },
+              {
+                "text": "Leave it.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "char": "M",
+      "id": "dunmore",
+      "name": "Dunmore",
+      "kind": "npc",
+      "facing_deg": -135,
+      "look": {
+        "body": "worker",
+        "head": "male-b",
+        "colors": {
+          "skin": "coral",
+          "hair": "brown",
+          "shirt": "red",
+          "pants": "charcoal",
+          "shoes": "brown",
+          "accent": "red"
+        }
+      },
+      "dialogue": {
+        "start": "hello",
+        "start_if": [
+          {
+            "flag": "gate_open",
+            "start": "done"
+          }
+        ],
+        "nodes": {
+          "hello": {
+            "text": "A heavy man on a stool by the gate, a ledger on his knee and red on his sleeve. \"Name? Doesn't matter. Gate opens for those who've paid the toll. One coin.\"",
+            "effects": {
+              "set_flags": [
+                "talked_dunmore"
+              ]
+            },
+            "choices": [
+              {
+                "text": "Who says there's a toll?",
+                "next": "who",
+                "hide_if": "asked_dunmore_who"
+              },
+              {
+                "text": "Here. One coin.",
+                "next": "paid",
+                "requires": "has_coin",
+                "effects": {
+                  "set_flags": [
+                    "gate_open",
+                    "paid_toll"
+                  ],
+                  "nudge": {
+                    "speed": 0.5
+                  }
+                }
+              },
+              {
+                "text": "Marta stopped the bread. Does she know you're charging tolls at her gate?",
+                "next": "talked",
+                "requires_knowledge": "deliveries_stopped",
+                "requires": "asked_dunmore_who",
+                "effects": {
+                  "set_flags": [
+                    "gate_open",
+                    "talked_dunmore_down"
+                  ],
+                  "nudge": {
+                    "persuasion": 1
+                  }
+                }
+              },
+              {
+                "text": "I'll wait.",
+                "next": "waited",
+                "effects": {
+                  "set_flags": [
+                    "gate_open",
+                    "waited_at_gate"
+                  ],
+                  "nudge": {
+                    "patience": 1
+                  }
+                }
+              },
+              {
+                "text": "Never mind.",
+                "next": ""
+              }
+            ]
+          },
+          "who": {
+            "text": "\"I say. The Gatekeeper's busy inside. Somebody's got to keep order out here.\" He taps the red on his sleeve, as if that settles it.",
+            "effects": {
+              "set_flags": [
+                "asked_dunmore_who"
+              ],
+              "learn": [
+                "toll_racket"
+              ]
+            },
+            "next": "hello"
+          },
+          "paid": {
+            "text": "He bites the coin, pockets it, and raps on the gate three times. Somewhere inside, a bar lifts."
+          },
+          "talked": {
+            "text": "The color goes out of his face. \"...Go on. Go on, then. You never saw me.\" He raps on the gate three times, quick."
+          },
+          "waited": {
+            "text": "You sit with your back to the wall while the shadows stretch toward the river. At dusk Dunmore grumbles, gets up, and raps on the gate. \"Fine. Patience is a toll too, I suppose.\""
+          },
+          "done": {
+            "text": "\"Go on, then. Before I change my mind.\""
+          }
+        }
+      }
+    }
+  ],
+  "fights": {
+    "dunmore": {
+      "opponents": [
+        "dunmore"
+      ],
+      "wounds": 3,
+      "yield_at": 1,
+      "yield_text": "Dunmore drops to his knees, hands up. \"All right! All right! I'll open it!\"",
+      "talk": [
+        {
+          "text": "Open the gate and we're done.",
+          "result": "yield",
+          "reply": "\"Done! Done.\""
+        }
+      ],
+      "outcomes": {
+        "spared": {
+          "text": "Dunmore raps on the gate with a shaking fist, and runs for the camp without his ledger.",
+          "effects": {
+            "set_flags": [
+              "gate_open",
+              "dunmore_spared"
+            ],
+            "nudge": {
+              "force": 1
+            }
+          }
+        },
+        "talked_down": {
+          "text": "Dunmore raps on the gate, three times, and sits back down very carefully.",
+          "effects": {
+            "set_flags": [
+              "gate_open"
+            ],
+            "nudge": {
+              "force": 0.5,
+              "persuasion": 0.5
+            }
+          }
+        },
+        "killed": {
+          "text": "Dunmore doesn't get up. You hammer on the gate with his ledger until a bar lifts on the other side.",
+          "effects": {
+            "set_flags": [
+              "gate_open",
+              "dunmore_dead"
+            ],
+            "nudge": {
+              "force": 2
+            }
+          },
+          "body_name": "Dunmore",
+          "body_lines": [
+            "Dunmore. The ledger's open beside him. Every name in it paid."
+          ]
+        },
+        "lost": {
+          "leaves": false,
+          "text": "You wake up against the wall. Dunmore's ledger has a new line in it: your name, and \"owes 2\".",
+          "effects": {
+            "set_flags": [
+              "lost_to_dunmore"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "end_rules": [
+    {
+      "note": "Got in quietly through the hatch.",
+      "if": [
+        "sneaked_in"
+      ],
+      "effects": {
+        "nudge": {
+          "speed": 0.5
+        }
+      }
+    }
+  ]
+}

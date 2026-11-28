@@ -14,6 +14,9 @@ const Cutscene := preload("res://scripts/game/cutscene.gd")
 ## Floor 1 (The Gatehouse) starts with the Waiting Hall; level 10 is Marta at the stair.
 const LEVELS := {
 	"0-1": "res://content/floors/floor_00/level_01.json",
+	"0-2": "res://content/floors/floor_00/level_02.json",
+	"0-3": "res://content/floors/floor_00/level_03.json",
+	"0-4": "res://content/floors/floor_00/level_04.json",
 	"1-1": "res://content/floors/floor_01/level_01.json",
 }
 
@@ -289,6 +292,7 @@ func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool
 	combat.reset(level)
 	ui.touch_actions_enabled = true
 	_focus = null
+	_show_focus_ring(null)
 	_restore_what_happened()
 	climber.place(level.return_cell() if arriving == "back" else level.spawn_cell)
 	cam.snap()
@@ -416,6 +420,13 @@ func _floors_open_between(a: int, b: int) -> bool:
 ## where they fell.
 func _restore_what_happened() -> void:
 	for obj in level.objects.duplicate():
+		# "only_if" / "unless": someone who's only here once something has happened (e.g. the
+		# traveler you helped turns up at the camp).
+		var only_if := String(obj.def.get("only_if", ""))
+		var unless := String(obj.def.get("unless", ""))
+		if (only_if != "" and not Baseline.has_flag(only_if)) or (unless != "" and Baseline.has_flag(unless)):
+			level.remove_object(obj)
+			continue
 		if Baseline.has_flag("gone:" + obj.id):
 			level.remove_object(obj)
 		elif Baseline.has_flag("used:" + obj.id):

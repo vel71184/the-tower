@@ -18,6 +18,7 @@ const GROUND_COLORS := {
 	"dirt": ["#8d6c49", "#876746"],
 	"stone": ["#8e877c", "#88817a"],
 	"water": ["#4b7fb5", "#4878ad"],
+	"wood": ["#8a6a48", "#846544"],
 }
 
 ## What map characters mean unless a level's "legend" says otherwise. A legend entry can set:
@@ -297,6 +298,16 @@ func _build_ground(cells: Dictionary, palette: Dictionary) -> void:
 		for v in [a, b, c, a, c, d]:
 			st.set_color(col)
 			st.add_vertex(v)
+		# A river at the map's edge keeps flowing out past it.
+		if kind == "water" and (cell.x == 0 or cell.y == 0 or cell.x == width - 1 or cell.y == height - 1):
+			var out := Vector2i(-1 if cell.x == 0 else (1 if cell.x == width - 1 else 0),
+				-1 if cell.y == 0 else (1 if cell.y == height - 1 else 0))
+			for i in range(1, 12):
+				var o: Vector2i = cell + out * i
+				var oa := Vector3(o.x, y, o.y)
+				for v in [oa, oa + Vector3(1, 0, 0), oa + Vector3(1, 0, 1), oa, oa + Vector3(1, 0, 1), oa + Vector3(0, 0, 1)]:
+					st.set_color(col)
+					st.add_vertex(v)
 	var mi := MeshInstance3D.new()
 	mi.name = "Ground"
 	mi.mesh = st.commit()
@@ -313,7 +324,8 @@ func _build_ground(cells: Dictionary, palette: Dictionary) -> void:
 		var plane := PlaneMesh.new()
 		plane.size = Vector2(width + 80, height + 80)
 		around.mesh = plane
-		around.position = Vector3(width / 2.0, -0.03, height / 2.0)
+		# Below the water (-0.12), so rivers show.
+		around.position = Vector3(width / 2.0, -0.2, height / 2.0)
 		var am := StandardMaterial3D.new()
 		var base_kind := String(data.get("ground", "grass"))
 		am.albedo_color = Color(String(GROUND_COLORS.get(base_kind, GROUND_COLORS["grass"])[0])).darkened(0.08)

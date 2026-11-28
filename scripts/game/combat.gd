@@ -426,8 +426,13 @@ func _end_foe(foe, outcome: String) -> void:
 			lay_down(foe, out)
 		"spared", "talked_down":
 			Baseline.set_flag("spared:" + foe.id)
-			Baseline.set_flag("gone:" + foe.id)
-			level.remove_object(foe)
+			# A sparring partner ("stays": true) is still there afterwards; anyone else leaves.
+			if out.get("stays", false):
+				if foe.character:
+					foe.character.release()
+			else:
+				Baseline.set_flag("gone:" + foe.id)
+				level.remove_object(foe)
 	var text := String(out.get("text", ""))
 	if text != "":
 		main.show_note(text)

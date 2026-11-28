@@ -1,0 +1,491 @@
+{
+  "id": "f00_l02",
+  "floor": 0,
+  "level": 2,
+  "title": "Floor 0 · The Bridge",
+  "draft_note": "Floor 0, level 2 of 4: the river crossing. The first level the player controls. A hurt climber, Pell, sits by a bridge plank that was cut from underneath by a rival climber ahead (Sorrel). Help costs time; walking past is allowed and remembered.",
+  "ground": "grass",
+  "mood": "outdoor_day",
+  "legend": {
+    ",": {
+      "ground": "path"
+    },
+    "S": {
+      "spawn": true,
+      "ground": "path"
+    },
+    "f": {
+      "prop": "mini-forest/tree",
+      "solid": true,
+      "random_rot": true,
+      "random_scale": true
+    },
+    "T": {
+      "prop": "fantasy-town/tree",
+      "solid": true,
+      "random_rot": true,
+      "random_scale": true
+    },
+    "Y": {
+      "prop": "fantasy-town/tree-high",
+      "solid": true,
+      "random_rot": true
+    },
+    "k": {
+      "prop": "fantasy-town/tree-crooked",
+      "solid": true,
+      "random_rot": true
+    },
+    "r": {
+      "prop": "fantasy-town/rock-small",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.7
+    },
+    "R": {
+      "prop": "fantasy-town/rock-large",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.6
+    },
+    "p": {
+      "prop": "mini-forest/plant",
+      "random_rot": true,
+      "random_scale": true
+    },
+    "o": {
+      "prop": "mini-forest/stones",
+      "random_rot": true,
+      "scale": 0.6
+    },
+    "g": {
+      "prop": "castle-kit/tree-log",
+      "solid": true,
+      "random_rot": true
+    },
+    "u": {
+      "prop": "castle-kit/tree-trunk",
+      "solid": true,
+      "random_rot": true
+    },
+    "q": {
+      "prop": "fantasy-town/pillar-wood",
+      "solid": true,
+      "scale": 1.2
+    },
+    "n": {
+      "prop": "fantasy-town/fence-broken",
+      "solid": true,
+      "rot": 90,
+      "ground": "path"
+    },
+    "~": {
+      "ground": "water"
+    },
+    "=": {
+      "ground": "wood"
+    }
+  },
+  "map": [
+    "YTkffffYff~~~~fTffkkfTff",
+    "k........p~~~~.ToT..k..f",
+    "f.........~~~~p.......Tf",
+    "T...bof...p~~~~p.T.....f",
+    "f.fk....T..~~~~pk......f",
+    "f......p...~~~~...,,,,,E",
+    "f.........======,,.....T",
+    "BS,,,,,,,,==X===......of",
+    "T.......P..~~~~.h......Y",
+    "k..p.....p~~~~pp.......T",
+    "f...p...kp~~~~..T...o..f",
+    "f.....pk..~~~~p.....f..Y",
+    "fk....oop~~~~.p.k......T",
+    "fffTYffff~~~~ffTkfkYkfkY"
+  ],
+  "surround": {
+    "far": [
+      "mini-forest/tree",
+      "mini-forest/tree-high",
+      "fantasy-town/tree",
+      "fantasy-town/tree-high",
+      "mini-forest/tree"
+    ],
+    "near": [
+      "mini-forest/plant",
+      "fantasy-town/rock-small",
+      "mini-forest/stones",
+      "castle-kit/tree-trunk",
+      "mini-forest/plant"
+    ],
+    "depth": 7,
+    "density": 0.45
+  },
+  "backdrop": [
+    {
+      "stack": [
+        "castle-kit/tower-hexagon-base",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-top",
+        "castle-kit/tower-hexagon-roof"
+      ],
+      "at": [
+        -2.5,
+        -5.0
+      ],
+      "scale": 7
+    }
+  ],
+  "objects": [
+    {
+      "char": "B",
+      "id": "road_back",
+      "name": "Back down the road",
+      "kind": "exit",
+      "to": "back",
+      "model": "fantasy-town/lantern",
+      "dialogue": {
+        "start": "ask",
+        "nodes": {
+          "ask": {
+            "text": "The road back the way you came. Go back?",
+            "choices": [
+              {
+                "text": "Go back.",
+                "action": "go_back"
+              },
+              {
+                "text": "Not yet.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "char": "E",
+      "id": "camp_on",
+      "name": "Path to the camp",
+      "kind": "exit",
+      "model": "fantasy-town/lantern",
+      "dialogue": {
+        "start": "ask",
+        "nodes": {
+          "ask": {
+            "text": "Smoke rises past the trees ahead: the climbers' camp, at the foot of the tower. Go on?",
+            "choices": [
+              {
+                "text": "Go on.",
+                "action": "end_level"
+              },
+              {
+                "text": "Not yet.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "char": "X",
+      "id": "cut_plank",
+      "name": "Broken plank",
+      "kind": "examine",
+      "ground": "water",
+      "shape": "plank",
+      "size": [
+        0.9,
+        0.04,
+        0.3
+      ],
+      "color": "#5e4630",
+      "lines": [
+        "The plank hangs into the river by one end.",
+        "The break is too clean. Someone sawed most of the way through it, from underneath, and left the last bit for the next person's weight."
+      ],
+      "effects": {
+        "learn": [
+          "plank_cut"
+        ]
+      }
+    },
+    {
+      "char": "h",
+      "id": "rival_saw",
+      "name": "Saw in the reeds",
+      "kind": "hidden",
+      "reveal": "step",
+      "blocking": false,
+      "shape": "plank",
+      "size": [
+        0.45,
+        0.03,
+        0.12
+      ],
+      "color": "#9aa0a6",
+      "lines": [
+        "A small saw, wrapped in a rag and pushed into the mud. Sawdust is still caught in the teeth.",
+        "The rag has a letter stitched in the corner: S."
+      ],
+      "after_use": "taken",
+      "effects": {
+        "learn": [
+          "plank_cut",
+          "rival_s"
+        ],
+        "set_flags": [
+          "found_saw"
+        ]
+      }
+    },
+    {
+      "char": "b",
+      "id": "branch",
+      "name": "Straight branch",
+      "kind": "examine",
+      "blocking": false,
+      "shape": "plank",
+      "size": [
+        0.8,
+        0.05,
+        0.08
+      ],
+      "color": "#7a5a3a",
+      "lines": [
+        "A straight branch, about the length of a leg. You pick it up."
+      ],
+      "after_use": "taken",
+      "effects": {
+        "set_flags": [
+          "has_branch"
+        ]
+      }
+    },
+    {
+      "char": "P",
+      "id": "pell",
+      "name": "Pell",
+      "kind": "npc",
+      "facing_deg": 45,
+      "look": {
+        "body": "male-c",
+        "head": "male-a",
+        "idle": "sit",
+        "colors": {
+          "skin": "tan",
+          "hair": "sand",
+          "shirt": "sky",
+          "pants": "brown",
+          "shoes": "charcoal",
+          "accent": "sand"
+        }
+      },
+      "dialogue": {
+        "start": "hello",
+        "nodes": {
+          "hello": {
+            "text": "A young man sits against the bridge post, one leg out at a bad angle. \"Mind the left side of the bridge. It gives.\"",
+            "effects": {
+              "set_flags": [
+                "talked_pell"
+              ]
+            },
+            "choices": [
+              {
+                "text": "What happened?",
+                "next": "what",
+                "hide_if": "asked_pell_what"
+              },
+              {
+                "text": "Rotten? Someone cut that plank.",
+                "next": "truth",
+                "requires": "asked_pell_what",
+                "requires_knowledge": "plank_cut",
+                "hide_if": "pell_told_truth"
+              },
+              {
+                "text": "Can you walk?",
+                "next": "walk",
+                "hide_if": "pell_needs_splint"
+              },
+              {
+                "text": "Here. Let's bind it to this.",
+                "next": "splint",
+                "requires": "has_branch",
+                "hide_if": "pell_helped"
+              },
+              {
+                "text": "What's it worth to you?",
+                "next": "worth",
+                "requires": "pell_needs_splint",
+                "hide_if": "pell_bargained"
+              },
+              {
+                "text": "I'll tell them at the camp.",
+                "next": "promise",
+                "requires": "pell_needs_splint",
+                "hide_if": "pell_promised"
+              },
+              {
+                "text": "Good luck.",
+                "next": ""
+              }
+            ]
+          },
+          "what": {
+            "text": "\"It just went. Rotten, I suppose.\" He doesn't look at the plank when he says it.",
+            "effects": {
+              "set_flags": [
+                "asked_pell_what"
+              ]
+            },
+            "next": "hello"
+          },
+          "truth": {
+            "text": "He's quiet a moment. \"Sorrel. We walked from the coast together. Last night she said there'd be less of a crowd at the gate by morning. I didn't think she meant this.\"",
+            "effects": {
+              "learn": [
+                "sorrel"
+              ],
+              "set_flags": [
+                "pell_told_truth"
+              ]
+            },
+            "next": "hello"
+          },
+          "walk": {
+            "text": "\"Not on this. If I had something straight to bind it to, I could make the camp.\"",
+            "effects": {
+              "set_flags": [
+                "pell_needs_splint"
+              ]
+            },
+            "next": "hello"
+          },
+          "worth": {
+            "text": "\"Everything I've got. Which is one coin.\" He holds it up.",
+            "effects": {
+              "set_flags": [
+                "pell_bargained"
+              ],
+              "nudge": {
+                "self": 1
+              }
+            },
+            "next": "hello"
+          },
+          "promise": {
+            "text": "\"My friend Bryn's there. She'll come. Tell her where I am.\"",
+            "effects": {
+              "set_flags": [
+                "pell_promised"
+              ],
+              "nudge": {
+                "others": 0.5,
+                "speed": 0.5
+              }
+            },
+            "next": "hello"
+          },
+          "splint": {
+            "text": "You bind the leg to the branch with his own belt. He gets up on the second try, gray in the face.",
+            "effects": {
+              "set_flags": [
+                "pell_helped"
+              ],
+              "nudge": {
+                "others": 1,
+                "patience": 0.5
+              }
+            },
+            "choices": [
+              {
+                "text": "Go on.",
+                "next": "thanks"
+              }
+            ]
+          },
+          "thanks": {
+            "text": "\"I'll make the camp by dark.\" He holds out a coin. \"It's all I have. Take it.\"",
+            "choices": [
+              {
+                "text": "Take the coin.",
+                "next": "bye",
+                "effects": {
+                  "set_flags": [
+                    "has_coin",
+                    "took_pell_coin"
+                  ],
+                  "nudge": {
+                    "self": 0.5
+                  }
+                }
+              },
+              {
+                "text": "Keep it.",
+                "next": "bye",
+                "effects": {
+                  "nudge": {
+                    "others": 0.5
+                  }
+                }
+              }
+            ]
+          },
+          "bye": {
+            "text": "He limps off toward the camp, slow, but on his own.",
+            "action": "leave"
+          }
+        }
+      }
+    }
+  ],
+  "end_rules": [
+    {
+      "note": "Talked to Pell and left him there.",
+      "if": [
+        "talked_pell"
+      ],
+      "unless": [
+        "pell_helped",
+        "pell_promised"
+      ],
+      "effects": {
+        "nudge": {
+          "self": 1
+        }
+      }
+    },
+    {
+      "note": "Walked past a hurt man without a word.",
+      "unless": [
+        "talked_pell"
+      ],
+      "effects": {
+        "nudge": {
+          "self": 0.5,
+          "speed": 0.5
+        }
+      }
+    },
+    {
+      "note": "Worked out the plank was cut.",
+      "if": [
+        "asked_pell_what"
+      ],
+      "min_examined": 3,
+      "effects": {
+        "nudge": {
+          "patience": 0.5
+        }
+      }
+    }
+  ]
+}

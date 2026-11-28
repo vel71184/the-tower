@@ -1,0 +1,830 @@
+{
+  "id": "f00_l03",
+  "floor": 0,
+  "level": 3,
+  "title": "Floor 0 · The Climbers' Camp",
+  "draft_note": "Floor 0, level 3 of 4: the camp at the foot of the tower. Nobody here has been inside. People who haven't gone in yet, families watching the tower for birds, and people who live off climbers. Ada (Wil's daughter), Hesk's sparring ring, a fire to rest by, Bryn waiting for Pell. fights.spar: the sparring ring teaches the fight; finishing a partner who yields is possible and remembered.",
+  "ground": "grass",
+  "mood": "outdoor_day",
+  "legend": {
+    ",": {
+      "ground": "path"
+    },
+    "S": {
+      "spawn": true,
+      "ground": "path"
+    },
+    "f": {
+      "prop": "mini-forest/tree",
+      "solid": true,
+      "random_rot": true,
+      "random_scale": true
+    },
+    "T": {
+      "prop": "fantasy-town/tree",
+      "solid": true,
+      "random_rot": true,
+      "random_scale": true
+    },
+    "Y": {
+      "prop": "fantasy-town/tree-high",
+      "solid": true,
+      "random_rot": true
+    },
+    "k": {
+      "prop": "fantasy-town/tree-crooked",
+      "solid": true,
+      "random_rot": true
+    },
+    "r": {
+      "prop": "fantasy-town/rock-small",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.7
+    },
+    "R": {
+      "prop": "fantasy-town/rock-large",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.6
+    },
+    "p": {
+      "prop": "mini-forest/plant",
+      "random_rot": true,
+      "random_scale": true
+    },
+    "o": {
+      "prop": "mini-forest/stones",
+      "random_rot": true,
+      "scale": 0.6
+    },
+    "g": {
+      "prop": "castle-kit/tree-log",
+      "solid": true,
+      "random_rot": true
+    },
+    "u": {
+      "prop": "castle-kit/tree-trunk",
+      "solid": true,
+      "random_rot": true
+    },
+    "q": {
+      "prop": "fantasy-town/pillar-wood",
+      "solid": true,
+      "scale": 1.2
+    },
+    "n": {
+      "prop": "fantasy-town/fence-broken",
+      "solid": true,
+      "rot": 90,
+      "ground": "path"
+    },
+    "x": {
+      "prop": "fantasy-town/fence",
+      "solid": true,
+      "ground": "dirt"
+    },
+    "z": {
+      "prop": "fantasy-town/fence",
+      "solid": true,
+      "rot": 90,
+      "ground": "dirt"
+    },
+    "d": {
+      "ground": "dirt"
+    },
+    "t": {
+      "prop": "mini-forest/tent",
+      "solid": true,
+      "random_rot": true
+    }
+  },
+  "map": [
+    "kfkkffTTfkfTfkYTffffkkfTff",
+    "f...f.T.p.p....k......f..f",
+    "f...f..T...........p...fff",
+    "T...........N.O..f.......T",
+    "f......t.........k..,,,,,E",
+    "k..t......o........,.....Y",
+    "k.........kkf....,,..Tp..f",
+    "T.....t.........,.......Tf",
+    "T.........F...,,xxxxxx...Y",
+    "k...t..T.L..A,..zddddz...f",
+    "f..........,,....ddHdz...k",
+    "Y....D....,..t..zddddz...k",
+    "BS,,,,,,,,......zddddz...f",
+    "Y...........f.k.xxxxxx.p.Y",
+    "T............o...........f",
+    "YffffkfYkfffTTfkkkkffTYYfY"
+  ],
+  "surround": {
+    "far": [
+      "mini-forest/tree",
+      "mini-forest/tree-high",
+      "fantasy-town/tree",
+      "fantasy-town/tree-high",
+      "mini-forest/tree"
+    ],
+    "near": [
+      "mini-forest/plant",
+      "fantasy-town/rock-small",
+      "mini-forest/stones",
+      "castle-kit/tree-trunk",
+      "mini-forest/plant"
+    ],
+    "depth": 7,
+    "density": 0.45
+  },
+  "backdrop": [
+    {
+      "stack": [
+        "castle-kit/tower-hexagon-base",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-mid",
+        "castle-kit/tower-hexagon-top",
+        "castle-kit/tower-hexagon-roof"
+      ],
+      "at": [
+        4.0,
+        -7.0
+      ],
+      "scale": 9
+    }
+  ],
+  "objects": [
+    {
+      "char": "B",
+      "id": "bridge_back",
+      "name": "Back to the bridge",
+      "kind": "exit",
+      "to": "back",
+      "model": "fantasy-town/lantern",
+      "dialogue": {
+        "start": "ask",
+        "nodes": {
+          "ask": {
+            "text": "The path back down to the river. Go back?",
+            "choices": [
+              {
+                "text": "Go back.",
+                "action": "go_back"
+              },
+              {
+                "text": "Not yet.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "char": "E",
+      "id": "gate_on",
+      "name": "Path to the gate",
+      "kind": "exit",
+      "model": "fantasy-town/lantern",
+      "dialogue": {
+        "start": "ask",
+        "nodes": {
+          "ask": {
+            "text": "The last stretch of road, straight up to the tower's gate. Go on?",
+            "choices": [
+              {
+                "text": "Go on.",
+                "action": "end_level"
+              },
+              {
+                "text": "Not yet.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "char": "F",
+      "id": "big_fire",
+      "name": "The camp fire",
+      "kind": "examine",
+      "model": "fantasy-town/lantern",
+      "scale": 1.0,
+      "dialogue": {
+        "start": "fire",
+        "nodes": {
+          "fire": {
+            "text": "A big fire, kept going day and night. People sleep around it in shifts, facing the tower.",
+            "choices": [
+              {
+                "text": "Rest a while.",
+                "action": "rest",
+                "requires_hurt": true
+              },
+              {
+                "text": "Move on.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "char": "N",
+      "id": "notes_post",
+      "name": "Post of fallen notes",
+      "kind": "examine",
+      "model": "fantasy-town/pillar-wood",
+      "lines": [
+        "Scraps people found at the foot of the tower, pinned to a post. Most are blank, rained out.",
+        "One reads: \"Ma, I'm fine. Don't come.\" No name.",
+        "Another, in a careful hand: \"Floor one is quiet. Whatever you hear, don't send the boy.\""
+      ],
+      "effects": {
+        "learn": [
+          "notes_come_down"
+        ]
+      }
+    },
+    {
+      "char": "O",
+      "id": "oda",
+      "name": "Oda",
+      "kind": "npc",
+      "facing_deg": -135,
+      "look": {
+        "body": "female-d",
+        "head": "female-a",
+        "colors": {
+          "skin": "tan",
+          "hair": "silver",
+          "shirt": "slate",
+          "pants": "ink",
+          "shoes": "brown",
+          "accent": "red"
+        }
+      },
+      "dialogue": {
+        "start": "hello",
+        "start_if": [
+          {
+            "flag": "hesk_dead",
+            "start": "afraid"
+          }
+        ],
+        "nodes": {
+          "hello": {
+            "text": "An old woman sits with an empty birdcage on her knees, eyes on the tower. \"Three years. One bird. It said Jory's alive.\"",
+            "choices": [
+              {
+                "text": "Who's Jory?",
+                "next": "jory"
+              },
+              {
+                "text": "Only one bird?",
+                "next": "birds"
+              },
+              {
+                "text": "Goodbye.",
+                "next": ""
+              }
+            ]
+          },
+          "jory": {
+            "text": "\"My son. He went in at sixteen. Nobody comes back out, you know that? Not ever. Birds do. Sometimes.\"",
+            "effects": {
+              "learn": [
+                "no_way_down"
+              ]
+            },
+            "next": "hello"
+          },
+          "birds": {
+            "text": "\"Most get lost. They go up wrong, come down wrong. Folk find notes on the ground meant for somebody three floors over. Still. One is one more than none.\"",
+            "effects": {
+              "learn": [
+                "birds_get_lost"
+              ]
+            },
+            "next": "hello"
+          },
+          "afraid": {
+            "text": "She holds the cage against her chest and won't look at you."
+          }
+        }
+      }
+    },
+    {
+      "char": "A",
+      "id": "ada",
+      "name": "Ada",
+      "kind": "npc",
+      "facing_deg": -100,
+      "look": {
+        "body": "female-b",
+        "head": "female-f",
+        "colors": {
+          "skin": "tan",
+          "hair": "brown",
+          "shirt": "steel",
+          "pants": "charcoal",
+          "shoes": "brown",
+          "accent": "sand"
+        }
+      },
+      "dialogue": {
+        "start": "hello",
+        "start_if": [
+          {
+            "flag": "hesk_dead",
+            "start": "afraid"
+          },
+          {
+            "flag": "ada_done",
+            "start": "again"
+          }
+        ],
+        "nodes": {
+          "hello": {
+            "text": "A young woman by the fire, sharpening a knife she doesn't quite know how to hold. \"You came up the road. Did you pass an old man with a heavy pack?\"",
+            "effects": {
+              "set_flags": [
+                "talked_ada"
+              ],
+              "learn": [
+                "ada"
+              ]
+            },
+            "choices": [
+              {
+                "text": "He said to tell you he went home. That you'd know what it means.",
+                "next": "told",
+                "requires": "carrying_wil_message",
+                "hide_if": "ada_told",
+                "effects": {
+                  "set_flags": [
+                    "ada_told",
+                    "wil_message_delivered"
+                  ],
+                  "nudge": {
+                    "honesty": 0.5,
+                    "others": 0.5
+                  }
+                }
+              },
+              {
+                "text": "He's waiting for you at home.",
+                "next": "lied",
+                "requires": "carrying_wil_message",
+                "hide_if": "ada_told",
+                "effects": {
+                  "set_flags": [
+                    "ada_told",
+                    "ada_lied"
+                  ],
+                  "nudge": {
+                    "deception": 1
+                  }
+                }
+              },
+              {
+                "text": "I didn't see anyone.",
+                "next": "withheld",
+                "requires": "talked_wil",
+                "hide_if": "ada_told",
+                "effects": {
+                  "set_flags": [
+                    "ada_told",
+                    "ada_withheld"
+                  ],
+                  "nudge": {
+                    "deception": 1,
+                    "self": 0.5
+                  }
+                }
+              },
+              {
+                "text": "I passed him. He was walking away from the tower.",
+                "next": "told",
+                "requires": "talked_wil",
+                "hide_if": "ada_told",
+                "effects": {
+                  "set_flags": [
+                    "ada_told"
+                  ],
+                  "nudge": {
+                    "honesty": 0.5
+                  }
+                }
+              },
+              {
+                "text": "No. Sorry.",
+                "next": "",
+                "hide_if": "talked_wil"
+              }
+            ]
+          },
+          "told": {
+            "text": "She's quiet a long time. \"It means he's stopped waiting for her. My mother. She went in two winters ago.\" She sets the knife down. \"He's allowed to stop. I'm not.\"",
+            "choices": [
+              {
+                "text": "Go on.",
+                "next": "ribbon"
+              }
+            ]
+          },
+          "lied": {
+            "text": "She looks at you for a long moment. \"He'd never say that. But thank you.\"",
+            "choices": [
+              {
+                "text": "Go on.",
+                "next": "ribbon"
+              }
+            ]
+          },
+          "withheld": {
+            "text": "\"Then he's still coming.\" She goes back to the knife, watching the road.",
+            "effects": {
+              "set_flags": [
+                "ada_done"
+              ]
+            }
+          },
+          "ribbon": {
+            "text": "She pulls a faded blue ribbon from her sleeve. \"If you go in before me... she'd know this. If you see a woman with gray in her hair who calls herself Ines, show her. Nothing gets carried up except by people.\"",
+            "choices": [
+              {
+                "text": "I'll carry it.",
+                "next": "carry",
+                "effects": {
+                  "set_flags": [
+                    "carrying_ada_ribbon",
+                    "ada_done"
+                  ],
+                  "learn": [
+                    "ines"
+                  ],
+                  "nudge": {
+                    "others": 1
+                  }
+                }
+              },
+              {
+                "text": "I can't promise that.",
+                "next": "no_carry",
+                "effects": {
+                  "set_flags": [
+                    "ada_done"
+                  ],
+                  "nudge": {
+                    "honesty": 0.5,
+                    "self": 0.5
+                  }
+                }
+              }
+            ]
+          },
+          "carry": {
+            "text": "She ties it around your wrist herself. Tight."
+          },
+          "no_carry": {
+            "text": "\"No. Nobody can.\""
+          },
+          "again": {
+            "text": "Ada's watching the road again. Or the tower. It's hard to tell which."
+          },
+          "afraid": {
+            "text": "Ada stands up fast, the knife held the wrong way round, and backs off until there's a fire between you."
+          }
+        }
+      }
+    },
+    {
+      "char": "D",
+      "id": "bryn",
+      "name": "Bryn",
+      "kind": "npc",
+      "facing_deg": 180,
+      "unless": "pell_helped",
+      "look": {
+        "body": "female-f",
+        "head": "female-e",
+        "colors": {
+          "skin": "tan",
+          "hair": "coral",
+          "shirt": "brown",
+          "pants": "slate",
+          "shoes": "charcoal",
+          "accent": "sand"
+        }
+      },
+      "dialogue": {
+        "start": "hello",
+        "start_if": [
+          {
+            "flag": "hesk_dead",
+            "start": "afraid"
+          }
+        ],
+        "nodes": {
+          "hello": {
+            "text": "A woman paces at the edge of camp, watching the road. \"Did you come over the river? There's a lad, Pell. He was meant to be right behind me.\"",
+            "choices": [
+              {
+                "text": "He's hurt, by the bridge. His leg.",
+                "next": "go",
+                "requires": "talked_pell",
+                "effects": {
+                  "set_flags": [
+                    "bryn_went",
+                    "pell_rescued"
+                  ],
+                  "nudge": {
+                    "others": 0.5,
+                    "honesty": 0.5
+                  }
+                }
+              },
+              {
+                "text": "I didn't see him.",
+                "next": "lie",
+                "requires": "talked_pell",
+                "hide_if": "lied_to_bryn",
+                "effects": {
+                  "set_flags": [
+                    "lied_to_bryn"
+                  ],
+                  "nudge": {
+                    "deception": 1,
+                    "self": 0.5
+                  }
+                }
+              },
+              {
+                "text": "No, sorry.",
+                "next": "",
+                "hide_if": "talked_pell"
+              },
+              {
+                "text": "Goodbye.",
+                "next": "",
+                "requires": "talked_pell"
+              }
+            ]
+          },
+          "go": {
+            "text": "\"Hurt? And you just...\" She doesn't finish. She grabs a bag and runs for the river.",
+            "action": "leave"
+          },
+          "lie": {
+            "text": "\"Then where is he?\" She goes back to watching the road."
+          },
+          "afraid": {
+            "text": "Bryn steps back, hands up, and doesn't take her eyes off you."
+          }
+        }
+      }
+    },
+    {
+      "char": "L",
+      "id": "pell_at_camp",
+      "name": "Pell",
+      "kind": "npc",
+      "facing_deg": 60,
+      "only_if": "pell_helped",
+      "look": {
+        "body": "male-c",
+        "head": "male-a",
+        "idle": "sit",
+        "colors": {
+          "skin": "tan",
+          "hair": "sand",
+          "shirt": "sky",
+          "pants": "brown",
+          "shoes": "charcoal",
+          "accent": "sand"
+        }
+      },
+      "dialogue": {
+        "start": "hello",
+        "start_if": [
+          {
+            "flag": "pell_told_truth",
+            "start": "warn"
+          }
+        ],
+        "nodes": {
+          "hello": {
+            "text": "Pell, by the fire with his leg propped up. \"Made it. Leg's ugly, but it's a leg. Bryn about killed me for being slow.\""
+          },
+          "warn": {
+            "text": "Pell, by the fire with his leg propped up. \"If you see Sorrel in there, don't turn your back on her. She'll have told them all about the rest of us by now.\"",
+            "effects": {
+              "learn": [
+                "sorrel_ahead"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "char": "H",
+      "id": "hesk",
+      "name": "Hesk",
+      "kind": "npc",
+      "facing_deg": -90,
+      "look": {
+        "body": "soldier",
+        "head": "male-d",
+        "item": "sword",
+        "colors": {
+          "skin": "tan",
+          "hair": "silver",
+          "shirt": "slate",
+          "pants": "brown",
+          "shoes": "brown",
+          "accent": "red"
+        }
+      },
+      "dialogue": {
+        "start": "hello",
+        "start_if": [
+          {
+            "flag": "spar_done",
+            "start": "again"
+          }
+        ],
+        "nodes": {
+          "hello": {
+            "text": "A broad man leans on a practice sword in the middle of a fenced ring. \"Going in? Then you'll want to know how not to die on the first floor. I'll take bread or coin. Or nothing, if you're quick.\"",
+            "choices": [
+              {
+                "text": "Teach me.",
+                "next": "lesson"
+              },
+              {
+                "text": "Who are you?",
+                "next": "who"
+              },
+              {
+                "text": "Not now.",
+                "next": ""
+              }
+            ]
+          },
+          "who": {
+            "text": "\"Thirty years a soldier, out here. Never went in. Somebody has to teach you lot before you do.\"",
+            "next": "hello"
+          },
+          "lesson": {
+            "text": "\"Nobody gets hit by accident in there. You pick who you're fighting first, and then you mean it. Watch me: when I wind up, get out of the way or get your guard up. And if I yield, you choose what happens next. Ready?\"",
+            "choices": [
+              {
+                "text": "Ready.",
+                "action": "fight:spar"
+              },
+              {
+                "text": "Later.",
+                "next": ""
+              }
+            ]
+          },
+          "again": {
+            "text": "\"Ring's open, if you want another go.\"",
+            "choices": [
+              {
+                "text": "Again.",
+                "action": "fight:spar"
+              },
+              {
+                "text": "Not now.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "fights": {
+    "spar": {
+      "opponents": [
+        "hesk"
+      ],
+      "wounds": 3,
+      "yield_at": 1,
+      "yield_text": "Hesk drops the practice sword and raises a hand. \"Yield! That's the last lesson: when someone yields, you choose.\"",
+      "talk": [
+        {
+          "text": "Enough for today.",
+          "result": "yield",
+          "reply": "\"Fair.\""
+        }
+      ],
+      "outcomes": {
+        "spared": {
+          "stays": true,
+          "text": "Hesk laughs and rubs his arm. \"Good. Plenty take a third swing. You didn't.\"",
+          "effects": {
+            "set_flags": [
+              "spar_done",
+              "spar_spared"
+            ],
+            "nudge": {
+              "others": 0.5
+            }
+          }
+        },
+        "talked_down": {
+          "stays": true,
+          "text": "Hesk lowers the sword. \"Knowing when to stop counts too.\"",
+          "effects": {
+            "set_flags": [
+              "spar_done"
+            ],
+            "nudge": {
+              "persuasion": 0.5
+            }
+          }
+        },
+        "killed": {
+          "text": "The practice sword falls out of his hand. Around the ring, nobody says anything. A woman pulls her children into a tent.",
+          "effects": {
+            "set_flags": [
+              "hesk_dead",
+              "killed_at_camp"
+            ],
+            "nudge": {
+              "force": 2,
+              "self": 1
+            }
+          },
+          "body_name": "Hesk",
+          "body_lines": [
+            "Hesk. He trained climbers for thirty years and never went in.",
+            "Nobody in the camp will come near you."
+          ]
+        },
+        "lost": {
+          "leaves": false,
+          "text": "You hit the dirt. Hesk offers you a hand up. \"That's how it goes in there, except nobody helps you up. Rest by the fire, then come back.\"",
+          "effects": {
+            "set_flags": [
+              "spar_done",
+              "spar_lost"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "end_rules": [
+    {
+      "note": "Promised Wil and never told Ada.",
+      "if": [
+        "carrying_wil_message"
+      ],
+      "unless": [
+        "ada_told"
+      ],
+      "effects": {
+        "nudge": {
+          "self": 1,
+          "deception": 0.5
+        }
+      }
+    },
+    {
+      "note": "Left without asking Bryn about Pell, after meeting him.",
+      "if": [
+        "talked_pell"
+      ],
+      "unless": [
+        "pell_helped",
+        "bryn_went",
+        "lied_to_bryn"
+      ],
+      "effects": {
+        "nudge": {
+          "self": 0.5
+        }
+      }
+    },
+    {
+      "note": "Took the time to look around the camp.",
+      "min_examined": 4,
+      "effects": {
+        "nudge": {
+          "patience": 0.5
+        }
+      }
+    }
+  ]
+}

@@ -7,9 +7,12 @@ baseline records who the climber is becoming, and the tower adapts to it.
 - Design: [The Tower — Game Design Doc](https://claude.ai/artifact/9chnnz1zTjYc1NeqCQTxKF)
 - What's decided and what's open: [docs/DECISIONS.md](docs/DECISIONS.md)
 
-**Status:** two levels are playable, with Kenney art and real-time combat:
-- **Floor 0 · The Road.** Floor 0 (The Approach) is the 4-level prologue outside the tower.
-- **Floor 1 · The Waiting Hall.** This is Floor 1, Level 1, the lobby just inside the gate. It has the Brann brawl.
+**Status:** all of Floor 0 and the first room of Floor 1 are playable, with Kenney art and real-time combat:
+- **Floor 0 · The Road.** The opening scene: the climber walks it alone, and Wil asks a favor.
+- **Floor 0 · The Bridge.** A hurt climber by a plank someone cut. Help him, bargain, or walk past.
+- **Floor 0 · The Climbers' Camp.** Ada, Hesk's sparring ring, a fire to rest by, families waiting for birds.
+- **Floor 0 · The Gate.** Dunmore's toll: pay, call his bluff, wait, fight, or find the bread hatch.
+- **Floor 1 · The Waiting Hall.** Floor 1, Level 1, the lobby just inside the gate. It has the Brann brawl.
 
 Levels that aren't built yet are skipped. As you go in through the gate, the tower's intro appears.
 You can walk back to earlier levels of the floor you're on, but you can't leave a floor until
