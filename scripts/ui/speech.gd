@@ -170,9 +170,9 @@ func _place(anchor: Node3D) -> void:
 	_tail.visible = not notice
 	var screen := get_viewport_rect().size
 	var tip := cam.unproject_position(point)
-	var size := _bubble.get_combined_minimum_size()
-	var x := clampf(tip.x - size.x * 0.5, EDGE, screen.x - size.x - EDGE)
-	var y := clampf(tip.y - size.y - 14.0, EDGE, screen.y - size.y - EDGE)
+	var box := _bubble.get_combined_minimum_size()
+	var x := clampf(tip.x - box.x * 0.5, EDGE, screen.x - box.x - EDGE)
+	var y := clampf(tip.y - box.y - 14.0, EDGE, screen.y - box.y - EDGE)
 	_bubble.position = Vector2(x, y)
-	_bubble.size = size
-	_tail.position = Vector2(clampf(tip.x, x + 20.0, x + size.x - 20.0), y + size.y - 1.0)
+	_bubble.size = box
+	_tail.position = Vector2(clampf(tip.x, x + 20.0, x + box.x - 20.0), y + box.y - 1.0)

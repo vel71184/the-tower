@@ -145,7 +145,7 @@ func _lineup() -> void:
 		var c = CharacterModel.new()
 		stage.add_child(c)
 		c.build(looks[i])
-		c.position = Vector3((i % cols) * 1.3, 0, (i / cols) * 1.6)
+		c.position = Vector3((i % cols) * 1.3, 0, floorf(i / float(cols)) * 1.6)
 		c.rotation.y = deg_to_rad(-135.0)
 	var cam := Camera3D.new()
 	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
@@ -163,9 +163,9 @@ func _frames(n: int) -> void:
 		await get_tree().process_frame
 
 
-func _shot(name: String) -> void:
+func _shot(shot_name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
-	var path := "%s/%s.png" % [_out, name]
+	var path := "%s/%s.png" % [_out, shot_name]
 	img.save_png(path)
 	print("saved ", path)

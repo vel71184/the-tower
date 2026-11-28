@@ -76,8 +76,8 @@ static func color_names() -> Array:
 	return (parts().get("palette", {}).get("colors", {}) as Dictionary).keys()
 
 
-static func is_color(name: String) -> bool:
-	return color_names().has(name)
+static func is_color(color: String) -> bool:
+	return color_names().has(color)
 
 
 ## UV rectangle of one colormap cell (32 x 128 px in a 512 x 512 texture).
@@ -86,17 +86,17 @@ static func cell_rect(cell: Vector2i) -> Rect2:
 
 
 ## UV rectangle covering a named colour's light/dark pair in the Mini Characters colormap.
-static func color_rect(name: String) -> Rect2:
-	var cells := color_cells(name)
+static func color_rect(color: String) -> Rect2:
+	var cells := color_cells(color)
 	if cells.is_empty():
 		return Rect2()
 	return cell_rect(cells[0]).merge(cell_rect(cells[cells.size() - 1]))
 
 
 ## The Mini Characters cells (light, dark) for a colour name.
-static func color_cells(name: String) -> Array:
+static func color_cells(color: String) -> Array:
 	var out: Array = []
-	for c in parts().get("palette", {}).get("colors", {}).get(name, []):
+	for c in parts().get("palette", {}).get("colors", {}).get(color, []):
 		out.append(Vector2i(int(c[0]), int(c[1])))
 	return out
 
@@ -232,12 +232,16 @@ func has_animation(animation: String) -> bool:
 
 
 func current_animation() -> String:
-	return anim.current_animation if anim else ""
+	if anim == null:
+		return ""
+	return String(anim.current_animation)
 
 
 func swap_count(mesh: MeshInstance3D) -> int:
 	var mat := mesh.material_override as ShaderMaterial
-	return int(mat.get_shader_parameter("swap_count")) if mat else 0
+	if mat == null:
+		return 0
+	return int(mat.get_shader_parameter("swap_count"))
 
 
 # --- Internals ------------------------------------------------------------------------------

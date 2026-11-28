@@ -205,9 +205,9 @@ func show_opening(lines: Array, button_text: String) -> void:
 	var go := _button(button_text, func() -> void:
 		var o := _opening
 		_opening = null
-		var tw := create_tween()
-		tw.tween_property(o, "modulate:a", 0.0, 0.8)
-		tw.tween_callback(o.queue_free)
+		var fade := create_tween()
+		fade.tween_property(o, "modulate:a", 0.0, 0.8)
+		fade.tween_callback(o.queue_free)
 		opening_done.emit())
 	go.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	go.add_theme_font_override("font", TITLE_FONT)

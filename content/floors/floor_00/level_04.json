@@ -62,28 +62,6 @@
       "random_scale": true,
       "scale": 0.45
     },
-    "g": {
-      "prop": "castle-kit/tree-log",
-      "solid": true,
-      "random_rot": true
-    },
-    "u": {
-      "prop": "mini-forest/tree-high",
-      "solid": true,
-      "random_rot": true,
-      "random_scale": true
-    },
-    "q": {
-      "prop": "fantasy-town/pillar-wood",
-      "solid": true,
-      "scale": 1.2
-    },
-    "n": {
-      "prop": "fantasy-town/fence-broken",
-      "solid": true,
-      "rot": 90,
-      "ground": "path"
-    },
     "w": {
       "prop": "castle-kit/wall",
       "solid": true,

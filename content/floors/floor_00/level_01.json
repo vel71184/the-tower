@@ -41,12 +41,6 @@
       "random_rot": true,
       "scale": 0.75
     },
-    "R": {
-      "prop": "castle-kit/rocks-large",
-      "solid": true,
-      "random_rot": true,
-      "scale": 0.7
-    },
     "p": {
       "prop": "mini-forest/plant",
       "random_rot": true,

@@ -87,7 +87,7 @@ func _test_characters() -> void:
 		var c = CM.new()
 		add_child(c)
 		var ok: bool = c.build({"body": body})
-		var anims_ok := ok and needed.all(func(a): return c.has_animation(a))
+		var anims_ok := ok and needed.all(func(anim): return c.has_animation(anim))
 		check(ok and c.skeleton != null and c.body_mesh != null and c.head_mesh != null and anims_ok,
 			"%s builds with a skeleton, both meshes and the key animations" % body)
 		check(ok and c.swap_count(c.body_mesh) == 0, "%s with no colours changes nothing" % body)
@@ -156,8 +156,8 @@ func _test_characters() -> void:
 
 func _key(code: int) -> InputEventKey:
 	var e := InputEventKey.new()
-	e.physical_keycode = code
-	e.keycode = code
+	e.physical_keycode = code as Key
+	e.keycode = code as Key
 	e.pressed = true
 	return e
 
