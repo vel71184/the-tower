@@ -63,7 +63,8 @@
       "solid": true,
       "random_rot": true,
       "recolor": {
-        "#6794d9": "#b8a47e"
+        "#6794d9": "#b8a47e",
+        "#5858bd": "#b8a47e"
       }
     }
   },
