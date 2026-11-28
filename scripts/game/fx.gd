@@ -19,11 +19,17 @@ static func flash(node: Node3D, color: Color = Color(1, 1, 1), seconds: float = 
 		m.set_shader_parameter("color", color)
 		_flash_mats[key] = m
 	var meshes: Array = _meshes(node, [])
+	# Each flash gets a number; only the newest one puts the outline back, so a short flash
+	# ending can't cut a longer one short (a hit landing during someone's red wind-up).
+	var n := int(node.get_meta("flash_n", 0)) + 1
+	node.set_meta("flash_n", n)
 	for mi in meshes:
 		if not mi.has_meta("overlay_before"):
 			mi.set_meta("overlay_before", mi.material_overlay)
 		mi.material_overlay = _flash_mats[key]
 	node.get_tree().create_timer(seconds, true, false, true).timeout.connect(func() -> void:
+		if not is_instance_valid(node) or int(node.get_meta("flash_n", 0)) != n:
+			return
 		for mi in meshes:
 			if is_instance_valid(mi) and mi.has_meta("overlay_before"):
 				mi.material_overlay = mi.get_meta("overlay_before")

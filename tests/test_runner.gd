@@ -3,6 +3,7 @@ extends Node
 ## Exits 0 when everything passes, 1 on any failure.
 
 const Models := preload("res://scripts/game/models.gd")
+const Fx := preload("res://scripts/game/fx.gd")
 
 var _failures := 0
 var _checks := 0
@@ -21,6 +22,7 @@ func _ready() -> void:
 	await _test_road()
 	await _test_floor_zero()
 	await _test_fight_fixes()
+	await _test_fx()
 	await _test_consistency()
 	await _test_polish()
 	Baseline.delete_save()
@@ -974,6 +976,27 @@ func _test_fight_fixes() -> void:
 	main.queue_free()
 	await get_tree().process_frame
 
+
+
+func _test_fx() -> void:
+	print("Hit flashes")
+	var main = load("res://scenes/main.tscn").instantiate()
+	add_child(main)
+	await get_tree().process_frame
+	main._leave_title()
+	main.start_level(0, 3)
+	await get_tree().process_frame
+	var hesk = main.find_object("hesk")
+	var body: MeshInstance3D = Fx._meshes(hesk, [])[0]
+	var outline: Material = body.material_overlay
+	Fx.flash(hesk, Color.WHITE, 0.05)
+	Fx.flash(hesk, Color.RED, 0.3)
+	await get_tree().create_timer(0.12).timeout
+	check(body.material_overlay != outline and body.material_overlay != null, "a short flash ending doesn't cut a longer one short (the red wind-up stays readable)")
+	await get_tree().create_timer(0.3).timeout
+	check(body.material_overlay == outline, "and the outline comes back after")
+	main.queue_free()
+	await get_tree().process_frame
 
 func _test_consistency() -> void:
 	print("Consistency: people, places and what they remember")
