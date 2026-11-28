@@ -26,6 +26,10 @@ var speech: Speech
 var _portrait: Portrait
 var _portrait_frame: PanelContainer
 var _safe_key := Rect2i()
+## The safe area's margins (left, top, right, bottom), and backdrops that reach past them to
+## the screen's edges (the text and buttons on top stay inside).
+var _insets := Vector4.ZERO
+var _full_bleed: Array = []
 var _panel: PanelContainer
 var _speaker: Label
 var _body: Label
@@ -176,6 +180,7 @@ func show_opening(lines: Array, button_text: String) -> void:
 	var black := ColorRect.new()
 	black.color = Color(0.02, 0.015, 0.015, 1.0)
 	black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bleed(black)
 	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_opening.add_child(black)
 	var center := CenterContainer.new()
@@ -303,6 +308,7 @@ func _build_title() -> void:
 	tex.fill_to = Vector2(0, 1)
 	shade.texture = tex
 	_title.add_child(shade)
+	_bleed(shade)
 
 	var name_label := Label.new()
 	name_label.text = "THE TOWER"
@@ -402,6 +408,24 @@ func _fit_safe_area() -> void:
 	_root.offset_top = top
 	_root.offset_right = -right
 	_root.offset_bottom = -bottom
+	_insets = Vector4(left, top, right, bottom)
+	_full_bleed = _full_bleed.filter(func(c): return is_instance_valid(c))
+	for c in _full_bleed:
+		_apply_bleed(c)
+
+
+## A backdrop (a black screen, a dimmer) that covers the whole screen, notch strip included,
+## though it sits inside the safe area like everything else.
+func _bleed(c: Control) -> void:
+	_full_bleed.append(c)
+	_apply_bleed(c)
+
+
+func _apply_bleed(c: Control) -> void:
+	c.offset_left = -_insets.x
+	c.offset_top = -_insets.y
+	c.offset_right = _insets.z
+	c.offset_bottom = _insets.w
 
 
 ## The on-screen pad: a gamepad-style cluster bottom right. Always there and always the same
@@ -633,6 +657,7 @@ func _build_card() -> void:
 	_dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	_dim.visible = false
 	_root.add_child(_dim)
+	_bleed(_dim)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
