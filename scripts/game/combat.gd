@@ -72,6 +72,10 @@ func reset(new_level) -> void:
 	lock_target = null
 	if climber:
 		climber.lock_face = null
+		if climber.character:
+			climber.character.put_away(WEAPON)
+	if ui:
+		ui.set_wounds(Baseline.wounds, Baseline.max_wounds, false)
 	blocking = false
 	events.clear()
 	_cooldown = 0.0
@@ -253,7 +257,9 @@ func _foe_tick(foe, st: Dictionary, dt: float) -> void:
 			_foe_hits(foe, d)
 		return
 	if d > FOE_REACH:
-		_foe_walk(foe, st, dt)
+		# Someone who can't walk (a broken leg) only swings at whoever comes close.
+		if not st["data"].get("stationary", false):
+			_foe_walk(foe, st, dt)
 	elif float(st["cd"]) <= 0.0:
 		foe.face(climber.global_position)
 		foe.act("attack-melee-right")
@@ -371,11 +377,15 @@ func _make_hostile(foe, by_climber: bool) -> void:
 		return
 	if by_climber and not Baseline.has_flag("attacked:" + foe.id):
 		Baseline.set_flag("attacked:" + foe.id)
+	# An attack nobody provoked (no scripted fight for it) frightens whoever sees it.
+	var unprovoked: bool = by_climber and _fight_for(foe).is_empty()
 	for other in level.objects:
 		if other != foe and other.kind == "npc" and other.character and not foes.has(other) \
 				and other.global_position.distance_to(foe.global_position) <= WITNESS_RANGE:
 			other.pop("!")
 			Baseline.record("witnessed", other.id + ":" + foe.id)
+			if unprovoked:
+				Baseline.set_flag("saw_attack:" + other.id)
 
 
 ## A swing at someone peaceful is the climber's own first strike.

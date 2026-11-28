@@ -427,6 +427,17 @@ func _restore_what_happened() -> void:
 		if (only_if != "" and not Baseline.has_flag(only_if)) or (unless != "" and Baseline.has_flag(unless)):
 			level.remove_object(obj)
 			continue
+		# "moves_if": [{"flag": f, "cell": [x, y]}] - somewhere else once something happened
+		# (e.g. Bryn sits with Pell once he's at the camp).
+		for m in obj.def.get("moves_if", []):
+			var to_cell := Vector2i(int(m["cell"][0]), int(m["cell"][1]))
+			if Baseline.has_flag(String(m["flag"])) and level.object_at(to_cell) == null:
+				level.move_object(obj, to_cell)
+				obj.position = level.cell_to_world(to_cell)
+				obj.home_cell = to_cell
+				if m.has("facing_deg") and obj.character:
+					obj.character.rotation.y = deg_to_rad(float(m["facing_deg"]))
+				break
 		if Baseline.has_flag("gone:" + obj.id):
 			level.remove_object(obj)
 		elif Baseline.has_flag("used:" + obj.id):
@@ -803,6 +814,11 @@ func interact(obj: Interactable) -> void:
 		_talk_nodes = {"wary": {"text": String(obj.def.get("attacked_text", "%s keeps well away from you, and won't say a word." % obj.display_name))}}
 		_show_node("wary")
 		return
+	if obj.kind == "npc" and Baseline.has_flag("saw_attack:" + obj.id) and not _has_start_for(obj, "saw_attack:" + obj.id):
+		_talk_obj = obj
+		_talk_nodes = {"wary": {"text": String(obj.def.get("witness_text", "%s keeps their distance. They saw what you did." % obj.display_name))}}
+		_show_node("wary")
+		return
 	if not Baseline.has_flag("examined:" + obj.id):
 		Baseline.set_flag("examined:" + obj.id)
 		Baseline.record("examined", obj.id)
@@ -917,10 +933,12 @@ func _do_action(action: String, obj: Interactable) -> void:
 			ui.set_wounds(Baseline.wounds, Baseline.max_wounds, false)
 			ui.toast("You rest until your wounds close.", 2.5)
 			autosave()
-		"leave":
+		"leave", "step_away":
+			# "leave": gone for good. "step_away": gone for now (back on a later visit).
 			if obj and is_instance_valid(obj):
-				Baseline.set_flag("gone:" + obj.id)
-				level.remove_object(obj)
+				if parts[0] == "leave":
+					Baseline.set_flag("gone:" + obj.id)
+				obj.walk_off(level, climber.global_position)
 			autosave()
 		"fight":
 			var id := parts[1] if parts.size() > 1 else ""

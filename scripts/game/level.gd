@@ -304,11 +304,21 @@ func move_object(obj: Interactable, to: Vector2i) -> void:
 
 ## Takes an object out of the level (someone who leaves, or is carried off).
 func remove_object(obj: Interactable) -> void:
-	_object_at.erase(obj.cell)
-	if obj.blocking:
-		astar.set_point_solid(obj.cell, false)
-	objects.erase(obj)
+	forget_object(obj)
 	obj.queue_free()
+
+
+## Takes something out of the level's bookkeeping (grid, lists) without freeing it yet, e.g.
+## someone walking off who should no longer block the way or be talked to.
+func forget_object(obj: Interactable) -> void:
+	if _object_at.get(obj.cell) == obj:
+		_object_at.erase(obj.cell)
+		if obj.blocking:
+			astar.set_point_solid(obj.cell, false)
+	objects.erase(obj)
+	for i in range(tall_props.size() - 1, -1, -1):
+		if tall_props[i][0] == obj:
+			tall_props.remove_at(i)
 
 
 ## Path for someone standing on a blocking cell, avoiding other cells (e.g. the climber).

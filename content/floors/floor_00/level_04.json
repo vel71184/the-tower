@@ -40,16 +40,16 @@
       "random_rot": true
     },
     "r": {
-      "prop": "fantasy-town/rock-small",
+      "prop": "castle-kit/rocks-small",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.75
+    },
+    "R": {
+      "prop": "castle-kit/rocks-large",
       "solid": true,
       "random_rot": true,
       "scale": 0.7
-    },
-    "R": {
-      "prop": "fantasy-town/rock-large",
-      "solid": true,
-      "random_rot": true,
-      "scale": 0.6
     },
     "p": {
       "prop": "mini-forest/plant",
@@ -57,9 +57,10 @@
       "random_scale": true
     },
     "o": {
-      "prop": "mini-forest/stones",
+      "prop": "castle-kit/rocks-small",
       "random_rot": true,
-      "scale": 0.6
+      "random_scale": true,
+      "scale": 0.45
     },
     "g": {
       "prop": "castle-kit/tree-log",
@@ -67,9 +68,10 @@
       "random_rot": true
     },
     "u": {
-      "prop": "castle-kit/tree-trunk",
+      "prop": "mini-forest/tree-high",
       "solid": true,
-      "random_rot": true
+      "random_rot": true,
+      "random_scale": true
     },
     "q": {
       "prop": "fantasy-town/pillar-wood",
@@ -127,10 +129,10 @@
     ],
     "near": [
       "mini-forest/plant",
-      "fantasy-town/rock-small",
-      "mini-forest/stones",
-      "castle-kit/tree-trunk",
-      "mini-forest/plant"
+      "castle-kit/rocks-small",
+      "mini-forest/plant",
+      "castle-kit/rocks-small",
+      "mini-forest/tree"
     ],
     "depth": 7,
     "density": 0.45
@@ -444,7 +446,8 @@
               "force": 0.5,
               "persuasion": 0.5
             }
-          }
+          },
+          "stays": true
         },
         "killed": {
           "text": "Dunmore doesn't get up. You hammer on the gate with his ledger until a bar lifts on the other side.",

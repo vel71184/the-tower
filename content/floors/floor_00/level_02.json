@@ -37,16 +37,16 @@
       "random_rot": true
     },
     "r": {
-      "prop": "fantasy-town/rock-small",
+      "prop": "castle-kit/rocks-small",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.75
+    },
+    "R": {
+      "prop": "castle-kit/rocks-large",
       "solid": true,
       "random_rot": true,
       "scale": 0.7
-    },
-    "R": {
-      "prop": "fantasy-town/rock-large",
-      "solid": true,
-      "random_rot": true,
-      "scale": 0.6
     },
     "p": {
       "prop": "mini-forest/plant",
@@ -54,9 +54,10 @@
       "random_scale": true
     },
     "o": {
-      "prop": "mini-forest/stones",
+      "prop": "castle-kit/rocks-small",
       "random_rot": true,
-      "scale": 0.6
+      "random_scale": true,
+      "scale": 0.45
     },
     "g": {
       "prop": "castle-kit/tree-log",
@@ -64,9 +65,10 @@
       "random_rot": true
     },
     "u": {
-      "prop": "castle-kit/tree-trunk",
+      "prop": "mini-forest/tree-high",
       "solid": true,
-      "random_rot": true
+      "random_rot": true,
+      "random_scale": true
     },
     "q": {
       "prop": "fantasy-town/pillar-wood",
@@ -112,10 +114,10 @@
     ],
     "near": [
       "mini-forest/plant",
-      "fantasy-town/rock-small",
-      "mini-forest/stones",
-      "castle-kit/tree-trunk",
-      "mini-forest/plant"
+      "castle-kit/rocks-small",
+      "mini-forest/plant",
+      "castle-kit/rocks-small",
+      "mini-forest/tree"
     ],
     "depth": 7,
     "density": 0.45
@@ -232,7 +234,7 @@
       "color": "#9aa0a6",
       "lines": [
         "A small saw, wrapped in a rag and pushed into the mud. Sawdust is still caught in the teeth.",
-        "The rag has a letter stitched in the corner: S."
+        "The rag has a letter stitched in the corner: S. You wrap it back up and keep it."
       ],
       "after_use": "taken",
       "effects": {
@@ -291,7 +293,7 @@
         "start": "hello",
         "nodes": {
           "hello": {
-            "text": "A young man sits against the bridge post, one leg out at a bad angle. \"Mind the left side of the bridge. It gives.\"",
+            "text": "A young man sits at the end of the bridge, one leg out at a bad angle. \"Mind the bridge. One of the planks gives.\"",
             "effects": {
               "set_flags": [
                 "talked_pell"
@@ -308,6 +310,12 @@
                 "next": "truth",
                 "requires": "asked_pell_what",
                 "requires_knowledge": "plank_cut",
+                "hide_if": "pell_told_truth"
+              },
+              {
+                "text": "Is this hers? It was in the reeds.",
+                "next": "saw",
+                "requires": "found_saw",
                 "hide_if": "pell_told_truth"
               },
               {
@@ -398,7 +406,8 @@
             "text": "You bind the leg to the branch with his own belt. He gets up on the second try, gray in the face.",
             "effects": {
               "set_flags": [
-                "pell_helped"
+                "pell_helped",
+                "pell_at_camp"
               ],
               "nudge": {
                 "others": 1,
@@ -442,9 +451,22 @@
           "bye": {
             "text": "He limps off toward the camp, slow, but on his own.",
             "action": "leave"
+          },
+          "saw": {
+            "text": "He looks at the S on the rag a long time. \"Sorrel. We walked from the coast together. Last night she said there'd be less of a crowd at the gate by morning. I didn't think she meant this.\"",
+            "effects": {
+              "learn": [
+                "sorrel"
+              ],
+              "set_flags": [
+                "pell_told_truth"
+              ]
+            },
+            "next": "hello"
           }
         }
-      }
+      },
+      "unless": "pell_rescued"
     },
     {
       "char": "m",
@@ -507,14 +529,61 @@
     {
       "note": "Worked out the plank was cut.",
       "if": [
-        "asked_pell_what"
+        "examined:cut_plank"
       ],
-      "min_examined": 3,
       "effects": {
         "nudge": {
           "patience": 0.5
         }
       }
     }
-  ]
+  ],
+  "fights": {
+    "pell": {
+      "opponents": [
+        "pell"
+      ],
+      "wounds": 2,
+      "yield_at": 1,
+      "stationary": true,
+      "yield_text": "Pell throws up his hands. \"Take it! Take the coin, it's all I've got!\"",
+      "talk": [],
+      "outcomes": {
+        "spared": {
+          "stays": true,
+          "text": "You take Pell's coin. He doesn't look at you again.",
+          "effects": {
+            "set_flags": [
+              "has_coin",
+              "robbed_pell"
+            ],
+            "nudge": {
+              "force": 1,
+              "self": 1
+            }
+          }
+        },
+        "killed": {
+          "text": "Pell slumps against the bridge end and is still.",
+          "effects": {
+            "set_flags": [
+              "pell_dead"
+            ],
+            "nudge": {
+              "force": 2
+            }
+          },
+          "body_name": "Pell",
+          "body_lines": [
+            "Pell. He came all the way from the coast."
+          ]
+        },
+        "lost": {
+          "leaves": false,
+          "text": "Pell is still sitting where he was, breathing hard, watching you.",
+          "effects": {}
+        }
+      }
+    }
+  }
 }

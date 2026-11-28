@@ -37,16 +37,16 @@
       "random_rot": true
     },
     "r": {
-      "prop": "fantasy-town/rock-small",
+      "prop": "castle-kit/rocks-small",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.75
+    },
+    "R": {
+      "prop": "castle-kit/rocks-large",
       "solid": true,
       "random_rot": true,
       "scale": 0.7
-    },
-    "R": {
-      "prop": "fantasy-town/rock-large",
-      "solid": true,
-      "random_rot": true,
-      "scale": 0.6
     },
     "p": {
       "prop": "mini-forest/plant",
@@ -54,9 +54,10 @@
       "random_scale": true
     },
     "o": {
-      "prop": "mini-forest/stones",
+      "prop": "castle-kit/rocks-small",
       "random_rot": true,
-      "scale": 0.6
+      "random_scale": true,
+      "scale": 0.45
     },
     "g": {
       "prop": "castle-kit/tree-log",
@@ -64,9 +65,10 @@
       "random_rot": true
     },
     "u": {
-      "prop": "castle-kit/tree-trunk",
+      "prop": "mini-forest/tree-high",
       "solid": true,
-      "random_rot": true
+      "random_rot": true,
+      "random_scale": true
     },
     "q": {
       "prop": "fantasy-town/pillar-wood",
@@ -124,10 +126,10 @@
     ],
     "near": [
       "mini-forest/plant",
-      "fantasy-town/rock-small",
-      "mini-forest/stones",
-      "castle-kit/tree-trunk",
-      "mini-forest/plant"
+      "castle-kit/rocks-small",
+      "mini-forest/plant",
+      "castle-kit/rocks-small",
+      "mini-forest/tree"
     ],
     "depth": 7,
     "density": 0.45
@@ -210,8 +212,8 @@
       "id": "big_fire",
       "name": "The camp fire",
       "kind": "examine",
-      "model": "fantasy-town/lantern",
-      "scale": 1.0,
+      "model": "castle-kit/rocks-small",
+      "scale": 0.55,
       "dialogue": {
         "start": "fire",
         "nodes": {
@@ -232,7 +234,8 @@
         }
       },
       "rest_spot": true,
-      "rest_place": "the camp fire"
+      "rest_place": "the camp fire",
+      "fire": true
     },
     {
       "char": "N",
@@ -243,7 +246,7 @@
       "lines": [
         "Scraps people found at the foot of the tower, pinned to a post. Most are blank, rained out.",
         "One reads: \"Ma, I'm fine. Don't come.\" No name.",
-        "Another, in a careful hand: \"Floor one is quiet. Whatever you hear, don't send the boy.\""
+        "Another, in a careful hand: \"Smoke all week up here. Forty houses. Whatever you hear, don't send the boy.\""
       ],
       "effects": {
         "learn": [
@@ -267,7 +270,8 @@
           "pants": "ink",
           "shoes": "brown",
           "accent": "red"
-        }
+        },
+        "idle": "sit"
       },
       "dialogue": {
         "start": "hello",
@@ -279,7 +283,7 @@
         ],
         "nodes": {
           "hello": {
-            "text": "An old woman sits with an empty birdcage on her knees, eyes on the tower. \"Three years. One bird. It said Jory's alive.\"",
+            "text": "An old woman sits facing the tower, turning a gray feather in her fingers. \"Three years. One bird. It said Jory's alive.\"",
             "choices": [
               {
                 "text": "Who's Jory?",
@@ -314,7 +318,7 @@
             "next": "hello"
           },
           "afraid": {
-            "text": "She holds the cage against her chest and won't look at you."
+            "text": "She closes her hand around the feather and won't look at you."
           }
         }
       }
@@ -345,6 +349,10 @@
             "start": "afraid"
           },
           {
+            "flag": "ada_hates",
+            "start": "afraid"
+          },
+          {
             "flag": "ada_done",
             "start": "again"
           }
@@ -361,6 +369,21 @@
               ]
             },
             "choices": [
+              {
+                "text": "He's dead. I killed him.",
+                "next": "dead",
+                "requires": "killed:wil",
+                "hide_if": "ada_told",
+                "effects": {
+                  "set_flags": [
+                    "ada_told",
+                    "told_ada_killed"
+                  ],
+                  "nudge": {
+                    "honesty": 1
+                  }
+                }
+              },
               {
                 "text": "He said to tell you he went home. That you'd know what it means.",
                 "next": "told",
@@ -500,6 +523,15 @@
           },
           "afraid": {
             "text": "Ada stands up fast, the knife held the wrong way round, and backs off until there's a fire between you."
+          },
+          "dead": {
+            "text": "She doesn't move. The knife slips and cuts her thumb and she doesn't notice. \"Get away from me.\"",
+            "effects": {
+              "set_flags": [
+                "ada_done",
+                "ada_hates"
+              ]
+            }
           }
         }
       }
@@ -510,7 +542,6 @@
       "name": "Bryn",
       "kind": "npc",
       "facing_deg": 180,
-      "unless": "pell_helped",
       "look": {
         "body": "female-f",
         "head": "female-e",
@@ -529,6 +560,14 @@
           {
             "flag": "hesk_dead",
             "start": "afraid"
+          },
+          {
+            "flag": "pell_helped",
+            "start": "helped"
+          },
+          {
+            "flag": "pell_rescued",
+            "start": "rescued"
           }
         ],
         "nodes": {
@@ -542,7 +581,8 @@
                 "effects": {
                   "set_flags": [
                     "bryn_went",
-                    "pell_rescued"
+                    "pell_rescued",
+                    "pell_at_camp"
                   ],
                   "nudge": {
                     "others": 0.5,
@@ -579,16 +619,33 @@
           },
           "go": {
             "text": "\"Hurt? And you just...\" She doesn't finish. She grabs a bag and runs for the river.",
-            "action": "leave"
+            "effects": {},
+            "action": "step_away"
           },
           "lie": {
             "text": "\"Then where is he?\" She goes back to watching the road."
           },
           "afraid": {
             "text": "Bryn steps back, hands up, and doesn't take her eyes off you."
+          },
+          "helped": {
+            "text": "Bryn sits by Pell, redoing his splint properly. \"You're the one who bound his leg? Thank you. He'd still be sitting there.\""
+          },
+          "rescued": {
+            "text": "Bryn sits by Pell, redoing his splint. \"Found him right where you said. Thank you.\""
           }
         }
-      }
+      },
+      "moves_if": [
+        {
+          "flag": "pell_at_camp",
+          "cell": [
+            8,
+            9
+          ],
+          "facing_deg": 90
+        }
+      ]
     },
     {
       "char": "L",
@@ -596,7 +653,7 @@
       "name": "Pell",
       "kind": "npc",
       "facing_deg": 60,
-      "only_if": "pell_helped",
+      "only_if": "pell_at_camp",
       "look": {
         "body": "male-c",
         "head": "male-a",
@@ -614,13 +671,17 @@
         "start": "hello",
         "start_if": [
           {
+            "flag": "hesk_dead",
+            "start": "afraid"
+          },
+          {
             "flag": "pell_told_truth",
             "start": "warn"
           }
         ],
         "nodes": {
           "hello": {
-            "text": "Pell, by the fire with his leg propped up. \"Made it. Leg's ugly, but it's a leg. Bryn about killed me for being slow.\""
+            "text": "Pell, by the fire with his leg propped up. \"Made it. Leg's ugly, but it's a leg.\""
           },
           "warn": {
             "text": "Pell, by the fire with his leg propped up. \"If you see Sorrel in there, don't turn your back on her. She'll have told them all about the rest of us by now.\"",
@@ -629,6 +690,9 @@
                 "sorrel_ahead"
               ]
             }
+          },
+          "afraid": {
+            "text": "Pell can't get up and walk away from you, so he just looks at the ground."
           }
         }
       }
@@ -662,7 +726,7 @@
         ],
         "nodes": {
           "hello": {
-            "text": "A broad man leans on a practice sword in the middle of a fenced ring. \"Going in? Then you'll want to know how not to die on the first floor. I'll take bread or coin. Or nothing, if you're quick.\"",
+            "text": "A broad man leans on a practice sword in the middle of a fenced ring. \"Going in? Then you'll want to know how not to die on the first floor. Costs you nothing but bruises.\"",
             "choices": [
               {
                 "text": "Teach me.",
@@ -757,7 +821,7 @@
           }
         },
         "killed": {
-          "text": "The practice sword falls out of his hand. Around the ring, nobody says anything. A woman pulls her children into a tent.",
+          "text": "The practice sword falls out of his hand. Around the ring, the whole camp has gone quiet.",
           "effects": {
             "set_flags": [
               "hesk_dead",
@@ -828,6 +892,21 @@
       "effects": {
         "nudge": {
           "patience": 0.5
+        }
+      }
+    },
+    {
+      "note": "Promised Pell to tell the camp, and didn't.",
+      "if": [
+        "pell_promised"
+      ],
+      "unless": [
+        "bryn_went"
+      ],
+      "effects": {
+        "nudge": {
+          "self": 1,
+          "deception": 0.5
         }
       }
     }

@@ -28,16 +28,35 @@
       "id": "entry_gate",
       "name": "The gate",
       "kind": "examine",
-      "shape": "arch",
-      "color": "#7d6a52",
-      "lines": [
-        "The gate you came in through. It swung shut behind you on its own.",
-        "There's no handle on this side."
-      ],
-      "effects": {
-        "learn": [
-          "no_way_back"
-        ]
+      "model": "castle-kit/gate",
+      "scale": 2.2,
+      "rot": 90,
+      "dialogue": {
+        "start": "gate",
+        "start_if": [
+          {
+            "flag": "sneaked_in",
+            "start": "hatch"
+          }
+        ],
+        "nodes": {
+          "gate": {
+            "text": "The gate you came in through. It swung shut behind you on its own, and there's no handle on this side.",
+            "effects": {
+              "learn": [
+                "no_way_back"
+              ]
+            }
+          },
+          "hatch": {
+            "text": "The great gate, shut. Beside it, the bread hatch you crawled through. You kneel by it, and find you can't make your hands push it open. Not won't. Can't.",
+            "effects": {
+              "learn": [
+                "no_way_back"
+              ]
+            }
+          }
+        }
       }
     },
     {

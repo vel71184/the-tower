@@ -50,6 +50,8 @@ func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: C
 		_build_model(d)
 		if d.has("sign"):
 			_build_sign(d["sign"])
+		if d.get("fire", false):
+			_build_fire()
 	else:
 		var color := Color(String(d.get("color", "#b8a48a")))
 		_build_shape(String(d.get("shape", "box")), d.get("size", []), material_for.call(color))
@@ -66,6 +68,25 @@ func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: C
 	add_child(_label)
 
 	visible = revealed
+
+
+## Someone leaving: they walk away from the climber for a few steps, fade, and are removed
+## from the level. Things just go.
+func walk_off(level, away_from: Vector3) -> void:
+	level.forget_object(self)
+	if character == null or not is_inside_tree():
+		queue_free()
+		return
+	var dir := global_position - away_from
+	dir.y = 0.0
+	dir = dir.normalized() if dir.length() > 0.1 else Vector3(0, 0, -1)
+	var goal := global_position + dir * 4.0
+	face(goal)
+	character.set_moving(true)
+	var t := create_tween()
+	t.tween_property(self, "global_position", goal, 2.0)
+	t.parallel().tween_property(self, "scale", Vector3(0.01, 0.01, 0.01), 0.6).set_delay(1.4)
+	t.tween_callback(queue_free)
 
 
 ## Walks (well, appears) back to where they belong, if that spot is free.
@@ -249,6 +270,55 @@ func _build_model(d: Dictionary) -> void:
 		var b: AABB = mi.get_aabb()
 		top = maxf(top, (b.position.y + b.size.y) * sc)
 	_top = maxf(top, 0.3)
+
+
+## A burning fire on top of the model (a ring of stones): flames that rise and fade, and a
+## warm light that flickers.
+func _build_fire() -> void:
+	var flames := CPUParticles3D.new()
+	flames.amount = 18
+	flames.lifetime = 0.7
+	flames.local_coords = true
+	flames.position = Vector3(0, 0.1, 0)
+	flames.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	flames.emission_sphere_radius = 0.12
+	flames.direction = Vector3.UP
+	flames.spread = 12.0
+	flames.gravity = Vector3(0, 0.6, 0)
+	flames.initial_velocity_min = 0.3
+	flames.initial_velocity_max = 0.6
+	flames.scale_amount_min = 0.5
+	flames.scale_amount_max = 1.0
+	var curve := Curve.new()
+	curve.add_point(Vector2(0, 1))
+	curve.add_point(Vector2(1, 0.1))
+	flames.scale_amount_curve = curve
+	var ramp := Gradient.new()
+	ramp.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
+	ramp.colors = PackedColorArray([Color(1.0, 0.85, 0.35, 1.0), Color(1.0, 0.45, 0.12, 0.9), Color(0.5, 0.15, 0.05, 0.0)])
+	flames.color_ramp = ramp
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.22, 0.22)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.vertex_color_use_as_albedo = true
+	quad.material = mat
+	flames.mesh = quad
+	add_child(flames)
+	var light := OmniLight3D.new()
+	light.light_color = Color(1.0, 0.65, 0.35)
+	light.light_energy = 1.2
+	light.omni_range = 4.0
+	light.position = Vector3(0, 0.5, 0)
+	add_child(light)
+	var flicker := create_tween().set_loops()
+	flicker.tween_property(light, "light_energy", 0.8, 0.13)
+	flicker.tween_property(light, "light_energy", 1.3, 0.09)
+	flicker.tween_property(light, "light_energy", 1.0, 0.17)
+	_top = maxf(_top, 0.7)
 
 
 ## A board with readable words on it, on top of a post: {"text": "THE TOWER →", "height": 1.1}

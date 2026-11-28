@@ -36,16 +36,16 @@
       "random_rot": true
     },
     "r": {
-      "prop": "fantasy-town/rock-small",
+      "prop": "castle-kit/rocks-small",
+      "solid": true,
+      "random_rot": true,
+      "scale": 0.75
+    },
+    "R": {
+      "prop": "castle-kit/rocks-large",
       "solid": true,
       "random_rot": true,
       "scale": 0.7
-    },
-    "R": {
-      "prop": "fantasy-town/rock-large",
-      "solid": true,
-      "random_rot": true,
-      "scale": 0.6
     },
     "p": {
       "prop": "mini-forest/plant",
@@ -53,9 +53,10 @@
       "random_scale": true
     },
     "o": {
-      "prop": "mini-forest/stones",
+      "prop": "castle-kit/rocks-small",
       "random_rot": true,
-      "scale": 0.6
+      "random_scale": true,
+      "scale": 0.45
     },
     "g": {
       "prop": "castle-kit/tree-log",
@@ -63,9 +64,10 @@
       "random_rot": true
     },
     "u": {
-      "prop": "castle-kit/tree-trunk",
+      "prop": "mini-forest/tree-high",
       "solid": true,
-      "random_rot": true
+      "random_rot": true,
+      "random_scale": true
     },
     "q": {
       "prop": "fantasy-town/pillar-wood",
@@ -261,7 +263,7 @@
             ]
           },
           "why": {
-            "text": "\"Waited at that gate forty days. Then one evening I looked up at the thing and thought: I like who I am down here.\"",
+            "text": "\"Two winters I sat by that gate, waiting on a bird from my wife. Then one evening I looked up at the thing and thought: I like who I am down here.\"",
             "effects": {
               "set_flags": [
                 "asked_wil_why"
@@ -319,16 +321,19 @@
               "learn": [
                 "ada"
               ]
-            }
+            },
+            "action": "leave"
           },
           "no_promise": {
-            "text": "\"Honest, at least. That's rarer at that gate than you'd think.\""
+            "text": "\"Honest, at least. That's rarer at that gate than you'd think.\"",
+            "action": "leave"
           },
           "again": {
             "text": "\"Road's that way. Up.\" He nods toward the tower."
           }
         }
-      }
+      },
+      "unless": "completed:f00_l01"
     },
     {
       "char": "E",
@@ -429,10 +434,10 @@
     ],
     "near": [
       "mini-forest/plant",
-      "fantasy-town/rock-small",
-      "mini-forest/stones",
-      "castle-kit/tree-trunk",
-      "mini-forest/plant"
+      "castle-kit/rocks-small",
+      "mini-forest/plant",
+      "castle-kit/rocks-small",
+      "mini-forest/tree"
     ],
     "depth": 7,
     "density": 0.45
