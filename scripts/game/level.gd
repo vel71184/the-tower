@@ -42,6 +42,12 @@ var tall_props: Array = []
 var astar := AStarGrid2D.new()
 
 var _object_at: Dictionary = {}
+## Fence cells: cell -> {"model": name, "arms": [Vector2 directions from the centre]}. A fence
+## runs through the middle of its cell and joins any fence next to it; it blocks movement only
+## along its own line, so you can walk right up to it.
+var fences: Dictionary = {}
+const FENCE_HALF := 0.06
+const ARM_DIRS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
 var _materials: Dictionary = {}
 
 
@@ -82,6 +88,9 @@ func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 				_add_wall(cell, palette)
 				astar.set_point_solid(cell, true)
 				continue
+			if entry.has("fence"):
+				fences[cell] = {"model": String(entry["fence"]), "arms": []}
+				astar.set_point_solid(cell, true)
 			var kind := String(entry.get("ground", defs[c].get("ground", default_ground) if defs.has(c) else default_ground))
 			ground[cell] = kind
 			if kind == "water":
@@ -100,6 +109,7 @@ func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 					astar.set_point_solid(cell, true)
 			elif not legend.has(c):
 				push_warning("Level %s: unknown map character '%s'" % [data.get("id", "?"), c])
+	_build_fences()
 	_build_ground(ground, palette)
 	_add_surroundings(data.get("surround", {}))
 	for item in data.get("backdrop", []):
@@ -175,11 +185,83 @@ func is_walkable(cell: Vector2i) -> bool:
 func can_stand(pos: Vector3, r: float, own: Vector2i = Vector2i(-99, -99)) -> bool:
 	for corner in [Vector2(-r, -r), Vector2(r, -r), Vector2(-r, r), Vector2(r, r)]:
 		var c := Vector2i(floori(pos.x + corner.x), floori(pos.z + corner.y))
-		if c == own:
+		if c == own or fences.has(c):
 			continue
 		if not is_walkable(c):
 			return false
+	# Fences only block along their line.
+	var p := Vector2(pos.x, pos.z)
+	for y in range(floori(pos.z - r), floori(pos.z + r) + 1):
+		for x in range(floori(pos.x - r), floori(pos.x + r) + 1):
+			var f: Dictionary = fences.get(Vector2i(x, y), {})
+			if f.is_empty():
+				continue
+			var centre := Vector2(x + 0.5, y + 0.5)
+			for arm in f["arms"]:
+				var end: Vector2 = centre + Vector2(arm) * 0.5
+				if Geometry2D.get_closest_point_to_segment(p, centre, end).distance_to(p) < r + FENCE_HALF:
+					return false
 	return true
+
+
+## The open cell to start a path from when standing at a world position. Usually the cell
+## underfoot; beside a fence (whose cell is closed to paths) it's the nearest open neighbour.
+func path_cell_at(pos: Vector3) -> Vector2i:
+	var c := world_to_cell(pos)
+	if is_walkable(c):
+		return c
+	var best := c
+	var best_d := INF
+	for dy in range(-1, 2):
+		for dx in range(-1, 2):
+			var n := c + Vector2i(dx, dy)
+			if is_walkable(n):
+				var d := cell_to_world(n).distance_to(Vector3(pos.x, 0, pos.z))
+				if d < best_d:
+					best_d = d
+					best = n
+	return best
+
+
+## Joins each fence cell to its fence neighbours and builds the pieces: a straight run is one
+## whole fence; corners and ends are half fences from the centre out to each joined side.
+func _build_fences() -> void:
+	for cell in fences:
+		var arms: Array = []
+		for d in ARM_DIRS:
+			if fences.has(cell + d):
+				arms.append(d)
+		if arms.is_empty():
+			arms = [Vector2i(1, 0), Vector2i(-1, 0)]
+		elif arms.size() == 1:
+			# The end of a run, beside a gap: carry on to the cell's far edge, so the gap is
+			# exactly the open cell.
+			arms.append(-(arms[0] as Vector2i))
+		fences[cell]["arms"] = arms
+		var straight: bool = arms.size() == 2 and (arms[0] as Vector2i) + (arms[1] as Vector2i) == Vector2i.ZERO
+		var holder := Node3D.new()
+		holder.position = cell_to_world(cell)
+		add_child(holder)
+		if straight:
+			_add_fence_piece(holder, fences[cell]["model"], arms[0], 1.0)
+		else:
+			for a in arms:
+				_add_fence_piece(holder, fences[cell]["model"], a, 0.5)
+		Models.outline(holder)
+
+
+## One fence model along a direction from the cell centre: full length (through the centre)
+## or half (from the centre to the edge). Kenney's fence runs along Z at the +X edge of its tile.
+func _add_fence_piece(holder: Node3D, model: String, dir: Vector2i, length: float) -> void:
+	var node := Models.make(model)
+	if node == null:
+		return
+	var arm := Node3D.new()
+	arm.rotation_degrees.y = {Vector2i(0, 1): 0.0, Vector2i(1, 0): 90.0, Vector2i(0, -1): 180.0, Vector2i(-1, 0): 270.0}[dir]
+	holder.add_child(arm)
+	arm.add_child(node)
+	node.scale = Vector3(1, 1, length)
+	node.position = Vector3(-0.46, 0, 0.0 if length >= 1.0 else 0.25)
 
 
 func object_at(cell: Vector2i) -> Interactable:

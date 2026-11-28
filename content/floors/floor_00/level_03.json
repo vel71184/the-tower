@@ -80,14 +80,11 @@
       "ground": "path"
     },
     "x": {
-      "prop": "fantasy-town/fence",
-      "solid": true,
+      "fence": "fantasy-town/fence",
       "ground": "dirt"
     },
     "z": {
-      "prop": "fantasy-town/fence",
-      "solid": true,
-      "rot": 90,
+      "fence": "fantasy-town/fence",
       "ground": "dirt"
     },
     "d": {
@@ -233,7 +230,9 @@
             ]
           }
         }
-      }
+      },
+      "rest_spot": true,
+      "rest_place": "the camp fire"
     },
     {
       "char": "N",
@@ -710,7 +709,8 @@
             ]
           }
         }
-      }
+      },
+      "ground": "dirt"
     }
   ],
   "fights": {
@@ -731,7 +731,7 @@
       "outcomes": {
         "spared": {
           "stays": true,
-          "text": "Hesk laughs and rubs his arm. \"Good. Plenty take a third swing. You didn't.\"",
+          "text": "Hesk laughs and rubs his arm. \"Good. Plenty take a third swing. You didn't.\" He checks you over and wraps your knuckles.",
           "effects": {
             "set_flags": [
               "spar_done",
@@ -739,7 +739,8 @@
             ],
             "nudge": {
               "others": 0.5
-            }
+            },
+            "heal": true
           }
         },
         "talked_down": {
@@ -751,7 +752,8 @@
             ],
             "nudge": {
               "persuasion": 0.5
-            }
+            },
+            "heal": true
           }
         },
         "killed": {
@@ -774,15 +776,18 @@
         },
         "lost": {
           "leaves": false,
-          "text": "You hit the dirt. Hesk offers you a hand up. \"That's how it goes in there, except nobody helps you up. Rest by the fire, then come back.\"",
+          "stay_put": true,
+          "text": "You hit the dirt. Hesk hauls you up and checks you over. \"That's how it goes in there, except nobody helps you up. Again, when you're ready.\"",
           "effects": {
             "set_flags": [
               "spar_done",
               "spar_lost"
-            ]
+            ],
+            "heal": true
           }
         }
-      }
+      },
+      "consensual": true
     }
   },
   "end_rules": [

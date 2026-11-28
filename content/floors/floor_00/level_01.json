@@ -113,7 +113,7 @@
     "k....o.p.....,,,o..pTg",
     "YT.kkpfTT.o....,,,.p.g",
     "k....fTff..f.p...S,p.g",
-    "YY.Tp..TT.f.......,,.r",
+    "YY.Tp..TT.f....m..,,.r",
     "TfffuufgffgTfffufqnnqT"
   ],
   "objects": [
@@ -348,6 +348,35 @@
               },
               {
                 "text": "Not yet.",
+                "next": ""
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "char": "m",
+      "id": "road_rock",
+      "name": "Flat rock",
+      "kind": "examine",
+      "model": "fantasy-town/rock-wide",
+      "scale": 0.8,
+      "rest_spot": true,
+      "rest_place": "the flat rock by the road",
+      "dialogue": {
+        "start": "rest",
+        "nodes": {
+          "rest": {
+            "text": "A flat rock beside the road, warm from the sun. A good place to sit a while.",
+            "choices": [
+              {
+                "text": "Rest a while.",
+                "action": "rest",
+                "requires_hurt": true
+              },
+              {
+                "text": "Move on.",
                 "next": ""
               }
             ]

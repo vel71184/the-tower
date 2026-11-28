@@ -18,6 +18,7 @@ func _ready() -> void:
 	await _test_brawl()
 	await _test_road()
 	await _test_floor_zero()
+	await _test_fight_fixes()
 	await _test_polish()
 	Baseline.delete_save()
 	print("\n%d checks, %d failed" % [_checks, _failures])
@@ -846,4 +847,85 @@ func _test_floor_zero() -> void:
 	main.ui.finish_opening()
 	main.queue_free()
 	Baseline.delete_save()
+	await get_tree().process_frame
+
+
+func _run_fight(main, seconds: float) -> void:
+	main.combat.manual = true
+	var t := 0.0
+	while t < seconds and main.combat.active:
+		main.combat.tick(0.05)
+		t += 0.05
+	main.combat.manual = false
+
+
+func _test_fight_fixes() -> void:
+	print("Losing, resting, aiming and fences")
+	Baseline.reset()
+	Baseline.delete_save()
+	var main = load("res://scenes/main.tscn").instantiate()
+	add_child(main)
+	await get_tree().process_frame
+	main._leave_title()
+	Baseline.set_flag("cutscene_seen:f00_l01")
+	main.start_level(0, 1)
+	var wil = main.find_object("wil")
+	main.climber.place(wil.cell + Vector2i(1, 0))
+	main.combat.start_from_dialogue(wil, "")
+	_run_fight(main, 30.0)
+	var rock = main.find_object("road_rock")
+	check(not main.combat.active and Baseline.wounds == 1, "losing a fight leaves you on your last wound")
+	check(main.level.chebyshev(main.climber.cell, rock.cell) <= 1, "you come to by the level's resting spot, not where you fell")
+	check(main.ui._body.text.contains("flat rock"), "and the text says where you are")
+	check(wil.cell == wil.home_cell, "whoever beat you goes back to what they were doing")
+	main.choose(0)
+	main.interact(wil)
+	check(main.ui._body.text.contains("won't say a word"), "someone you attacked won't chat as if nothing happened")
+	main.choose(0)
+	main.interact(rock)
+	check(main.choose_text("Rest a while"), "you can rest by the rock when hurt")
+	check(Baseline.wounds == Baseline.max_wounds, "and your wounds close")
+	for lv in [[0, 1], [0, 2], [0, 3], [0, 4], [1, 1]]:
+		main.start_level(lv[0], lv[1])
+		var spots := {}
+		for obj in main.level.objects:
+			if obj.def.get("rest_spot", false):
+				spots[obj.id] = true
+		check(spots.size() == 1, "level %d-%d has a place to rest" % lv)
+
+	Baseline.reset()
+	main.start_level(0, 3)
+	var ada = main.find_object("ada")
+	main.climber.place(ada.cell + Vector2i(-1, 0))
+	main.combat._set_lock(ada)
+	main.climber.facing_dir = Vector3(-1, 0, 0)
+	main.climber.rotation.y = 0.0
+	main.combat._cooldown = 0.0
+	check(main.combat.strike(), "a swing turns toward whoever you're locked on to")
+	main.combat.reset(main.level)
+	main.climber.lock_face = null
+
+	var hesk = main.find_object("hesk")
+	main.climber.place(hesk.cell + Vector2i(-2, 0))
+	main.interact(hesk)
+	main.choose_text("Teach me")
+	main.choose_text("Ready")
+	check(not Baseline.has_flag("attacked:hesk"), "a spar isn't an attack")
+	_run_fight(main, 30.0)
+	var c: Vector2i = main.climber.cell
+	check(main.ui._body.text.contains("hauls you up") and c.x >= 16 and c.x <= 21 and c.y >= 8 and c.y <= 13, "lose a spar and Hesk helps you up where you fell, in the ring")
+	check(Baseline.wounds == Baseline.max_wounds, "and patches you up")
+	main.choose(0)
+	main.interact(hesk)
+	check(main.choose_text("Again"), "you can always spar again")
+	main.combat.reset(main.level)
+
+	var lvl = main.level
+	var fence_cell := Vector2i(18, 8)
+	check(lvl.fences.has(fence_cell), "the ring has a fence")
+	var line: Vector3 = lvl.cell_to_world(fence_cell)
+	check(not lvl.can_stand(line, 0.26), "you can't walk through a fence")
+	check(lvl.can_stand(line + Vector3(0, 0, 0.36), 0.26), "but you can walk right up to it")
+	check(lvl.fences.has(Vector2i(16, 9)) and not lvl.fences.has(Vector2i(16, 10)), "the ring's way in is one clear gap")
+	main.queue_free()
 	await get_tree().process_frame

@@ -133,6 +133,8 @@ func apply(effects: Dictionary) -> void:
 		set_flag(String(f), false)
 	for fact in effects.get("learn", []):
 		learn(String(fact))
+	if effects.get("heal", false):
+		rest()
 
 
 ## Applies effects only the first time a given key is seen, so repeating a choice can't farm it.

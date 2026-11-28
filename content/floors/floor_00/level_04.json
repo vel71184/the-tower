@@ -104,7 +104,7 @@
   "map": [
     "########################",
     "wwwwwwwwwwwwwwwwwwwwwwww",
-    "Y..........G.....c.h...Y",
+    "Y...m......G.....c.h...Y",
     "f..........,......C.c..k",
     "T.....R....,.M.........f",
     "T.....k....,...........f",
@@ -278,6 +278,10 @@
           {
             "flag": "gate_open",
             "start": "done"
+          },
+          {
+            "flag": "attacked:dunmore",
+            "start": "wary"
           }
         ],
         "nodes": {
@@ -365,6 +369,38 @@
           },
           "done": {
             "text": "\"Go on, then. Before I change my mind.\""
+          },
+          "wary": {
+            "text": "Dunmore keeps the stool between you and him. \"Gate's shut to you. Find another way, or don't.\""
+          }
+        }
+      }
+    },
+    {
+      "char": "m",
+      "id": "wall_bench",
+      "name": "Bench by the wall",
+      "kind": "examine",
+      "model": "fantasy-town/stall-bench",
+      "rot": 0,
+      "rest_spot": true,
+      "rest_place": "the bench by the wall",
+      "dialogue": {
+        "start": "rest",
+        "nodes": {
+          "rest": {
+            "text": "A bench against the tower wall, worn smooth by everyone who's sat here waiting to be let in.",
+            "choices": [
+              {
+                "text": "Rest a while.",
+                "action": "rest",
+                "requires_hurt": true
+              },
+              {
+                "text": "Move on.",
+                "next": ""
+              }
+            ]
           }
         }
       }
@@ -428,7 +464,7 @@
         },
         "lost": {
           "leaves": false,
-          "text": "You wake up against the wall. Dunmore's ledger has a new line in it: your name, and \"owes 2\".",
+          "text": "Dunmore's back on his stool. His ledger has a new line in it: your name, and \"owes 2\".",
           "effects": {
             "set_flags": [
               "lost_to_dunmore"

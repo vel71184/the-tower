@@ -95,7 +95,7 @@
     "f......p...~~~~...,,,,,E",
     "f.........======,,.....T",
     "BS,,,,,,,,==X===......of",
-    "T.......P..~~~~.h......Y",
+    "T...m...P..~~~~.h......Y",
     "k..p.....p~~~~pp.......T",
     "f...p...kp~~~~..T...o..f",
     "f.....pk..~~~~p.....f..Y",
@@ -442,6 +442,35 @@
           "bye": {
             "text": "He limps off toward the camp, slow, but on his own.",
             "action": "leave"
+          }
+        }
+      }
+    },
+    {
+      "char": "m",
+      "id": "bank_rock",
+      "name": "Flat rock",
+      "kind": "examine",
+      "model": "fantasy-town/rock-wide",
+      "scale": 0.8,
+      "rest_spot": true,
+      "rest_place": "the flat rock on the bank",
+      "dialogue": {
+        "start": "rest",
+        "nodes": {
+          "rest": {
+            "text": "A flat rock on the bank, out of the wind. You can hear the river from here.",
+            "choices": [
+              {
+                "text": "Rest a while.",
+                "action": "rest",
+                "requires_hurt": true
+              },
+              {
+                "text": "Move on.",
+                "next": ""
+              }
+            ]
           }
         }
       }

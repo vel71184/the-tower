@@ -70,6 +70,8 @@ func reset(new_level) -> void:
 	level = new_level
 	foes.clear()
 	lock_target = null
+	if climber:
+		climber.lock_face = null
 	blocking = false
 	events.clear()
 	_cooldown = 0.0
@@ -109,6 +111,7 @@ func strike() -> bool:
 		return false
 	_cooldown = SWING_COOLDOWN
 	_count("strike")
+	_aim()
 	climber.character.act("attack-melee-right")
 	Fx.slash(climber, climber.facing_dir, SWING_RANGE)
 	var target = _target_in_arc()
@@ -131,6 +134,7 @@ func kick() -> bool:
 		return false
 	_cooldown = KICK_COOLDOWN
 	_count("kick")
+	_aim()
 	climber.character.act("attack-kick-right")
 	var target = _target_in_arc()
 	if target == null:
@@ -291,6 +295,10 @@ func _foe_walk(foe, st: Dictionary, dt: float) -> void:
 		next = _next_cell_toward_climber(foe)
 		st["next"] = next
 	if next == null:
+		# Already beside the climber's cell, but the climber can stand anywhere in it: close
+		# the last bit directly, or both sides end up just out of reach forever.
+		if _close_in(foe, dt):
+			return
 		if foe.character:
 			foe.character.set_moving(false)
 		return
@@ -301,6 +309,26 @@ func _foe_walk(foe, st: Dictionary, dt: float) -> void:
 		if next != foe.cell:
 			level.move_object(foe, next)
 		st["next"] = null
+
+
+## Steps a foe straight toward the climber until within reach. Returns true if they moved.
+func _close_in(foe, dt: float) -> bool:
+	var to: Vector3 = climber.global_position - foe.global_position
+	to.y = 0.0
+	if to.length() <= FOE_REACH * 0.9:
+		return false
+	var step: Vector3 = to.normalized() * minf(FOE_SPEED * dt, to.length() - FOE_REACH * 0.85)
+	var goal: Vector3 = foe.position + step
+	if not level.can_stand(goal, 0.25, foe.cell):
+		return false
+	foe.face(climber.global_position)
+	foe.position = goal
+	var c: Vector2i = level.world_to_cell(goal)
+	if c != foe.cell and level.is_walkable(c) and level.object_at(c) == null and c != climber.cell:
+		level.move_object(foe, c)
+	if foe.character:
+		foe.character.set_moving(true)
+	return true
 
 
 func _next_cell_toward_climber(foe):
@@ -336,10 +364,13 @@ func _make_hostile(foe, by_climber: bool) -> void:
 		ui.toast("Fight!", 1.2)
 	foes[foe] = {"wounds": int(data.get("wounds", 3)), "cd": 0.8, "windup": 0.0, "stun": 0.0, "data": data}
 	Baseline.record("fight", foe.id)
-	if by_climber and not Baseline.has_flag("attacked:" + foe.id):
-		Baseline.set_flag("attacked:" + foe.id)
 	_show_hearts(foe)
 	ui.set_wounds(Baseline.wounds, Baseline.max_wounds, true)
+	# A spar both sides agreed to ("consensual": true) isn't an attack, and nobody's alarmed.
+	if data.get("consensual", false):
+		return
+	if by_climber and not Baseline.has_flag("attacked:" + foe.id):
+		Baseline.set_flag("attacked:" + foe.id)
 	for other in level.objects:
 		if other != foe and other.kind == "npc" and other.character and not foes.has(other) \
 				and other.global_position.distance_to(foe.global_position) <= WITNESS_RANGE:
@@ -420,6 +451,8 @@ func _end_foe(foe, outcome: String) -> void:
 	Baseline.record(outcome, foe.id)
 	var out: Dictionary = st["data"].get("outcomes", {}).get(outcome, {})
 	Baseline.apply(out.get("effects", {}))
+	if foe.has_method("go_home") and outcome != "killed":
+		foe.go_home(level)
 	match outcome:
 		"killed":
 			Baseline.set_flag("killed:" + foe.id)
@@ -450,8 +483,13 @@ func lay_down(obj, out: Dictionary) -> void:
 	obj.set_status("")
 
 
+## The climber goes down. Nobody kills them for it (yet): they come to at the level's resting
+## spot with one wound left, unless the fight says otherwise ("stay_put": a spar, where you're
+## helped up where you fell). Whoever beat them goes back to what they were doing, or leaves.
 func _lost() -> void:
 	var notes: Array = []
+	var stay_put := false
+	Baseline.wounds = 1
 	for foe in foes.keys():
 		var st: Dictionary = foes[foe]
 		foes.erase(foe)
@@ -460,18 +498,24 @@ func _lost() -> void:
 			foe.character.set_moving(false)
 		var out: Dictionary = st["data"].get("outcomes", {}).get("lost", {})
 		Baseline.apply(out.get("effects", {}))
+		stay_put = stay_put or bool(out.get("stay_put", false))
 		if out.has("text"):
 			notes.append(String(out["text"]))
 		if out.get("leaves", true) and out.has("text"):
 			Baseline.set_flag("gone:" + foe.id)
 			level.remove_object(foe)
+		elif foe.has_method("go_home"):
+			foe.go_home(level)
 	Baseline.habit("lost")
 	Baseline.record("lost", "")
-	Baseline.wounds = 1
 	_set_lock(null)
 	set_blocking(false)
+	# A "lost" outcome's text is what you find when you come to (who's gone, what's taken).
+	if not stay_put:
+		var place: String = main.wake_at_rest()
+		notes.push_front("Everything goes dark. When you come to, you're %s, aching all over." % place)
 	climber.character.hold("die")
-	main.show_note("\n\n".join(PackedStringArray(notes)) if not notes.is_empty() else "Everything goes dark. When you come to, you're alone.")
+	main.show_note("\n\n".join(PackedStringArray(notes)))
 	_end_encounter("lost")
 
 
@@ -504,6 +548,22 @@ func _count(action: String) -> void:
 		_first_in_encounter = false
 		Baseline.habit("openers", action)
 	Baseline.habit("actions", action)
+
+
+## Turns the climber toward whoever they mean to hit before a swing or kick: the person
+## they're locked on to if close enough, otherwise the nearest foe roughly in front. Without
+## this, a swing goes wherever the stick last pointed.
+func _aim() -> void:
+	var target = null
+	if lock_target != null and is_instance_valid(lock_target) and _dist(lock_target) <= SWING_RANGE + 0.3:
+		target = lock_target
+	else:
+		for p in _people_in_front(SWING_RANGE + 0.2, -0.3):
+			if foes.has(p):
+				target = p
+				break
+	if target:
+		climber.face(target.global_position)
 
 
 ## Who a swing would connect with: in reach, in front, and either fighting the climber or the
@@ -556,6 +616,7 @@ func _set_lock(target) -> void:
 	if lock_target != null and is_instance_valid(lock_target):
 		lock_target.set_locked(false)
 	lock_target = target
+	climber.lock_face = target
 	if target != null:
 		target.set_locked(true)
 		climber.face(target.global_position)

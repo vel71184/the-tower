@@ -109,7 +109,9 @@
             ]
           }
         }
-      }
+      },
+      "rest_spot": true,
+      "rest_place": "the bedrolls"
     },
     {
       "char": "T",
@@ -560,7 +562,7 @@
           ]
         },
         "lost": {
-          "text": "The floor comes up to meet you. When you come to, Brann is gone, and so is Tobin's bird.",
+          "text": "Brann is gone, and so is Tobin's bird.",
           "effects": {
             "set_flags": [
               "lost_to_brann",

@@ -16,6 +16,8 @@ var cell := Vector2i.ZERO
 var character
 ## World direction the climber faces (flat). Free movement, attacks and interactions use it.
 var facing_dir := Vector3(1, 0, 1).normalized()
+## While locked on, the climber keeps facing this person, even while walking (strafing).
+var lock_face: Node3D = null
 var _path: Array = []
 var _free_moving := false
 
@@ -53,7 +55,9 @@ func is_moving() -> bool:
 
 ## The cell a new path should start from: where the climber is heading next, or where it stands.
 func path_start() -> Vector2i:
-	return _path[0] if is_moving() else cell
+	if is_moving():
+		return _path[0]
+	return cell if level.is_walkable(cell) else level.path_cell_at(position)
 
 
 func walk(path: Array) -> void:
@@ -116,7 +120,10 @@ func move_free(dir: Vector3, delta: float) -> void:
 	if level.can_stand(try_z, RADIUS, cell):
 		p = try_z
 	position = p
-	face(position + dir)
+	if lock_face and is_instance_valid(lock_face) and lock_face.is_inside_tree():
+		face(lock_face.global_position)
+	else:
+		face(position + dir)
 	_update_cell()
 
 
@@ -140,6 +147,8 @@ func _update_cell() -> void:
 
 func _process(delta: float) -> void:
 	if _path.is_empty():
+		if lock_face and is_instance_valid(lock_face) and lock_face.is_inside_tree() and not _free_moving:
+			face(lock_face.global_position)
 		return
 	var next: Vector2i = _path[0]
 	var target: Vector3 = level.cell_to_world(next)

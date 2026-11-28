@@ -796,6 +796,13 @@ func pad_interact() -> bool:
 func interact(obj: Interactable) -> void:
 	if _ended or not obj.revealed:
 		return
+	# Someone the climber attacked doesn't chat as if nothing happened. A level can give them
+	# their own reaction with a "start_if" on "attacked:<id>"; otherwise they keep away.
+	if obj.kind == "npc" and Baseline.has_flag("attacked:" + obj.id) and not _has_start_for(obj, "attacked:" + obj.id):
+		_talk_obj = obj
+		_talk_nodes = {"wary": {"text": String(obj.def.get("attacked_text", "%s keeps well away from you, and won't say a word." % obj.display_name))}}
+		_show_node("wary")
+		return
 	if not Baseline.has_flag("examined:" + obj.id):
 		Baseline.set_flag("examined:" + obj.id)
 		Baseline.record("examined", obj.id)
@@ -812,6 +819,13 @@ func interact(obj: Interactable) -> void:
 			start = String(rule.get("start", start))
 			break
 	_show_node(start)
+
+
+func _has_start_for(obj: Interactable, flag: String) -> bool:
+	for rule in obj.def.get("dialogue", {}).get("start_if", []):
+		if String(rule.get("flag", "")) == flag:
+			return true
+	return false
 
 
 ## Opens a conversation at a given node (cutscenes hand the player a choice this way).
@@ -920,6 +934,28 @@ func _do_action(action: String, obj: Interactable) -> void:
 			combat.start_from_dialogue(foe, parts[2] if parts.size() > 2 else "")
 		_:
 			push_warning("Unknown dialogue action '%s'" % action)
+
+
+## Puts the climber beside the level's resting spot (an object with "rest_spot": true) after
+## losing a fight, or back at the start if there isn't one. Returns where that is, for the text.
+func wake_at_rest() -> String:
+	var spot: Interactable = null
+	for obj in level.objects:
+		if obj.def.get("rest_spot", false):
+			spot = obj
+			break
+	var to := level.spawn_cell
+	var place := "back where you started"
+	if spot:
+		var path: Array = level.path_to_object(level.spawn_cell, spot)
+		if not path.is_empty():
+			to = path.back()
+		place = "by " + String(spot.def.get("rest_place", "the " + spot.display_name.to_lower()))
+	climber.place(to)
+	if spot:
+		climber.face(spot.global_position)
+	cam.snap()
+	return place
 
 
 ## A narration page with a Continue button (e.g. how a fight ended).

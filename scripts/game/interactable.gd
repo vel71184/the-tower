@@ -9,6 +9,8 @@ var id := ""
 var kind := "examine"
 var display_name := ""
 var cell := Vector2i.ZERO
+## Where this was placed in the level; people go back here after a fight.
+var home_cell := Vector2i.ZERO
 var blocking := true
 var revealed := true
 ## Set once it's been opened (see show_open).
@@ -36,6 +38,7 @@ func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: C
 	kind = String(d.get("kind", "examine"))
 	display_name = String(d.get("name", id))
 	cell = at_cell
+	home_cell = at_cell
 	blocking = bool(d.get("blocking", kind != "hidden"))
 	revealed = kind != "hidden"
 	position = world_pos
@@ -63,6 +66,18 @@ func setup(d: Dictionary, at_cell: Vector2i, world_pos: Vector3, material_for: C
 	add_child(_label)
 
 	visible = revealed
+
+
+## Walks (well, appears) back to where they belong, if that spot is free.
+func go_home(level) -> void:
+	if cell == home_cell or not is_inside_tree():
+		return
+	if level.object_at(home_cell) != null or not level.in_bounds(home_cell):
+		return
+	level.move_object(self, home_cell)
+	position = level.cell_to_world(home_cell)
+	if character:
+		character.rotation.y = deg_to_rad(float(def.get("facing_deg", -135.0)))
 
 
 func top_height() -> float:
