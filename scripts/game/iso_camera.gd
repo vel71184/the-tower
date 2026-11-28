@@ -14,6 +14,7 @@ const MAX_VIEW := 17.0
 var target: Node3D
 ## Visible world height at the target; zoom changes this.
 var view_height := VIEW_HEIGHT
+var _shake := 0.0
 
 
 func _ready() -> void:
@@ -28,6 +29,18 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if target:
 		global_position = global_position.lerp(_goal(), minf(1.0, delta * 6.0))
+	if _shake > 0.0:
+		_shake = maxf(0.0, _shake - delta * 1.5)
+		h_offset = randf_range(-_shake, _shake)
+		v_offset = randf_range(-_shake, _shake)
+	elif h_offset != 0.0 or v_offset != 0.0:
+		h_offset = 0.0
+		v_offset = 0.0
+
+
+## A short shake, e.g. when the climber is hit. amount: world units at the strongest.
+func shake(amount: float) -> void:
+	_shake = maxf(_shake, amount)
 
 
 func snap() -> void:

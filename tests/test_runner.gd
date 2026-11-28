@@ -632,8 +632,15 @@ func _test_polish() -> void:
 	main.combat._set_lock(brann)
 	await get_tree().process_frame
 	check(pad["strike"].useful and pad["block"].useful, "locking on brightens the fight buttons")
+	check(main.climber.character.is_holding("sword"), "locking on draws the climber's sword")
 	main.combat._set_lock(null)
 	await get_tree().process_frame
+	check(not main.climber.character.is_holding("sword"), "and letting go puts it away")
+	var before_children: int = main.get_child_count()
+	main.combat.strike()
+	check(main.get_child_count() == before_children + 1, "a swing draws a slash in the world")
+	await get_tree().create_timer(0.4, true, false, true).timeout
+	check(Engine.time_scale == 1.0, "time runs normally again after a hit")
 
 	var vp: Vector2 = main.get_viewport().get_visible_rect().size
 	var down := InputEventScreenTouch.new()

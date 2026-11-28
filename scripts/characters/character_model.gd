@@ -12,6 +12,7 @@ extends Node3D
 
 const PARTS_PATH := "res://content/characters/parts.json"
 const SHADER := preload("res://shaders/palette_swap.gdshader")
+const Models := preload("res://scripts/game/models.gd")
 const MAX_SWAPS := 12
 const BASE_FAMILY := "mini-characters"
 ## Where the hand is, in arm-bone space (model units). All Mini Characters share one rig.
@@ -305,6 +306,28 @@ func _texture_of(mesh: MeshInstance3D, family: String) -> Texture2D:
 			return (m as BaseMaterial3D).albedo_texture
 	var path := String(parts().get("families", {}).get(family, {}).get("texture", ""))
 	return load(path) if ResourceLoader.exists(path) else null
+
+
+## Puts an item in a hand mid-game (e.g. the climber drawing a sword when a fight starts).
+func draw_item(item: String, right: bool = true) -> void:
+	if skeleton == null or skeleton.get_node_or_null("Holding_" + item.to_pascal_case()):
+		return
+	_attach_item(item, "arm-right" if right else "arm-left", HAND_RIGHT if right else HAND_LEFT)
+	var holder := skeleton.get_node_or_null("Holding_" + item.to_pascal_case())
+	if holder:
+		Models.outline(holder, 0.01)
+
+
+## Puts an item away again.
+func put_away(item: String) -> void:
+	var holder := skeleton.get_node_or_null("Holding_" + item.to_pascal_case()) if skeleton else null
+	if holder:
+		holder.queue_free()
+		holder.name = "Gone"
+
+
+func is_holding(item: String) -> bool:
+	return skeleton != null and skeleton.get_node_or_null("Holding_" + item.to_pascal_case()) != null
 
 
 func _attach_item(item: String, bone: String, offset: Vector3) -> void:

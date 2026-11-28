@@ -19,6 +19,10 @@ extends Node
 
 signal ended(outcome: String)
 
+const Fx := preload("res://scripts/game/fx.gd")
+## What the climber draws when a fight starts or they lock on.
+const WEAPON := "sword"
+
 const SWING_RANGE := 1.3
 const SWING_ARC := 0.3          # cosine of the half-angle in front that a swing covers
 const SWING_COOLDOWN := 0.45
@@ -89,6 +93,7 @@ func _process(delta: float) -> void:
 ## Advances fights by dt seconds. Paused while a dialogue or card is open.
 func tick(dt: float) -> void:
 	_cooldown = maxf(0.0, _cooldown - dt)
+	_update_weapon()
 	if foes.is_empty() or ui.is_busy() or main._ended:
 		return
 	for foe in foes.keys():
@@ -105,12 +110,16 @@ func strike() -> bool:
 	_cooldown = SWING_COOLDOWN
 	_count("strike")
 	climber.character.act("attack-melee-right")
+	Fx.slash(climber, climber.facing_dir, SWING_RANGE)
 	var target = _target_in_arc()
 	if target == null:
 		events.append("strike_miss")
 		return false
 	_start_if_peaceful(target)
 	events.append("strike_hit:" + target.id)
+	Fx.flash(target)
+	Fx.hitstop(get_tree())
+	main.cam.shake(0.1)
 	_knock(target, climber.facing_dir, false)
 	_hurt(target)
 	return true
@@ -128,6 +137,8 @@ func kick() -> bool:
 		events.append("kick_miss")
 		return false
 	_start_if_peaceful(target)
+	Fx.flash(target)
+	main.cam.shake(0.06)
 	if _knock(target, climber.facing_dir, true):
 		events.append("kick_moved:" + target.id)
 	else:
@@ -243,6 +254,8 @@ func _foe_tick(foe, st: Dictionary, dt: float) -> void:
 		foe.face(climber.global_position)
 		foe.act("attack-melee-right")
 		st["windup"] = FOE_WINDUP
+		# A red warning while they wind up, so the hit can be read and dodged or blocked.
+		Fx.flash(foe, Color(1.0, 0.25, 0.15), FOE_WINDUP * 0.8)
 
 
 func _foe_hits(foe, d: float) -> void:
@@ -253,8 +266,13 @@ func _foe_hits(foe, d: float) -> void:
 	if blocking and climber.facing_dir.dot(-from_foe) > 0.3:
 		events.append("strike_blocked:climber")
 		main.climber_bark("Blocked!")
+		Fx.flash(climber, Color(0.7, 0.8, 1.0), 0.08)
+		main.cam.shake(0.05)
 		return
 	events.append("strike_hit:climber")
+	Fx.flash(climber, Color(1.0, 0.35, 0.3), 0.15)
+	Fx.hitstop(get_tree(), 0.05)
+	main.cam.shake(0.18)
 	Baseline.wounds = maxi(0, Baseline.wounds - 1)
 	Baseline.changed.emit()
 	main.climber_bark("-1 wound")
@@ -459,6 +477,18 @@ func _end_encounter(outcome: String) -> void:
 
 
 # --- Helpers --------------------------------------------------------------------------------
+
+## The climber's sword is out while they're fighting or locked on, and away otherwise.
+func _update_weapon() -> void:
+	if climber == null or climber.character == null:
+		return
+	var want: bool = active or lock_target != null
+	if want != climber.character.is_holding(WEAPON):
+		if want:
+			climber.character.draw_item(WEAPON)
+		else:
+			climber.character.put_away(WEAPON)
+
 
 func _can_act() -> bool:
 	return _cooldown <= 0.0 and not ui.is_busy() and not main._ended and level != null
