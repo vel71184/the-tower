@@ -933,6 +933,22 @@ func _test_fight_fixes() -> void:
 	check(not lvl.can_stand(line, 0.26), "you can't walk through a fence")
 	check(lvl.can_stand(line + Vector3(0, 0, 0.36), 0.26), "but you can walk right up to it")
 	check(lvl.fences.has(Vector2i(16, 9)) and not lvl.fences.has(Vector2i(16, 10)), "the ring's way in is one clear gap")
+	# Standing in a corner of someone's square (allowed: bodies are round) must not let you
+	# walk on into them. Found by the random-play bot at the Gate.
+	var fire = main.find_object("big_fire")
+	var corner := Vector3(fire.cell.x + 0.02, 0.0, fire.cell.y + 0.02)
+	check(lvl.can_stand(corner, 0.26, fire.cell), "you can stand in the corner of something's square")
+	main.climber.position = corner
+	main.climber.cell = fire.cell
+	var gap := INF
+	for i in 60:
+		main.climber.move_free(Vector3(1, 0, 1).normalized(), 1.0 / 30.0)
+		gap = minf(gap, Vector2(main.climber.position.x, main.climber.position.z).distance_to(Vector2(fire.position.x, fire.position.z)))
+	check(gap >= 0.26 + fire.body_radius() - 0.01, "but you can't walk on into it from there")
+	main.climber.position = fire.position + Vector3(0.3, 0, 0)
+	main.climber.move_free(Vector3(1, 0, 0), 1.0 / 30.0)
+	check(main.climber.position.x > fire.position.x + 0.3, "anyone pushed into something can always step back out")
+	main.climber.place(hesk.cell + Vector2i(-2, 0))
 	var tent: MeshInstance3D = null
 	for child in lvl.get_children():
 		if child.scene_file_path.ends_with("mini-forest/tent.glb"):

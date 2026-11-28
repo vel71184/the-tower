@@ -186,8 +186,10 @@ func is_walkable(cell: Vector2i) -> bool:
 
 
 ## Whether a round body (radius r) can stand at a world position. "own" is the cell the
-## body already stands in, which never blocks it.
-func can_stand(pos: Vector3, r: float, own: Vector2i = Vector2i(-99, -99)) -> bool:
+## body already stands in (its floor never blocks it); "mover" is the one moving, so it never
+## bumps into itself. "from" is where it's moving from: anyone already overlapping someone
+## (pushed there by a hit) can always step away, just never closer.
+func can_stand(pos: Vector3, r: float, own: Vector2i = Vector2i(-99, -99), mover: Object = null, from: Variant = null) -> bool:
 	for corner in [Vector2(-r, -r), Vector2(r, -r), Vector2(-r, r), Vector2(r, r)]:
 		var c := Vector2i(floori(pos.x + corner.x), floori(pos.z + corner.y))
 		if c == own or fences.has(c):
@@ -200,11 +202,13 @@ func can_stand(pos: Vector3, r: float, own: Vector2i = Vector2i(-99, -99)) -> bo
 			return false
 	var p2 := Vector2(pos.x, pos.z)
 	for obj in objects:
-		if not obj.blocking or obj.cell == own or _wall_or_prop(obj.cell):
+		if not obj.blocking or obj == mover or _wall_or_prop(obj.cell):
 			continue
 		var op := Vector2(obj.position.x, obj.position.z)
-		if op.distance_to(p2) < r + obj.body_radius():
-			return false
+		var d := op.distance_to(p2)
+		if d < r + obj.body_radius():
+			if from == null or d <= op.distance_to(Vector2((from as Vector3).x, (from as Vector3).z)):
+				return false
 	# Fences only block along their line.
 	var p := Vector2(pos.x, pos.z)
 	for y in range(floori(pos.z - r), floori(pos.z + r) + 1):

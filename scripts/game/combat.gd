@@ -325,7 +325,7 @@ func _close_in(foe, dt: float) -> bool:
 		return false
 	var step: Vector3 = to.normalized() * minf(FOE_SPEED * dt, to.length() - FOE_REACH * 0.85)
 	var goal: Vector3 = foe.position + step
-	if not level.can_stand(goal, 0.25, foe.cell):
+	if not level.can_stand(goal, 0.25, foe.cell, foe):
 		return false
 	foe.face(climber.global_position)
 	foe.position = goal

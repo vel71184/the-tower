@@ -114,10 +114,10 @@ func move_free(dir: Vector3, delta: float) -> void:
 	var step := dir.limit_length(1.0) * WALK_SPEED * delta
 	var p := position
 	var try_x := p + Vector3(step.x, 0, 0)
-	if level.can_stand(try_x, RADIUS, cell):
+	if level.can_stand(try_x, RADIUS, cell, null, p):
 		p = try_x
 	var try_z := p + Vector3(0, 0, step.z)
-	if level.can_stand(try_z, RADIUS, cell):
+	if level.can_stand(try_z, RADIUS, cell, null, p):
 		p = try_z
 	position = p
 	if lock_face and is_instance_valid(lock_face) and lock_face.is_inside_tree():
@@ -133,7 +133,7 @@ func knock_back(dir: Vector3, distance: float) -> void:
 	var steps := 6
 	for i in steps:
 		var try := position + dir.normalized() * distance / steps
-		if level.can_stand(try, RADIUS, cell):
+		if level.can_stand(try, RADIUS, cell, null, position):
 			position = try
 	_update_cell()
 
