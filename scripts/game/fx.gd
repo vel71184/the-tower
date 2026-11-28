@@ -27,8 +27,11 @@ static func flash(node: Node3D, color: Color = Color(1, 1, 1), seconds: float = 
 		if not mi.has_meta("overlay_before"):
 			mi.set_meta("overlay_before", mi.material_overlay)
 		mi.material_overlay = _flash_mats[key]
+	# Held by id: the person may be gone (walked off, removed) by the time the flash ends.
+	var node_id := node.get_instance_id()
 	node.get_tree().create_timer(seconds, true, false, true).timeout.connect(func() -> void:
-		if not is_instance_valid(node) or int(node.get_meta("flash_n", 0)) != n:
+		var who := instance_from_id(node_id)
+		if who == null or int(who.get_meta("flash_n", 0)) != n:
 			return
 		for mi in meshes:
 			if is_instance_valid(mi) and mi.has_meta("overlay_before"):
