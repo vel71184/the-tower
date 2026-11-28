@@ -335,7 +335,7 @@ func _build_sign(spec: Dictionary) -> void:
 	var y := float(spec.get("height", _top - 0.25))
 	var board := MeshInstance3D.new()
 	var box := BoxMesh.new()
-	var bs: Array = spec.get("size", [0.95, 0.34])
+	var bs: Array = spec.get("size", [0.5, 0.26])
 	box.size = Vector3(float(bs[0]), float(bs[1]), 0.06)
 	board.mesh = box
 	var wood := StandardMaterial3D.new()
