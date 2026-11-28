@@ -1107,7 +1107,8 @@ func _on_card_choice(i: int) -> void:
 
 
 func _refresh_dev() -> void:
-	ui.set_dev_text(Baseline.debug_text())
+	if ui.is_dev_visible():
+		ui.set_dev_text(Baseline.debug_text())
 
 
 ## A soft ring under whatever the interact button would use.

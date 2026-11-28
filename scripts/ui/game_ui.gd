@@ -40,9 +40,6 @@ var _card_buttons: VBoxContainer
 var _toast: Label
 var _toast_tween: Tween
 var _dev: Label
-var _combat: PanelContainer
-var _combat_hint: Label
-var _combat_buttons: HBoxContainer
 var _wounds: Label
 var _bars: Array = []
 var _skip: Button
@@ -78,7 +75,7 @@ func _ready() -> void:
 	_build_card()
 	_build_toast()
 	_build_dev()
-	_build_combat()
+	_build_wounds()
 	_build_touch_bar()
 	_build_title()
 	_build_cinematic()
@@ -342,29 +339,6 @@ func _build_title() -> void:
 
 # --- Combat ---------------------------------------------------------------------------------
 
-## Shows the action bar for the climber's turn. options: [{"id", "label", "enabled"}].
-## Buttons can't take focus, so the d-pad keeps walking; pads use face buttons instead.
-func show_combat(options: Array, hint: String) -> void:
-	_combat_hint.text = hint
-	_clear(_combat_buttons)
-	for o in options:
-		var b := _button(String(o["label"]) + _pad_hint(String(o["id"])), _on_combat.bind(String(o["id"])))
-		b.focus_mode = Control.FOCUS_NONE
-		b.disabled = not bool(o.get("enabled", true))
-		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_combat_buttons.add_child(b)
-	_combat.visible = true
-
-
-func hide_combat() -> void:
-	_combat.visible = false
-
-
-func is_combat_bar_visible() -> bool:
-	return _combat.visible
-
-
 ## The climber's wounds, top right. Shown in fights, or whenever they're hurt.
 func set_wounds(current: int, maximum: int, in_fight: bool) -> void:
 	var pips := ""
@@ -491,40 +465,7 @@ func _build_touch_bar() -> void:
 	_full.add_child(_stick)
 
 
-func _pad_hint(id: String) -> String:
-	var controls := get_node_or_null("/root/Controls")
-	if controls == null or not (controls.using_pad or controls.has_controller()):
-		return ""
-	return {"strike": "  (A)", "shove": "  (X)", "guard": "  (B)", "talk": "  (Y)", "wait": "  (Start)"}.get(id, "")
-
-
-func _on_combat(id: String) -> void:
-	combat_action.emit(id)
-
-
-func _build_combat() -> void:
-	_combat = PanelContainer.new()
-	_combat.add_theme_stylebox_override("panel", _box(Color(0.12, 0.06, 0.05, 0.94)))
-	_combat.anchor_left = 0.0
-	_combat.anchor_right = 1.0
-	_combat.anchor_top = 1.0
-	_combat.anchor_bottom = 1.0
-	_combat.offset_left = 20
-	_combat.offset_right = -20
-	_combat.offset_top = -20
-	_combat.offset_bottom = -20
-	_combat.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_combat.visible = false
-	_root.add_child(_combat)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 10)
-	_combat.add_child(col)
-	_combat_hint = _label(TEXT_SIZE - 2, Color(0.95, 0.75, 0.6))
-	col.add_child(_combat_hint)
-	_combat_buttons = HBoxContainer.new()
-	_combat_buttons.add_theme_constant_override("separation", 8)
-	col.add_child(_combat_buttons)
-
+func _build_wounds() -> void:
 	_wounds = _label(26, Color(1.0, 0.6, 0.5))
 	_wounds.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_wounds.anchor_left = 1.0
@@ -586,6 +527,10 @@ func toast(text: String, seconds: float = 2.5) -> void:
 
 func toggle_dev() -> void:
 	_dev.visible = not _dev.visible
+
+
+func is_dev_visible() -> bool:
+	return _dev.visible
 
 
 func set_dev_text(text: String) -> void:

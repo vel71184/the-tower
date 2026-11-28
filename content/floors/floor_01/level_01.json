@@ -537,7 +537,7 @@
       "talk": [
         {
           "text": "Marta's choosing who climbs. Think she'll open the stair for a thug?",
-          "requires": "marta_motive",
+          "requires_knowledge": "marta_motive",
           "result": "yield",
           "reply": "\"...Not worth it.\""
         },

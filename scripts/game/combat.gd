@@ -198,7 +198,10 @@ func talk() -> bool:
 	_talk_foe = nearest
 	_talk_options = []
 	for t in foes[nearest]["data"].get("talk", []):
-		if t.has("requires") and not Baseline.knows(String(t["requires"])):
+		# The same keys as a conversation's choices: "requires" a flag, "requires_knowledge" a fact.
+		if t.has("requires") and not Baseline.has_flag(String(t["requires"])):
+			continue
+		if t.has("requires_knowledge") and not Baseline.knows(String(t["requires_knowledge"])):
 			continue
 		_talk_options.append(t)
 	var labels: Array = []
@@ -437,7 +440,7 @@ func _talk_chosen(index: int) -> void:
 	if foe == null or not foes.has(foe) or index >= _talk_options.size():
 		return
 	var t: Dictionary = _talk_options[index]
-	Baseline.apply_once("fight/%s/talk/%d" % [foe.id, index], t.get("effects", {}))
+	Baseline.apply_once("fight/%s/talk/%s" % [foe.id, t.get("text", index)], t.get("effects", {}))
 	climber.character.act("emote-yes")
 	if String(t.get("result", "")) == "yield":
 		foe.act("emote-no")

@@ -148,14 +148,6 @@ func apply_once(key: String, effects: Dictionary) -> void:
 	apply(effects)
 
 
-func advance_level() -> void:
-	level_num += 1
-	if level_num > 10:
-		level_num = 1
-		floor_num += 1
-	changed.emit()
-
-
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
