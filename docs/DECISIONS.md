@@ -8,6 +8,10 @@ records decisions made in chat that the doc may not have yet.
 
 | Decision | Detail | Source |
 |---|---|---|
+| No way back | People can never come back down or out of the tower. Things and animals can: something thrown from an opening, a bird with a note tied to it. It's unreliable, so people outside mostly live on rumor and hope. | Chat, 2026-11-28 |
+| Marta's motive | The last climber she let up burned Floor 1's houses on the way to the stair; she only heard after they'd gone up. Then birds came down from Floor 2 with burnt feathers and worse notes. So she won't open the stair until she's watched a climber all the way across her floor: how you treat Floor 1 is her test. | Chat, 2026-11-28 |
+| Floor 0 people | Nobody on Floor 0 has been inside. The Camp is people who haven't gone in yet (waiting, scared, changing their minds), families watching the tower for birds, and people who live off climbers. | Chat, 2026-11-28 |
+| The Bridge | A hurt climber heading for the tower. The plank was cut by a rival climber ahead of you, someone you may meet inside. | Chat, 2026-11-28 |
 | The world shows what you did | Things you pick up disappear; things you open stay open (a level's "after_use": "taken" or {"open": true}), and that's remembered. Looking again gives an "after" line. | Chat, 2026-11-27 |
 | Hidden things don't announce themselves | No captions like "Something pale in the grass". A loose board rocks and shows itself when you step on it (with a short phone buzz); that's the hint. Things in plain sight just sit there: whether the player checks them is part of what the game measures. | Chat, 2026-11-27 |
 | Renderer | Mobile on Android, Forward+ on PC; Compatibility only as the automatic fallback for old devices. | Chat, 2026-11-27 |

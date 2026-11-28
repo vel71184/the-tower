@@ -172,11 +172,11 @@
             ]
           },
           "marta": {
-            "text": "Marta. The Gatekeeper. They say she used to wave everyone through. Then something came back down the stair, and now nobody goes up.",
+            "text": "Marta. The Gatekeeper. They say she used to wave everyone through. Then she let one up who'd burned half the floor getting to the stair. Now nobody goes up.",
             "effects": {
               "learn": [
                 "marta_name",
-                "something_came_down"
+                "last_climber_burned"
               ]
             },
             "next": "more"
@@ -416,8 +416,9 @@
       "color": "#8b6b47",
       "lines": [
         "You pry the board up. Underneath, wrapped in oilcloth, is a folded letter.",
-        "\"Brother. I let the last one through, like all the others. You know what came back down. Forty houses on the lower stair.",
-        "I won't open the stair again until I know who's climbing. If they ask, tell them I'm cruel. It's easier. — M.\""
+        "\"Brother. I let the last one through, like all the others. I didn't hear about the fires until they were already on the stair. Forty houses.",
+        "Now the birds come down from the second floor with burnt feathers, and the notes tied to them are worse.",
+        "I won't open the stair again until I've watched who's climbing, all the way across our floor. If they ask, tell them I'm cruel. It's easier. — M.\""
       ],
       "effects": {
         "learn": [
