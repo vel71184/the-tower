@@ -333,6 +333,7 @@ func start_level(floor_n: int, level_n: int, arriving: String = "start") -> bool
 func end_level() -> void:
 	if _ended:
 		return
+	_note_fled()
 	var here := Vector2i(Baseline.floor_num, Baseline.level_num)
 	var info := floor_data(here.x)
 	var last := int(info.get("levels", 10))
@@ -358,14 +359,23 @@ func end_level() -> void:
 	_travel(next, "start")
 
 
+## Walking out of a level mid-fight counts as running from it.
+func _note_fled() -> void:
+	if combat.active:
+		Baseline.habit("fled")
+		for foe in combat.foes:
+			Baseline.record("fled", foe.id)
+
+
 ## Walks back to the previous level of this floor. You can't go back down past a floor's start.
 func go_back() -> void:
+	_note_fled()
 	var here := Vector2i(Baseline.floor_num, Baseline.level_num)
 	var prev := here.y - 1
 	while prev >= 1 and not LEVELS.has("%d-%d" % [here.x, prev]):
 		prev -= 1
 	if prev < 1:
-		show_note("There's no way back from here.")
+		show_note("There's no way back from here." if here.x == 0 else "You turn back toward the way you came, and find you can't make yourself take a single step.")
 		return
 	_ended = true
 	climber.stop()
@@ -929,6 +939,9 @@ func _do_action(action: String, obj: Interactable) -> void:
 		"go_back":
 			go_back()
 		"rest":
+			if combat.active:
+				show_note("Not with someone coming at you.")
+				return
 			Baseline.rest()
 			ui.set_wounds(Baseline.wounds, Baseline.max_wounds, false)
 			ui.toast("You rest until your wounds close.", 2.5)

@@ -46,6 +46,8 @@ var _object_at: Dictionary = {}
 ## runs through the middle of its cell and joins any fence next to it; it blocks movement only
 ## along its own line, so you can walk right up to it.
 var fences: Dictionary = {}
+## Cells the map itself closes (walls, solid props, water), as opposed to people and things.
+var _map_solid: Dictionary = {}
 const FENCE_HALF := 0.06
 const ARM_DIRS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
 var _materials: Dictionary = {}
@@ -87,6 +89,7 @@ func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 			if entry.get("wall", false):
 				_add_wall(cell, palette)
 				astar.set_point_solid(cell, true)
+				_map_solid[cell] = true
 				continue
 			if entry.has("fence"):
 				fences[cell] = {"model": String(entry["fence"]), "arms": []}
@@ -95,6 +98,7 @@ func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 			ground[cell] = kind
 			if kind == "water":
 				astar.set_point_solid(cell, true)
+				_map_solid[cell] = true
 			if entry.get("spawn", false):
 				spawn_cell = cell
 			if entry.get("return", false):
@@ -103,6 +107,7 @@ func build(level_data: Dictionary, floor_info: Dictionary = {}) -> void:
 				_add_prop(entry, cell)
 				if entry.get("solid", false):
 					astar.set_point_solid(cell, true)
+					_map_solid[cell] = true
 			if defs.has(c):
 				var obj := _add_object(defs[c], cell)
 				if obj.blocking:
@@ -187,7 +192,18 @@ func can_stand(pos: Vector3, r: float, own: Vector2i = Vector2i(-99, -99)) -> bo
 		var c := Vector2i(floori(pos.x + corner.x), floori(pos.z + corner.y))
 		if c == own or fences.has(c):
 			continue
+		# People and things standing in a cell are round, not the whole square: checked below.
+		var there: Interactable = _object_at.get(c, null)
+		if there != null and there.blocking and not _wall_or_prop(c):
+			continue
 		if not is_walkable(c):
+			return false
+	var p2 := Vector2(pos.x, pos.z)
+	for obj in objects:
+		if not obj.blocking or obj.cell == own or _wall_or_prop(obj.cell):
+			continue
+		var op := Vector2(obj.position.x, obj.position.z)
+		if op.distance_to(p2) < r + obj.body_radius():
 			return false
 	# Fences only block along their line.
 	var p := Vector2(pos.x, pos.z)
@@ -202,6 +218,12 @@ func can_stand(pos: Vector3, r: float, own: Vector2i = Vector2i(-99, -99)) -> bo
 				if Geometry2D.get_closest_point_to_segment(p, centre, end).distance_to(p) < r + FENCE_HALF:
 					return false
 	return true
+
+
+## True if a cell is closed by the map itself (a wall, a solid prop, water), regardless of
+## anyone standing in it.
+func _wall_or_prop(c: Vector2i) -> bool:
+	return _map_solid.has(c)
 
 
 ## The open cell to start a path from when standing at a world position. Usually the cell

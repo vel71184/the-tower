@@ -8,6 +8,12 @@ records decisions made in chat that the doc may not have yet.
 
 | Decision | Detail | Source |
 |---|---|---|
+| Losing a fight | You're knocked out, not killed: you come to at the level's resting spot with one wound, and the text says where. Whoever beat you goes back to what they were doing (or leaves, if the fight says so). A spar is different: you're helped up in the ring and patched up. | Chat, 2026-11-28 |
+| Healing | Every level has one resting spot (a flat rock, the camp fire, a bench, the bedrolls). Resting closes every wound. Not while someone's attacking you. | Chat, 2026-11-28 |
+| People remember | Someone you attacked won't chat as if nothing happened; anyone who saw an unprovoked attack keeps their distance. Scripted fights (defending Tobin, Dunmore's toll) and spars don't count as unprovoked. | Chat, 2026-11-28 |
+| People leave by walking | Someone who leaves walks away and is gone for good; someone who steps away comes back on a later visit. People can move once something has happened (Bryn sits with Pell). | Chat, 2026-11-28 |
+| Fences and bodies | Fences run along a line and join up; people and small things are round. You can walk right up to either. | Chat, 2026-11-28 |
+| Lock-on | While locked on you keep facing the target (strafing), and swings turn toward them. | Chat, 2026-11-28 |
 | No way down | People can't go back down. It's the tower itself, a kind of magic with no reason given: you can walk to the door, even stand there as someone comes up, but you can't make yourself step through. Floor bosses are the only exception. | Chat, 2026-11-28 |
 | Things going up | Animals and things sometimes make it up, but usually get lost; things can turn up on the wrong floor. Ropes never work. The only reliable way is to hand it to a climber and hope they meet the person. | Chat, 2026-11-28 |
 | The dead | Stay on their floor. Each floor buries or keeps its own. | Chat, 2026-11-28 |

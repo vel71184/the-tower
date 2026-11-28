@@ -101,6 +101,12 @@ func go_home(level) -> void:
 		character.rotation.y = deg_to_rad(float(def.get("facing_deg", -135.0)))
 
 
+## How wide this is for bumping into: people are slim, things a bit wider ("radius" in the
+## level to override).
+func body_radius() -> float:
+	return float(def.get("radius", 0.28 if kind == "npc" else 0.4))
+
+
 func top_height() -> float:
 	return _top
 
